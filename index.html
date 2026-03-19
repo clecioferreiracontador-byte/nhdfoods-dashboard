@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Belive · DRE Gerencial 2025 · Audicon</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{--navy:#0D1B2E;--n2:#1A3A6B;--n3:#0F2035;--n4:#162840;--gold:#C9A84C;--g2:#E8C96A;--white:#EDEAE4;--gray:#6E7E8E;--gray2:#A0B0BE;--green:#27AE60;--green2:#2ECC71;--red:#C0392B;--red2:#E74C3C;--amber:#E67E22;--blue:#2980B9;--blue2:#3498DB;--bdr:rgba(201,168,76,.15);--r:10px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--navy);color:var(--white);font-family:"Inter",sans-serif;font-size:14px;line-height:1.5;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+.shell{display:grid;grid-template-columns:224px 1fr;grid-template-rows:58px 1fr;height:100vh}
+.topbar{grid-column:1/-1;background:var(--n3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;padding:0 20px;gap:12px}
+.sidebar{background:var(--n3);border-right:1px solid var(--bdr);display:flex;flex-direction:column;overflow:hidden}
+.main{overflow-y:auto;background:var(--navy)}
+.tb-logo{height:32px;width:auto;object-fit:contain}
+.tb-div{width:1px;height:24px;background:var(--bdr);margin:0 2px}
+.tb-title{font-family:"Syne",sans-serif;font-weight:700;font-size:14px;color:var(--white);letter-spacing:-.01em}
+.tb-sub{font-size:10px;color:var(--gray);margin-top:1px}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.badge{background:rgba(201,168,76,.12);color:var(--g2);border:1px solid rgba(201,168,76,.25);font-size:11px;padding:3px 9px;border-radius:12px;font-family:"DM Mono",monospace;font-weight:500}
+.sb-nav{flex:1;overflow-y:auto;padding:8px 0}
+.ssec{padding:14px 14px 5px;font-size:10px;font-family:"Syne",sans-serif;font-weight:700;letter-spacing:.12em;color:var(--gray);text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 13px;cursor:pointer;border-radius:7px;margin:1px 7px;font-size:13px;font-weight:400;color:rgba(237,234,228,.5);transition:all .12s}
+.nav-item:hover{background:rgba(201,168,76,.07);color:rgba(237,234,228,.85)}
+.nav-item.active{background:rgba(201,168,76,.13);color:var(--g2);font-weight:500}
+.niv{width:14px;height:14px;flex-shrink:0;opacity:.65}
+.nav-item.active .niv{opacity:1}
+.sdiv{margin:6px 14px;border:none;border-top:1px solid var(--bdr)}
+.skpi{margin:4px 9px;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px}
+.skpi-l{font-size:10px;color:var(--gray);margin-bottom:2px;font-weight:500;letter-spacing:.02em}
+.skpi-v{font-family:"DM Mono",monospace;font-weight:500;font-size:14.5px;color:var(--gold);letter-spacing:-.02em}
+.skpi-p{font-size:10.5px;color:var(--green2);margin-top:2px;font-family:"DM Mono",monospace}
+.sb-bottom{border-top:1px solid var(--bdr);padding:14px 12px 12px;display:flex;align-items:center;gap:9px;background:var(--n3);flex-shrink:0}
+.sb-aud-img{height:30px;width:auto;object-fit:contain;filter:brightness(.95)}
+.sb-aud-txt{display:flex;flex-direction:column}
+.sb-aud-name{font-family:"Syne",sans-serif;font-weight:700;font-size:10.5px;color:var(--g2);line-height:1.2}
+.sb-aud-sub{font-size:9.5px;color:var(--gray);margin-top:1px}
+.fbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:10px 22px;border-bottom:1px solid var(--bdr);background:rgba(15,32,53,.6)}
+.fl{font-size:11px;color:var(--gray);white-space:nowrap;font-weight:500}
+.fs{background:var(--n2);color:var(--white);border:1px solid rgba(201,168,76,.35);border-radius:6px;padding:5px 9px;font-size:12px;font-family:"Inter",sans-serif;cursor:pointer;font-weight:500}
+.fs:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 2px rgba(201,168,76,.15)}
+.fs:hover{border-color:var(--gold)}
+.fs option{background:#0F2035;color:#EDEAE4}
+.fdiv{width:1px;height:16px;background:var(--bdr)}
+.finfo{font-size:10.5px;color:var(--amber);margin-left:auto;font-style:italic}
+.page{display:none;padding:22px 22px 40px}
+.page.active{display:block}
+.phdr{margin-bottom:18px}
+.ptitle{font-family:"Syne",sans-serif;font-weight:800;font-size:22px;color:var(--white);letter-spacing:-.02em}
+.psub{font-size:11.5px;color:var(--gray);margin-top:3px;font-weight:400}
+.krow{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
+.kcard{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
+.kcard::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:var(--r) var(--r) 0 0}
+.kcard.g::before{background:var(--gold)}.kcard.gr::before{background:var(--green2)}.kcard.bl::before{background:var(--blue2)}.kcard.am::before{background:var(--amber)}.kcard.rd::before{background:var(--red2)}
+.klbl{font-size:9.5px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
+.kval{font-family:"DM Mono",monospace;font-weight:500;font-size:20px;color:var(--white);line-height:1;margin-bottom:5px;letter-spacing:-.03em}
+.kmeta{font-size:11px;display:flex;gap:6px;align-items:center}
+.kpct{color:var(--green2);font-family:"DM Mono",monospace;font-weight:500;font-size:11.5px}
+.kpct.neg{color:var(--red2)}.ksub{color:var(--gray);font-size:10.5px}
+.crow{display:grid;gap:12px;margin-bottom:14px}.crow.two{grid-template-columns:1fr 1fr}
+.cc{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:16px}
+.cc.sp2{grid-column:1/-1}
+.ctop{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.ctitle{font-family:"Syne",sans-serif;font-weight:600;font-size:13px;color:var(--white);letter-spacing:-.01em}
+.cdesc{font-size:10.5px;color:var(--gray);margin-top:2px}
+.leg{display:flex;flex-wrap:wrap;gap:8px;font-size:10.5px;color:var(--gray)}
+.leg span{display:flex;align-items:center;gap:4px;font-weight:500}
+.ldot{width:7px;height:7px;border-radius:2px;flex-shrink:0}
+.tw{overflow-x:auto;border-radius:var(--r);border:1px solid var(--bdr)}
+.dt{width:100%;border-collapse:collapse}
+.dt thead th{background:var(--n2);padding:8px 11px;text-align:right;font-family:"Syne",sans-serif;font-weight:600;font-size:10px;letter-spacing:.06em;color:var(--g2);border-bottom:1px solid var(--bdr);white-space:nowrap}
+.dt thead th:first-child{text-align:left;min-width:190px;position:sticky;left:0;background:var(--n2);z-index:2}
+.dt tbody td{padding:5px 11px;text-align:right;border-bottom:1px solid rgba(201,168,76,.05);white-space:nowrap;font-family:"DM Mono",monospace;font-size:11px}
+.dt tbody td:first-child{text-align:left;font-family:"Inter",sans-serif;font-size:12px;position:sticky;left:0;z-index:1;background:var(--n3)}
+.dt tr:hover td{background:rgba(201,168,76,.04)!important}
+.rt td{background:rgba(201,168,76,.08)!important;font-family:"DM Mono",monospace;font-weight:500;color:var(--g2);font-size:11.5px}
+.rt td:first-child{background:rgba(201,168,76,.08)!important;font-family:"Syne",sans-serif;font-weight:600;font-size:12px}
+.rst td:first-child{font-weight:500;color:var(--white);padding-left:12px;background:rgba(255,255,255,.02)}
+.rst td{background:rgba(255,255,255,.02)}
+.rs td:first-child{color:var(--gray);padding-left:24px;font-size:11.5px;background:transparent}
+.rs td{background:transparent;color:var(--gray2)}
+.vn{color:var(--red2)!important}
+.vpc{font-size:9.5px;color:var(--amber);display:block;font-family:"DM Mono",monospace;line-height:1.3}
+.au{color:var(--green2);font-size:9px}.ad{color:var(--red2);font-size:9px}.an{color:var(--gray);font-size:9px}
+.dwrap{position:relative;display:inline}
+.dtip{display:none;position:absolute;left:0;top:100%;background:var(--n2);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;font-size:11.5px;color:var(--white);max-width:280px;z-index:300;line-height:1.6;font-family:"Inter",sans-serif;box-shadow:0 8px 32px rgba(0,0,0,.6);margin-top:4px}
+.dlbl{cursor:help;border-bottom:1px dotted rgba(201,168,76,.35)}
+.dlbl:hover+.dtip{display:block}
+.avc{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:16px}
+.acard{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 15px}
+.an2{font-size:9.5px;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;font-weight:600}
+.av{font-family:"DM Mono",monospace;font-weight:500;font-size:20px;color:var(--white);letter-spacing:-.02em}
+.aamt{font-size:10.5px;color:var(--gray);font-family:"DM Mono",monospace;margin-top:2px}
+.abar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:8px;overflow:hidden}
+.abf{height:100%;border-radius:2px;transition:width .4s}
+.igrid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-bottom:18px}
+.icard{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px}
+.ictitle{font-family:"Syne",sans-serif;font-weight:700;font-size:12.5px;color:var(--g2);margin-bottom:10px;letter-spacing:-.01em}
+.irow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(201,168,76,.05)}
+.irow:last-child{border:none}
+.iname{font-size:12px;color:var(--gray2)}
+.ivals{text-align:right}
+.ival{font-family:"DM Mono",monospace;font-weight:500;font-size:13px;color:var(--white)}
+.ipct{font-size:10px;color:var(--amber);font-family:"DM Mono",monospace}
+.idx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.idx-card{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 15px;position:relative;overflow:hidden}
+.idx-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px}
+.idx-card.ok::before{background:var(--green2)}.idx-card.warn::before{background:var(--amber)}.idx-card.bad::before{background:var(--red2)}
+.idx-lbl{font-size:9.5px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.idx-val{font-family:"DM Mono",monospace;font-weight:500;font-size:22px;letter-spacing:-.03em;line-height:1;margin-bottom:5px}
+.idx-val.ok{color:var(--green2)}.idx-val.warn{color:var(--amber)}.idx-val.bad{color:var(--red2)}
+.idx-ref{font-size:10px;color:var(--gray);margin-top:3px}
+.idx-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:10px;overflow:hidden}
+.idx-bar-fill{height:100%;border-radius:2px}
+.bal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.bal-section{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px}
+.bal-title{font-family:"Syne",sans-serif;font-weight:700;font-size:12.5px;color:var(--g2);margin-bottom:10px}
+.bal-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(201,168,76,.05);font-size:12px}
+.bal-row:last-child{border:none}
+.bal-row.tot{font-family:"DM Mono",monospace;font-weight:500;color:var(--gold);font-size:12.5px;border-top:1px solid rgba(201,168,76,.2);margin-top:4px;padding-top:8px}
+.bal-name{color:var(--gray2)}.bal-val{font-family:"DM Mono",monospace;font-size:11.5px;color:var(--white)}
+.interp{background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:12px 16px;font-size:12px;line-height:1.7;color:var(--white);margin-top:14px}
+.interp strong{color:var(--g2);font-weight:600}
+.sec-hdr{font-family:"Syne",sans-serif;font-weight:700;font-size:11.5px;color:var(--g2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.footer{text-align:center;font-size:10px;color:var(--gray);padding:12px;border-top:1px solid var(--bdr);margin-top:8px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(201,168,76,.18);border-radius:2px}
+@media(max-width:860px){
+  .shell{grid-template-columns:1fr;grid-template-rows:58px 44px 1fr}
+  .sidebar{grid-row:2;flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:none;border-bottom:1px solid var(--bdr)}
+  .nav-item{flex-direction:column;gap:2px;font-size:9px;padding:5px 9px;min-width:58px}
+  .krow{grid-template-columns:repeat(2,1fr)}
+  .crow.two{grid-template-columns:1fr}
+  .avc{grid-template-columns:repeat(2,1fr)}
+  .idx-grid{grid-template-columns:repeat(2,1fr)}
+  .bal-grid{grid-template-columns:1fr}
+  .igrid{grid-template-columns:1fr}
+  .ssec,.sdiv,.skpi,.sb-bottom{display:none}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<header class="topbar">
+  <img class="tb-logo" src="data:image/png;base64,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" alt="Belive">
+  <div class="tb-div"></div>
+  <div>
+    <div class="tb-title">NHD Foods &middot; DRE Gerencial</div>
+    <div class="tb-sub">CNPJ: 21.541.988/0001-76 &middot; Uberaba MG</div>
+  </div>
+  <div class="tb-right"><span class="badge">2025 &middot; Jan&ndash;Dez</span></div>
+</header>
+
+<nav class="sidebar">
+  <div class="sb-nav">
+    <div class="ssec">Análise</div>
+    <div class="nav-item active" onclick="setPage('ov',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/><rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/></svg>Visão Geral</div>
+    <div class="nav-item" onclick="setPage('dre',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M2 8h12M2 12h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>DRE Mensal</div>
+    <div class="nav-item" onclick="setPage('av',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M8 14V6M4 14V9M12 14V3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Análise Vertical</div>
+    <div class="nav-item" onclick="setPage('ind',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5L10.5 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Indicadores</div>
+    <div class="nav-item" onclick="setPage('bal',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>Balanço &amp; Índices</div>
+    <hr class="sdiv">
+    <div class="ssec">KPIs Anuais</div>
+    <div class="skpi"><div class="skpi-l">Receita Líquida</div><div class="skpi-v">R$ 64,24M</div><div class="skpi-p">79,5% s/ Rec. Bruta</div></div>
+    <div class="skpi" style="margin-top:4px"><div class="skpi-l">Lucro Líquido</div><div class="skpi-v" style="color:var(--green2)">R$ 4,49M</div><div class="skpi-p">7,0% s/ Rec. Líquida</div></div>
+    <div class="skpi" style="margin-top:4px"><div class="skpi-l">EBITDA</div><div class="skpi-v" style="color:var(--amber)">R$ 11,27M</div><div class="skpi-p">17,5% s/ Rec. Líquida</div></div>
+    <div class="skpi" style="margin-top:4px"><div class="skpi-l">Margem Bruta</div><div class="skpi-v" style="color:var(--gold)">49,5%</div><div class="skpi-p">s/ Rec. Líquida</div></div>
+  </div>
+  <div class="sb-bottom">
+    <img class="sb-aud-img" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFkAAABXCAYAAABvAenfAAAYqklEQVR4nO2ceYxd133fP2e529vmDWfhcN8lUgtJkQopSlbsWIlTK0gdxGoQoUCRtjYKw0CTfxqjiBGnCYwg/SdGkTQoYiA12jSODbRNWtutJW+xFlKWLbvWQkviIu7bLG+/2zmnf9w7b2aooURZ8ZBG5gsc3Dfv3fveud/zO7/z+33P745g64dZxU8W8lZ34B8CVkleAaySvAJYJXkFsEryCmCV5BXAKskrgFWSVwCrJK8AVkleAaySvAJYJXkFsEryCmCV5BWAvtUdWAoLonzplo6/cOXbojxviNvfTm45ycItIk4sIhkKop1EANIV51gsTliQpvwcbneib4vezVvpEoIXw133wfwFwr753NsQt9ySl2DeRSxHthMgys+dBeSNB+U2wy23ZOmWfXdRW2DSitKohQQhis9+Coi+9ZY8nPKLxnu46C0luGBYLjrfvmmBvB1x60leDMcil7CMiQ6d93VE3+a4vUhGLkOuA1G4lSV0Ds+7/Ym+beaaWNY3zzsMCyJHkiOwZdj204NbTrIQAmctzloQEim9olvOAQ4hHEoYPC2wNkc4g+8pMAay7KeC8FtMskUIV0QKQhSEO1cSDEI4JDnOZmTZAJcnSGERzoBz6DC6td2/SdwWPlkqwEmsc2Dn/atD4rAmBZuihMDYDJs6FAIMWFO4j9vdmG85yaakaMl650BIiZA5ghwhDRs3rMOTHleuzZGkBl9J0n4fEQW3puPvALfcJ1trcK603tJNICVSOITLMXlC4EuO/Mx97rEP/2O37+47rnjCQZ6i9I2SmdsLt9ySobTiRb5YCodzBpOnuEGP0XUbeODQAY4cOQK5mXjlxVdod1pUxtaSiDLFvo1xy3snROkn5kkuF0BrLTZNEaHmnrv3uHvuvosd2yMO7N/Htq2bfw9nMcbc2s7fJN49yaUcuWyb//wtjkLJgmhhWRKPWQtZzvrJSQ4f2MvWTeMEArZvmWL/vbs/VW+O4IxBOAvYRcfrO2jf3MT865WBFG6ZRGAowpRtsWAzr/GWDesKbuYb88JNqTNICUIt/C3EgsAjFDYvlz5hQQvAYK3FJ4DMsWfbtukP/OwRNo1rlIWdWxsc2HsX6yemwEjyJCYKPSQGTEbgqaJPaYLEgTNADiIDmYG0ZXNFc2/dhLNv2W6K5Js6662ULimHce7CeUPGwRqwObi8uOHFR2tBqYUfsDlCClyWkqUx4xNrePjIoTVT46NIHC4f4Huwb+9uHnrwsHMmA2OxWY6UCoHC5AJPeqigipQaKTSCRS7J2LKJwpiHfS9jdSmXNCdkGfksHN8p3uKKG0+phZ0KENIiZGkpIl04ugRcUoRhyixpSAMyL5qxkJY3nTuks9Dv4NIOe/bseGr/vnsIg4Dnjn2PJ776Dc6fvcSOnRs4dHgf1ZoGa0m6MS7XSOeTpWCNQhhNHjsEPlJECEJwIYgIRAVkBWQIKIazVKgyOl9o85+5RceC+KL9+CRf7z7cwnGxUUtnwboiS1v8dc4NXztjcLnBGQu28KGiPCoLofIIPJ+qX8VTikBJkJY14zV+/ucefGj//nuoVkOefOIb/OV//QLHX3mdRh0O3L+H97//AdcYrYOxKARRWMXXHr4O0NJDCh+bWUxucbkAKwvN1EjIHWSLjMjxZncxTIzmNwgWHYeD8/a4cQg3JHpRR0Tx/kJsKsGpRT7dlotYsXEnh6NiF77LlMmHc4VLzM2wJ2YwgGyAkhkb1zW37tt7J6NNyanXz/J33zr2t9/97nd/a92G7Se37NjF2Jo6Dxy5m++/+Art6VmSBLQSkFuMzXFWIKXDOlvMPCnL1LK0SCtwwuLIQBTnLMkdbWlO4ka+cpGe/TbbYO8oThZLCC6gWCykC5x1gCiIF264thhjsCYrrMNk4BzGOchSEJJESYh7WJ0jQ6gE/HKnfYXvPP8i3/r6t3jxpRMfmpnt/u6TTz4lNmzZ6g4e3o+zXbSIIZmDpEcv6UEOKL+w0jAoOiwcViuQGiW9wldLhZCQ5/mQJMW8mxYgBU5Q3M+Q50WEu6V/viXJy2njBd4cDsnyd8Qi9wEGZy2SwjqFdVibFx87S56nCOEQQuAJifY8dCVAa40WgmolxNcKrTVSm4aW2URYcY/esWP9f5iZvki/06bd6nHgwHtckmRfj2qBa7UGXLh4DilT7tq90QW+GlXK35TlHE9SkyF92q0uyvPo9LsYY8jzjDwfYDKHcaKgVCiEVoUwJYv4XFKGlBIEAuvccB66eWOan53OFbPgLbJOJ0Dc6BGzxeHJ0E6vJ92BM3aonFlrweTF0RWdqEQBnqeohBH1RpVms/kHo6Ojn2zU6oRhwFhzlDDyiaKIes1HyBStEhojHkoJNDWcDRGuisAjtwk5HYRugUhJYpiZ7lKtNGh3Y3r9DOMUFy5eIs0NV6avEMfx/261Wh9tzXUutbs94jjG5IXiZ20ZWcgisigsvXAtQoh57zZc5Ow7jC6GJAshFopHnCn8JaXW6wxKyOKHjSVNU1yWFXquKyIE6QlCPyCKImq1CmvWrPknaycmvtBo1KhGFUaaDUbqDXxfUwlDoihCS0WWZVQrDdI0RwiLFCnVmubOO7dQb/hcuHCJk69d4dqVAYE/ie9V6fSukZkWm7ZWOXjwbqIg5OqVGX7wg5cYDAy1+hhJZnFCkuYWJwqX0B8M6PV6xHHCYDBgdrrN7NwcnV7y5W63+3tzc3Pf6XQ6DJKELMuwmQFjkNV6YURSoZRCaq8g3xiMMWgvwtrC0OZnBFAanEFojcYYnJSIcqSEEKjS2QtX5hrGkNkMawwIQVCrUKlUiEJJLZJUIv2BZr35583RxuaRkRFGRkZo1OpEUUCjXsf3fTwpyLKMNInpdWfp9/sM+jGtuQF5ntPtzYFNuP/+ezhyZB8jzYgTJ8/yzaee5fSJmR8N+v7RIKg+nmbd/y5Ef/o977vr44cP3c+6yTrXLl7j5GsnOX3mPI3GJOgAzw9Rvs/Y2BhCSqIgYk1zDUp5xHFMMsjJ8pxr16492u33Hp2ZmWF2dpa5dvfjg8Hgc2ma9TKTMzfbJskz8jwnT3NknqG1RgmFVBJrc1zpcwt3WayZUkqEUlhr0UUyUEwEV4YteZnpKAQmScogXRCGAY1Gg4mJiQ9NTk7+z+ZIxPYtUwSeJAwjtFYYYxgMBnS7PaanZ7l48QWSZEC/23u62+1+Ou73vxLHMVmWFZagAvI8o9edY2K8xj33bHejoxGzrZhvP/U8X/ry18TcnAXXoFpp/IZ1Ca3WRQbZ7H/Zc8edRz/8y+9Diojpq12+/uTTIkkFQaWB9gOQGuccXuATRVG9Wq99shJWPlqpVEYrUYMw9BmfGGVNc5T169ejtSZN0z+dbbf+dHamRbfb5dy58/+22+/90dzcnJtrd0nTlDROEVIXPt0LEJR+XZRRE2KJdKullIVvyvPSBRTLppICpRRj69ZRqUSMjo7+ebPZ/MjIyAjVakQQBHhaMjvXw+QpSZIQxzHdbpd2u/0nvXbndweDwWy322Uw6DEYJORptqC0qWL6ZekcxF101ePg1r0/2Lv/PpSC4y+f4hvfPPq5y5dmkeE4CJjptfEluCTl1dfOHvvqE9/m8MHDbN26jp99+BH+7ukXeOkHr0gRZVaoAJsMikgj9AA6GPMJpfxPNJtNGo0RPE9TbwQfC6Pg1yq12vtqtRphGOJ5Hr4fsGY8ZHR0zR8OkvgPu50+rVbrQqvV+mftdvtr7V6XOMlIUospPYAQAqFKn20sRhTvazskFtAaX2uiIKQWhQS+z/qpKVetVhkZGSGqBFhr6fV6XLhwgX6/f/zCuYt7+v0BnU6HZDAoBkoIUB6IYqCM0QgZENY8tNaFwlYG+kEF+t0ZNm4a48DBQ3vHJqY4/lqLbz31Xc6cm/0N/DpBtQ74pFlCFHp4wThZ1ueHP3wteObZ55MPfvBh7t53gHv33+9OX5wVFh/tR1jKSEI6XKmJ2Nwx0+sz0+7jnAGR/Rki/zNR9jUMQxqNBqPNsXsr9don145P/JryPaJanUq9sX7NxOSTrVaLmZmZxzvd/ufnWl2SzBR+3JaRRhmpYG258G36FVCKwNMEQUA9qtCo1j5Yq0afCMPwvSbLrhhjTqVZ/GQcx3/d7/d/2O/3GSR98sySG4kxDpfNhzQClBr6eCnlUM4sRlvhnCtXdksl8In7s6xbW+M9D97ndu3czIXzFzl67IfRayfOxYkLECogqERICb4wpP0e/XaLWqR5+OGD7qGHjlCpNvnSV77Gt59+TqSZBS8kqFRBSpI4BumIogBhBf1uF1IDngJhoAwxh35VCJTyhqT7vqYa1Yiq4cHQjz4stVgvQDukTDP7Qm+QfLbb7c4OBoMh2cYV7tdJgWDLr+L5PtUoJAxDIs+XnlR3KsmYRNR6nfb/KdxAm36/j82TYufC81DaJ8sMeD5aB3he0TFrLXluyxXYFiKStcXuMhJ8H+0FCOswcY6WOZUwY3zUZ7RRfSyJsycuXe215jopMqgRpylh3SdJ+rjWDDqsMFpvUg011WqOFYYgrN8/2x48HycgvYjZTo84SUuvaCgkzkIBlFrjlyQKV0QCLjfDiGGeaCEEeRwXEYBQSE9RCStUahVqlSpBGD0ihBo1xl2I0/SZwWDAYDAgSRJyW2SyRfy97TGCICAKfLTWOGOI+wPiXp88GRSESoksfbQQDovDGUsG6DDEWAoNw7Jkp3k+BIyiYlHMc4OUmjCooJSHzS29mQ7jozWU6GHyHmsn1jy2bt36L8aJ5PK1uUdPnTn/FTzF1PrJjb3u3LmrVy6zfdMW9uzc44JAcPb88c/+8KUXPpqlMLl+E3t23+Mm1m3k9ROnXjn+6qt3dQd9xsbGcM4yPT0NCCbHxvF0QKfTY2auDVKX97gQA8+HZXI+4XZFSUKxupmhaud5AWFQIYhCAJIkIUmS4npZbD5orTV5ntMuzbwQcspExPdRnleMCEXGWsQhIHWR+FgBzuSAQpZWrIQrhGo7IOvOcNfeQ3908OCB337u2WP/9NKla//trl273Pj4Wk68euJTr5x/7ff3H3rYbdu+ifMXzrBzxxY2btxIu9MjycyXj7/6KidPn/nIug0TnxViknMjlV8/eN/9n9+39yDnzp8miNKP5GbwUqfd+8wjjzzitm/fzuzsHPfuenDP8+O+e/nl49HhwwcGng545pmjG0+ePHV+qrrx5x944MEnXnjxlS8/+/z/+yV8HycUxi24CyF1kWAVJgNIhJJluLawJ5kj6CYDusmA6+FckZLrLMuWfiJFKaQAaG60wWMAhMXlFrQGK7CusHaNw+YpJs9AOnZu2/jbD/7MXira/eUzTx3bGnqGjWvH6F67/O+ujYa/P9r02bh+jGbTZ8vmTbS7Lc6efY3xiQnu2LGOiYnaZ8MgIreODWsnPj8yUuf1V1/kzIUzXJu++PTkxLo//rmH9/xxvVHjxI+OMzN7jTt37uLeO3cQCQZ7tm1m44bNVD157hsm2zU10Xxiw8QoP/K9RwtR3xX3TTkjBbhS3Cpm46LaOwGFysHQ+N4OGmsXlKZFC9T80dq3VphwDqk1NivEcKl9bJaRpTngWDu1nrWT66hV6+zauZMzJ899Os8tvpJ0OrP/a3r2Mr1BC6ENTmZcnb7E088+xXPPHRXve+T97tChQ6hI0usOCDyfiakmZ86c5atffVKcOvkGIHnPex7+4ob12x47/qOX+eJf/w8xPX2Vh4488B8PHz78sd177sYPKjgh2LZjFxb9mvY9lOeRmfRlrF2Irhbd05JiG+bpebPQ466/dhnIJTsbiy6cX/3fFsIhZKm9lj+YZTmklkrU4L6Dhx0onn76GFcuX2PTpk1MTU2iPciz5HsoSbVexw8i+nFKq9Nmeq716dl2B6SguWYM4xwGUWSZUQUnIElT6PXvwnl4uvo+T1fAemQpmF6+Pcl4zgsqhEGVfpxy7Dsv8L3v/4ANGzdz6IEHqY2OkDt7bmENEcuSuHgAbobQ5aDFdeRe/8U31lNLSFnsGhsD0isWhsyAFzA2Nsndd+2lNXOVo898c3LP7juv3HPXHsbXNKlXG+zfv+9TlUrlX02t20a7kzE90+POXTt5+OFf+J1abc3vTK7dxuUrbS6cnyYMasy5mAvn3yCMmvziP/qQe33bqWc7rd6/Cbza+OlT52nUx/nAL/6Su3z54tHde+54oFId4eTpc4yvHePStWmePXZU9OLMbdu1i+bYGH4QfWDeyJYjcDk+Fp+17KAsR/Kyo3OTFw811TwvLFqXvkop/DAgjKqbk9hx4eIVTrz+xlWJ2NaoVU81ahXyNGPT5g3s2rV7Kh6kvPKj47zxxtmv79xx5/v37b2fan2UdrvNC997iZmZGTu1br3sXrjK+fMXf+vQ4SOfeejB97J7171HTr525qnTp09z7Nh3Lu7de8+69/7sI3R7cw/kec7Jk6/z/Re///j27dv/CqEYxBlf+9ZTQodVt2HTRjqD5D+h9PB+h1ws4yoW7tm9+fy3I3k5q13Wum9IdKkilRqIMQahfZTSdNqDM0ePfudvZ6cvfcgYweXL06efffaYaDYqfxD63i+sXbvu8NjoRk6/cZ6XX35ZzLVmkFK/snnzyd1pGnP27Nm/OHH61L/I85zLl2YmOt3+1StXrmCNbHXbvb8Awdx0i5MnXxcXL52n3Wv9ej/t/ZUxGXNzc7zwwnfFzNws03Otz68Zn/xNJ31m5lp86f8+KSYm19LpxuAFUEoL8wTK6/5+y3u/CYMUYttjy5O5aFRvjPkaBpDKw+USl+UgPXyliwqgLMPZmIqv8T1DvzvDSD0kTfrUqnUEIb1+kTRoXWSHSZIw0qwzOzuLK9W7Rr2JUoo4jsmMRUpJo94kjlMGgwHWZEilqFUjMpMThj6tVgshNV4YkRtHZ65FfXyCQZySxym6VsM4UWjF86RKiVJFVmqNQZavF2h5535Zzi9yy9B/824DivoJ50Drod4qUCjt4QdV4iQnzR1K+wRRlf33HfhatVah3ZlG65Q7dm/6zS3bpn61258miCxrp5qPr98whq8N9apmzWjAju1Tf7Jt6+TBMLRAH6FictNFeoYNmybZvmvTFqkdTuQEkc/GrVvYvmvng0JqeoMYv9YkzRwWhYwa5HbRjrMQRWZKuVVWRl3zSckNeboZkn+sqxZfPqwWmt9QdDhhyyeVJLkFhAalcWj8oMr4xNR7N27Z+v4tO3Y47StGx5pMTEx8plKv/Osg8AgqEc1m83MTU5NfaDabVBs1Go3G443RkY83Go1/X6tVaDYbTE1N/suRNXWkJ/CrYW3D5o2nJzdMvddJkJ5my7atzg+iR6WnQXhYREGwCkB6SOGxEg/2/D38wnxtQokh0WCFxSkF2kOogMwJjFA45TdzK3FokCHKq2LxyHJ5wokApSsgQ097lQeEihAywOIb6zTGeX2Hj/aqRJXGx6JqHaQgzbOuE6C0d4exDmPBCyKskAipcEJiHFhXEC2Ed9N1E+8W77qqU7hia3woUg+3x0Wx8ShlUYOsFDiPJIu5em3ub6Q89c9n56b/cy4Cplsp4syVyX4cX81tQJJ5XJ3u/spgMPibVqfw10IMvpDb9my/33+i08nwPJiZ6z0eZ5A7ydWZFpk9KZI4JnOS3iDh5Ok39qSJOZ6kebEtVBKNEAjnhs9c/qRxw43Um4KTCFdsX7v5Ir55kp2mSD9VUUiCxfckLuujlKESaeI4RRKRpIbA95FKkaUpSmvCICCOY9I0RilFEAQopUjThDRN0VoTRj4GQxzH5CYtdAcHytN4SoMUKOnRixOsEUgVFF2Z75fLy5KBn2zx4bu2ZOkAJ7CSkujFBS2FrGjzFJBYBAiPNMsxZoCUmkxAZgV5avB9haGIZ3tJXgrfGqEVcWYxcYZzhZKXWUvcSzDGoJQubsXmxQPumcCaQgUzJsY5h/Z8hFKQFzvpQqmyRuQnj7+HIvD5+XadlFRathMWlCynavF4mENgrUBJh3EZ+EUxXyrmLauo9HRKgnSkovg+J+cHsbQ8IyDXOBkW0qqyCIq6j9walFAIcpxw5WaBKWVKjZC2LFz5yRP9rj2SFRa75NHdxVU2FpcmgEVKhjsFXhAWQpL0Cr3a9woSTYpQoCIffFXslymJoxTSlSoGzJV1HVohwgDlBTgnyDMDQhbfrzxy41CeD1KTW1tUC9nFLm1lLPnd+WRYCIGGRC/3j0HkQtI/rLhZtFi+7VjfyGfOh48CsURVWHr+jaukVgbv3l28adFYROgQS/9ZyDuv832Lc8vfXxmb/PFwy58Z+YeAVZJXAKskrwBWSV4BrJK8AlgleQWwSvIKYJXkFcAqySuAVZJXAKskrwBWSV4BrJK8AlgleQWwSvIKYJXkFcAqySuAVZJXAKskrwBWSV4BrJK8Avj/br44fJ324KoAAAAASUVORK5CYII=" alt="Audicon">
+    <div class="sb-aud-txt"><span class="sb-aud-name">Audicon Contadores</span><span class="sb-aud-sub">Uberlândia MG</span></div>
+  </div>
+</nav>
+
+<main class="main">
+
+<!-- VISÃO GERAL -->
+<section id="page-ov" class="page active">
+  <div class="fbar">
+    <span class="fl">Período:</span>
+    <select class="fs" id="ovMes" onchange="updateOV()">
+      <option value="all">Anual (Jan–Dez)</option>
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+      <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+      <option value="9">Outubro</option><option value="10">Novembro</option>
+    </select>
+    <div class="fdiv"></div>
+    <span class="fl">Base %:</span>
+    <select class="fs" id="ovBase" onchange="updateOV()">
+      <option value="rl">s/ Rec. Líquida</option><option value="rb">s/ Rec. Bruta</option>
+    </select>
+  </div>
+  <div style="padding:18px 0 0;margin-bottom:16px">
+    <div class="ptitle">Visão Geral</div>
+    <div class="psub" id="ovSub">Resumo executivo · Jan–Dez 2025 · s/ Rec. Líquida</div>
+  </div>
+  <div class="krow" id="ovKPIs"></div>
+  <div class="crow two">
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle">Receita Líquida vs Lucro Líquido</div><div class="cdesc">Mensal em R$</div></div>
+        <div class="leg"><span><span class="ldot" style="background:#2980B9"></span>Rec. Líquida</span><span><span class="ldot" style="background:#27AE60"></span>Lucro Líq.</span></div></div>
+      <div style="position:relative;height:210px"><canvas id="cRB"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle" id="ovMTit">Margens % s/ Rec. Líquida</div><div class="cdesc">Evolução mensal</div></div>
+        <div class="leg"><span><span class="ldot" style="background:#27AE60"></span>MB</span><span><span class="ldot" style="background:#C9A84C"></span>EBITDA</span><span><span class="ldot" style="background:#2980B9"></span>LL</span></div></div>
+      <div style="position:relative;height:210px"><canvas id="cMarg"></canvas></div>
+    </div>
+  </div>
+  <div class="crow two">
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle">Resultado Operacional vs EBITDA</div><div class="cdesc">Mensal em R$</div></div>
+        <div class="leg"><span><span class="ldot" style="background:#27AE60"></span>Res.Op.</span><span><span class="ldot" style="background:#C9A84C"></span>EBITDA</span></div></div>
+      <div style="position:relative;height:210px"><canvas id="cRop"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle">Composição das Despesas</div><div class="cdesc">Distribuição anual</div></div>
+        <div class="leg"><span><span class="ldot" style="background:#2980B9"></span>Comerciais</span><span><span class="ldot" style="background:#C9A84C"></span>Operacionais</span><span><span class="ldot" style="background:#27AE60"></span>Financeiras</span></div></div>
+      <div style="position:relative;height:210px"><canvas id="cDsp"></canvas></div>
+    </div>
+  </div>
+  <div class="footer">DRE Gerencial 2025 · NHD Foods | Belive · Elaborado por Clécio Ferreira de M. Jr. · Audicon Contadores · clecioferreira@audiconcontadores.com.br</div>
+</section>
+
+<!-- DRE MENSAL -->
+<section id="page-dre" class="page">
+  <div class="fbar">
+    <span class="fl">Mês:</span>
+    <select class="fs" id="dMes" onchange="buildDRE()">
+      <option value="all">Todos (Jan–Dez)</option>
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+      <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+      <option value="9">Outubro</option><option value="10">Novembro</option>
+    </select>
+    <div class="fdiv"></div>
+    <span class="fl">Período:</span>
+    <select class="fs" id="dPer" onchange="buildDRE()">
+      <option value="all">Completo</option>
+      <option value="s1">1º Semestre</option><option value="s2">2º Semestre</option>
+      <option value="t1">T1 Jan–Mar</option><option value="t2">T2 Abr–Jun</option>
+      <option value="t3">T3 Jul–Set</option><option value="t4">T4 Out–Dez</option>
+    </select>
+    <div class="fdiv"></div>
+    <span class="fl">Exibir:</span>
+    <select class="fs" id="dView" onchange="buildDRE()">
+      <option value="both">Valor + AV%</option><option value="val">Apenas R$</option><option value="pct">Apenas %</option>
+    </select>
+    <div class="fdiv"></div>
+    <span class="fl">Base %:</span>
+    <select class="fs" id="dBase" onchange="buildDRE()">
+      <option value="rl">s/ Rec. Líquida</option><option value="rb">s/ Rec. Bruta</option>
+    </select>
+    <span class="finfo">💡 Passe o mouse sobre a conta para ver descrição</span>
+  </div>
+  <div style="margin:18px 0 14px"><div class="ptitle">DRE Mensal</div><div class="psub">Demonstrativo completo · consulte por mês ou período</div></div>
+  <div class="tw" id="dTable"></div>
+</section>
+
+<!-- ANÁLISE VERTICAL -->
+<section id="page-av" class="page">
+  <div class="fbar">
+    <span class="fl">Mês:</span>
+    <select class="fs" id="avMes" onchange="buildAV()">
+      <option value="all">Todos</option>
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+      <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+      <option value="9">Outubro</option><option value="10">Novembro</option>
+    </select>
+    <div class="fdiv"></div>
+    <span class="fl">Base %:</span>
+    <select class="fs" id="avBase" onchange="buildAV()">
+      <option value="rl">s/ Rec. Líquida</option><option value="rb">s/ Rec. Bruta</option>
+    </select>
+  </div>
+  <div style="margin:18px 0 14px"><div class="ptitle">Análise Vertical</div><div class="psub" id="avSub">% mensais com setas de tendência · s/ Rec. Líquida</div></div>
+  <div class="avc" id="avCards"></div>
+  <div class="cc">
+    <div class="ctop">
+      <div><div class="ctitle" id="avCTit">Análise Vertical — s/ Rec. Líquida</div><div class="cdesc">Principais indicadores mensais</div></div>
+      <div class="leg"><span><span class="ldot" style="background:#27AE60"></span>MB</span><span><span class="ldot" style="background:#C9A84C"></span>EBITDA</span><span><span class="ldot" style="background:#2980B9"></span>LL</span><span><span class="ldot" style="background:#C0392B"></span>Desp.</span></div>
+    </div>
+    <div style="position:relative;height:240px"><canvas id="cAVC"></canvas></div>
+  </div>
+</section>
+
+<!-- INDICADORES -->
+<section id="page-ind" class="page">
+  <div class="fbar">
+    <span class="fl">Mês:</span>
+    <select class="fs" id="iMes" onchange="buildInd()">
+      <option value="all">Anual (Jan–Dez)</option>
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+      <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6">Julho</option><option value="7">Agosto</option><option value="8">Setembro</option>
+      <option value="9">Outubro</option><option value="10">Novembro</option>
+    </select>
+  </div>
+  <div style="margin:18px 0 14px"><div class="ptitle">Indicadores</div><div class="psub">KPIs detalhados · filtre por mês</div></div>
+  <div class="igrid" id="iGrid"></div>
+  <div class="crow two">
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle">Waterfall — Formação do Resultado</div></div></div>
+      <div style="position:relative;height:250px"><canvas id="cWF"></canvas></div>
+    </div>
+    <div class="cc">
+      <div class="ctop"><div><div class="ctitle">Lucro Líquido Mensal</div><div class="cdesc">Dez/25: provisão fiscal integral</div></div></div>
+      <div style="position:relative;height:250px"><canvas id="cLL"></canvas></div>
+    </div>
+  </div>
+  <div class="cc sp2" style="margin-top:12px">
+    <div class="ctop">
+      <div><div class="ctitle">Despesas Operacionais — Composição Mensal</div></div>
+      <div class="leg"><span><span class="ldot" style="background:#2980B9"></span>Folha</span><span><span class="ldot" style="background:#C9A84C"></span>Serviços</span><span><span class="ldot" style="background:#27AE60"></span>Outros</span></div>
+    </div>
+    <div style="position:relative;height:200px"><canvas id="cDopM"></canvas></div>
+  </div>
+</section>
+
+<!-- BALANÇO & ÍNDICES -->
+<section id="page-bal" class="page">
+  <div style="margin:18px 0 16px"><div class="ptitle">Balanço &amp; Índices de Liquidez</div><div class="psub">Balancete NHD Foods 2025 · Saldos atuais · Fonte: Audicon Contadores</div></div>
+  <div class="sec-hdr">Índices de Liquidez</div>
+  <div class="idx-grid">
+    <div class="idx-card bad"><div class="idx-lbl">Liquidez Imediata</div><div class="idx-val bad">0,29</div><div class="idx-ref">Caixa / Passivo Circulante</div><div style="font-size:10px;color:var(--gray);margin-top:4px">R$ 4,19M / R$ 14,59M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:29%;background:var(--red2)"></div></div></div>
+    <div class="idx-card ok"><div class="idx-lbl">Liquidez Seca</div><div class="idx-val ok">1,01</div><div class="idx-ref">(AC − Estoques) / PC</div><div style="font-size:10px;color:var(--gray);margin-top:4px">R$ 14,75M / R$ 14,59M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:100%;background:var(--green2)"></div></div></div>
+    <div class="idx-card ok"><div class="idx-lbl">Liquidez Corrente</div><div class="idx-val ok">1,29</div><div class="idx-ref">Ativo Circulante / PC</div><div style="font-size:10px;color:var(--gray);margin-top:4px">R$ 18,80M / R$ 14,59M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:100%;background:var(--green2)"></div></div></div>
+    <div class="idx-card ok"><div class="idx-lbl">Liquidez Geral</div><div class="idx-val ok">1,01</div><div class="idx-ref">(AC + ARLP) / (PC + PNC)</div><div style="font-size:10px;color:var(--gray);margin-top:4px">R$ 18,80M / R$ 18,61M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:100%;background:var(--green2)"></div></div></div>
+  </div>
+  <div class="sec-hdr">Índices de Endividamento e Estrutura</div>
+  <div class="idx-grid">
+    <div class="idx-card warn"><div class="idx-lbl">Endividamento Geral</div><div class="idx-val warn">77,1%</div><div class="idx-ref">(PC + PNC) / Ativo Total</div><div style="font-size:10px;color:var(--gray);margin-top:4px">Passivos s/ Ativo: elevado</div><div class="idx-bar"><div class="idx-bar-fill" style="width:77%;background:var(--amber)"></div></div></div>
+    <div class="idx-card bad"><div class="idx-lbl">PC / Patrimônio Líquido</div><div class="idx-val bad">14,1×</div><div class="idx-ref">Passivo Circulante / PL</div><div style="font-size:10px;color:var(--gray);margin-top:4px">PL R$ 1,04M vs PC R$ 14,59M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:100%;background:var(--red2)"></div></div></div>
+    <div class="idx-card warn"><div class="idx-lbl">Alavancagem (Dív/PL)</div><div class="idx-val warn">3,26×</div><div class="idx-ref">Dívida Fin. / Pat. Líquido</div><div style="font-size:10px;color:var(--gray);margin-top:4px">Empréstimos: R$ 3,38M</div><div class="idx-bar"><div class="idx-bar-fill" style="width:65%;background:var(--amber)"></div></div></div>
+    <div class="idx-card ok"><div class="idx-lbl">Capital de Giro Líquido</div><div class="idx-val ok" style="font-size:16px">R$ 4,21M</div><div class="idx-ref">Ativo Circulante − PC</div><div style="font-size:10px;color:var(--gray);margin-top:4px">Folga operacional positiva</div><div class="idx-bar"><div class="idx-bar-fill" style="width:55%;background:var(--green2)"></div></div></div>
+  </div>
+  <div class="sec-hdr">Balanço Patrimonial Resumido</div>
+  <div class="bal-grid">
+    <div class="bal-section">
+      <div class="bal-title">ATIVO</div>
+      <div class="bal-row"><span class="bal-name">Caixa e Equivalentes</span><span class="bal-val">R$ 4,19M</span></div>
+      <div class="bal-row"><span class="bal-name">Créditos (Clientes)</span><span class="bal-val">R$ 10,56M</span></div>
+      <div class="bal-row"><span class="bal-name">Estoques</span><span class="bal-val">R$ 4,05M</span></div>
+      <div class="bal-row tot"><span>Ativo Circulante</span><span>R$ 18,80M</span></div>
+      <div class="bal-row" style="margin-top:8px"><span class="bal-name">Investimentos</span><span class="bal-val">R$ 0,09M</span></div>
+      <div class="bal-row"><span class="bal-name">Imobilizado</span><span class="bal-val">R$ 5,24M</span></div>
+      <div class="bal-row tot"><span>Ativo Não Circulante</span><span>R$ 5,34M</span></div>
+      <div class="bal-row tot" style="border-top:2px solid rgba(201,168,76,.4);margin-top:8px"><span>ATIVO TOTAL</span><span>R$ 24,14M</span></div>
+    </div>
+    <div class="bal-section">
+      <div class="bal-title">PASSIVO CIRCULANTE</div>
+      <div class="bal-row"><span class="bal-name">Fornecedores</span><span class="bal-val" style="color:var(--red2)">R$ 5,61M</span></div>
+      <div class="bal-row"><span class="bal-name">Empréstimos CP</span><span class="bal-val" style="color:var(--red2)">R$ 2,39M</span></div>
+      <div class="bal-row"><span class="bal-name">Obrig. Trabalhistas</span><span class="bal-val" style="color:var(--red2)">R$ 0,64M</span></div>
+      <div class="bal-row"><span class="bal-name">Obrig. Tributárias</span><span class="bal-val" style="color:var(--red2)">R$ 5,95M</span></div>
+      <div class="bal-row tot"><span>Passivo Circulante</span><span style="color:var(--red2)">R$ 14,59M</span></div>
+      <div class="bal-row" style="margin-top:8px"><span class="bal-name">Empréstimos LP</span><span class="bal-val" style="color:var(--amber)">R$ 0,99M</span></div>
+      <div class="bal-row"><span class="bal-name">Outros PNC</span><span class="bal-val" style="color:var(--amber)">R$ 3,03M</span></div>
+      <div class="bal-row tot"><span>Passivo Não Circ.</span><span style="color:var(--amber)">R$ 4,02M</span></div>
+    </div>
+    <div class="bal-section">
+      <div class="bal-title">PATRIMÔNIO LÍQUIDO</div>
+      <div class="bal-row"><span class="bal-name">Capital Social</span><span class="bal-val">R$ 0,15M</span></div>
+      <div class="bal-row"><span class="bal-name">Lucros Acumulados</span><span class="bal-val">R$ 2,40M</span></div>
+      <div class="bal-row"><span class="bal-name">Resultado do Exercício</span><span class="bal-val" style="color:var(--green2)">R$ 4,50M</span></div>
+      <div class="bal-row tot"><span>Patrimônio Líquido</span><span style="color:var(--gold)">R$ 1,04M</span></div>
+      <div class="bal-row tot" style="border-top:2px solid rgba(201,168,76,.4);margin-top:16px"><span>PASSIVO + PL</span><span>R$ 19,64M</span></div>
+      <div style="position:relative;height:130px;margin-top:14px"><canvas id="cIdx"></canvas></div>
+    </div>
+  </div>
+  <div class="interp">
+    <strong>Interpretação:</strong><br>
+    ▲ <strong>Liquidez Corrente 1,29</strong> — R$ 1,29 de AC para cada R$ 1,00 de PC. Folga de R$ 4,21M de Capital de Giro.<br>
+    ▲ <strong>Liquidez Seca 1,01</strong> — Mesmo excluindo estoques, cobre integralmente o passivo circulante.<br>
+    ▼ <strong>Liquidez Imediata 0,29</strong> — Caixa cobre apenas 29% das obrigações imediatas. Atenção ao fluxo de caixa.<br>
+    ⚠ <strong>Endividamento 77,1%</strong> — Típico de empresa em crescimento. EBITDA de R$ 11,27M demonstra capacidade de geração de caixa para servir a dívida.<br>
+    ⚠ <strong>PL reduzido (R$ 1,04M)</strong> — Comprimido pela distribuição de resultados. A geração operacional sustenta a estrutura.
+  </div>
+  <div style="margin-top:16px" class="cc">
+    <div class="ctop">
+      <div><div class="ctitle">Composição do Passivo</div><div class="cdesc">Distribuição das obrigações</div></div>
+      <div class="leg"><span><span class="ldot" style="background:#C0392B"></span>Fornecedores</span><span><span class="ldot" style="background:#E74C3C"></span>Empréstimos</span><span><span class="ldot" style="background:#E67E22"></span>Obrig. Trib.</span><span><span class="ldot" style="background:#7F8C8D"></span>Outros</span></div>
+    </div>
+    <div style="position:relative;height:160px"><canvas id="cPassivo"></canvas></div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+const M=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
+const MF=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const gc="rgba(201,168,76,.08)",tc="#6E7E8E";
+const D={
+  rb:  [5261970,5638700,6343844,7434745,6378983,6533505,7044071,7157988,8536525,7515651,9073352,3951473],
+  ded: [1089123,1111931,1087657,1485606,1315516,1345676,1456591,1379333,1705440,1755338,2038805,855280],
+  rl:  [4172847,4526769,5256187,5949139,5063467,5187829,5587480,5778655,6831085,5760313,7034547,3096193],
+  custos:[2066641,2325166,2413681,2765047,2651450,2866848,2962994,2535753,3336366,2811063,3138953,2015156],
+  df:  [41841,42011,42774,42858,44637,44964,52066,52461,52461,53900,55029,55073],
+  mb:  [2064365,2159592,2799732,3141234,2367380,2276017,2572420,3190441,3442258,2895350,3840565,1025964],
+  dt:  [1287646,1248932,1714515,1440094,1721505,1589756,1329115,1613353,1731912,1985434,2484430,3002402],
+  dc:  [780700,639395,987396,895333,999449,1103417,814847,827126,953124,1060116,1130297,1025355],
+  dv:  [720657,587992,946712,851491,835032,952254,776152,791388,899489,989576,988818,974462],
+  dm:  [60043,51403,40684,43842,164417,151163,38695,35738,53635,70540,141479,50893],
+  dop: [506946,609537,727119,544761,722056,486339,514268,786227,778788,925318,1354133,1977047],
+  fol: [117226,171090,149922,141969,172017,136650,133883,132747,129870,135811,177783,449741],
+  ben: [91526,54803,272805,74474,88685,55015,45509,84009,72024,103352,72661,176655],
+  ocu: [74189,90066,102053,61999,85017,82275,69354,81406,76839,71253,76751,117650],
+  adm: [85593,48115,27982,112844,176757,53131,74286,42983,75466,63638,36969,82490],
+  trb: [14065,42624,35212,27245,48876,29275,30010,103226,60657,68019,64848,98909],
+  da:  [5740,6065,6142,6364,5591,5607,5607,5607,5780,5055,5055,5269],
+  srv: [118607,196774,133003,119866,145113,124386,155619,336249,358152,478190,920066,1046333],
+  ro:  [776719,910660,1085217,1701140,645875,686261,1243305,1577088,1710346,909916,1356135,-1976438],
+  rf:  [304759,182397,343025,313047,366348,351873,314438,389606,360474,347885,276290,249941],
+  dfn: [363967,231840,359573,359921,392021,376231,331805,422349,397498,413530,314600,352683],
+  rcf: [-59208,-49443,-16548,-46874,-25673,-24358,-17367,-32743,-37024,-65645,-38310,-102742],
+  out: [2877,15237,-26203,-3319,-21716,5297,-161993,14553,-286877,-2083,282671,4374],
+  ai:  [469083,713026,768395,1391412,301243,329091,1090860,1172929,1636749,564114,797174,-2230753],
+  ir:  [0,0,0,0,0,0,0,0,0,0,0,1844407.53],
+  cs:  [0,0,0,0,0,0,0,0,0,0,0,672626.71],
+  ll:  [469083,713026,768395,1391412,301243,329091,1090860,1172929,1636749,564114,797174,-4747787.24],
+  eb:  [824300,958736,1134133,1750362,696103,736832,1300978,1635156,1768587,968870,1416219,-1916096]
+};
+const BAL={at:24139847.66,ac:18804392.55,anc:5335455.11,caixa:4192454.50,cred:10560806.32,est:4051131.73,inv:93066.34,imo:5242388.77,pt:19643551.77,pc:14591567.57,pnc:4016449.25,pl:1035534.95,forn:5613339.06,empCP:2390861.89,obrT:640462.69,obrTrib:5946777.03,empLP:987505.08,outPNC:3028944.17};
+const DESCS={"RECEITA BRUTA":"Total de vendas brutas antes de qualquer dedução. Representa o faturamento total da Belive no período.","( - ) Deduções":"Impostos sobre vendas (PIS, COFINS, ISS) e devoluções. Reduzem a receita bruta para chegar à receita líquida.","RECEITA LÍQUIDA":"Receita após deduções. Base principal para cálculo das margens operacionais.","( - ) Custos":"Custo das Mercadorias Vendidas (CMV) — matéria-prima, embalagens e mão de obra direta de produção.","( - ) Depr. Fábrica":"Depreciação dos equipamentos e instalações da fábrica, apropriada no custo do produto.","≈ MARGEM BRUTA":"Resultado após deduzir custos de produção. Indica a eficiência operacional da produção.","DESPESAS TOTAIS":"Soma de todas as despesas comerciais e operacionais do período.","Desp. Comerciais":"Total de gastos com a área comercial e marketing da empresa.","Despesas Vendas":"Comissões, fretes de venda, representantes e demais custos de vendas.","Despesas Marketing":"Investimentos em publicidade, redes sociais, influenciadores e campanhas.","Desp. Operacionais":"Total das despesas administrativas e de suporte ao negócio.","Folha de Pagamento":"Salários e encargos sociais (INSS, FGTS) da equipe administrativa.","Benefícios Func.":"Vale-alimentação, plano de saúde, vale-transporte e outros benefícios.","Ocupação":"Aluguel, condomínio, IPTU e despesas com espaço físico.","Desp. Administrativas":"Despesas gerais: material de escritório, telecom, software, viagens.","Desp. Tributárias":"Impostos e taxas: IPTU, alvará, taxas municipais/estaduais.","Depreciação ADM":"Depreciação de ativos administrativos: computadores, móveis, veículos.","Serviços de Terceiros":"Contabilidade, jurídico, consultorias, TI, segurança e terceirizados.","RESULTADO OPERACIONAL":"Lucro da operação antes do resultado financeiro. Principal indicador da saúde do negócio.","RESULTADO FINANCEIRO":"Impacto das receitas e despesas financeiras no resultado.","Despesa Financeira":"Juros de empréstimos, tarifas bancárias, IOF e encargos financeiros.","Receita Financeira":"Rendimentos de aplicações financeiras e descontos obtidos.","OUTRAS RECEITAS E DESPESAS":"Receitas e despesas não recorrentes ou fora da atividade principal.","RES. ANTES IRPJ E CSLL":"Resultado antes dos tributos sobre o lucro. Base de cálculo do IRPJ e CSLL.","PROVISÃO IRPJ E CSLL":"Estimativa dos tributos sobre o lucro. Reconhecida integralmente em Dezembro/2025.","IRPJ":"Imposto de Renda Pessoa Jurídica sobre o lucro real.","CSLL":"Contribuição Social sobre o Lucro Líquido.","LUCRO LÍQUIDO":"Resultado final após todos os custos, despesas e tributos. Dez/25 negativo pela provisão fiscal.","EBITDA":"Lucro antes de juros, impostos, depreciação e amortização. Proxy de geração de caixa operacional."};
+const sum=a=>a.reduce((s,v)=>s+v,0);
+const cols=m=>m==='all'?[0,1,2,3,4,5,6,7,8,9,10,11]:[parseInt(m)];
+const fmt=v=>{const a=Math.abs(v),n=v<0;let s=a>=1e6?'R$ '+(a/1e6).toFixed(2)+'M':a>=1e3?'R$ '+(a/1e3).toFixed(0)+'K':'R$ '+Math.round(a).toLocaleString('pt-BR');return n?'-'+s:s;};
+const pf=(v,b)=>b?((v/b)*100).toFixed(1)+'%':'—';
+Chart.defaults.font.family='Inter';Chart.defaults.font.size=11;Chart.defaults.color=tc;
+const tip={backgroundColor:'#0F2035',borderColor:'rgba(201,168,76,.25)',borderWidth:1,titleColor:'#E8C96A',bodyColor:'#EDEAE4',titleFont:{family:'Syne',weight:'600',size:12},bodyFont:{family:'DM Mono',size:12},padding:11};
+function bopt(yF,stk){
+  var o={responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ' '+(ctx.dataset.label||'')+(yF==='pct'?': '+ctx.raw.toFixed(1)+'%':': '+fmt(ctx.raw));}}}},
+    scales:{x:{grid:{display:false},ticks:{color:tc,font:{size:11,family:'Inter',weight:'500'},autoSkip:false,maxRotation:0}},y:{grid:{color:gc,lineWidth:1},ticks:{color:tc,font:{size:11,family:'DM Mono'},callback:function(v){return yF==='pct'?v+'%':fmt(v);}}}}};
+  if(stk){o.scales.x.stacked=true;o.scales.y.stacked=true;}
+  return o;
+}
+function mkC(id,type,labels,ds,opts){var el=document.getElementById(id);if(!el)return;var e=Chart.getChart(el);if(e)e.destroy();return new Chart(el,{type:type,data:{labels:labels,datasets:ds},options:opts});}
+
+function updateOV(){
+  var m=document.getElementById('ovMes').value;
+  var base=document.getElementById('ovBase').value;
+  var bk=base==='rl'?'rl':'rb';
+  var ci=cols(m);
+  var mn=m==='all'?'Jan–Dez 2025':MF[parseInt(m)]+' 2025';
+  var s=function(k){return ci.reduce(function(a,i){return a+D[k][i];},0);};
+  var rb=s('rb'),rl=s('rl'),mb=s('mb'),eb=s('eb'),ro=s('ro'),ll=s('ll'),dt=s('dt');
+  var bv=base==='rl'?rl:rb;
+  var p=function(v){return pf(v,bv);};
+  document.getElementById('ovSub').textContent='Resumo executivo · '+mn+' · s/ Rec. '+(base==='rl'?'Líquida':'Bruta');
+  document.getElementById('ovMTit').textContent='Margens % s/ Rec. '+(base==='rl'?'Líquida':'Bruta');
+  document.getElementById('ovKPIs').innerHTML=
+    '<div class="kcard bl"><div class="klbl">RECEITA LÍQUIDA</div><div class="kval">'+fmt(rl)+'</div><div class="kmeta"><span class="kpct">'+pf(rl,rb)+'</span><span class="ksub">s/ Rec. Bruta</span></div></div>'+
+    '<div class="kcard gr"><div class="klbl">MARGEM BRUTA</div><div class="kval">'+fmt(mb)+'</div><div class="kmeta"><span class="kpct">'+p(mb)+'</span><span class="ksub">s/ Rec.'+(base==='rl'?'Líq.':'Bruta')+'</span></div></div>'+
+    '<div class="kcard am"><div class="klbl">EBITDA</div><div class="kval">'+fmt(eb)+'</div><div class="kmeta"><span class="kpct">'+p(eb)+'</span><span class="ksub">s/ Rec.'+(base==='rl'?'Líq.':'Bruta')+'</span></div></div>'+
+    '<div class="kcard '+(ll<0?'rd':'gr')+'"><div class="klbl">LUCRO LÍQUIDO</div><div class="kval">'+fmt(ll)+'</div><div class="kmeta"><span class="kpct'+(ll<0?' neg':'')+'">'+p(ll)+'</span><span class="ksub">s/ Rec.'+(base==='rl'?'Líq.':'Bruta')+'</span></div></div>'+
+    '<div class="kcard g"><div class="klbl">RECEITA BRUTA</div><div class="kval">'+fmt(rb)+'</div><div class="kmeta"><span class="kpct">100%</span><span class="ksub">'+mn+'</span></div></div>'+
+    '<div class="kcard am"><div class="klbl">RES. OPERACIONAL</div><div class="kval">'+fmt(ro)+'</div><div class="kmeta"><span class="kpct'+(ro<0?' neg':'')+'">'+p(ro)+'</span><span class="ksub">s/ Rec.'+(base==='rl'?'Líq.':'Bruta')+'</span></div></div>'+
+    '<div class="kcard rd"><div class="klbl">DESPESAS TOTAIS</div><div class="kval">'+fmt(dt)+'</div><div class="kmeta"><span class="kpct neg">'+p(dt)+'</span><span class="ksub">s/ Rec.'+(base==='rl'?'Líq.':'Bruta')+'</span></div></div>'+
+    '<div class="kcard g"><div class="klbl">DEDUÇÕES</div><div class="kval">'+fmt(s('ded'))+'</div><div class="kmeta"><span class="kpct neg">'+pf(s('ded'),rb)+'</span><span class="ksub">s/ Rec. Bruta</span></div></div>';
+  mkC('cRB','bar',M,[{label:'Rec. Líquida',data:D.rl,backgroundColor:'rgba(41,128,185,.55)',borderRadius:4},{label:'Lucro Líquido',data:D.ll,backgroundColor:D.ll.map(function(v){return v>=0?'rgba(39,174,96,.7)':'rgba(192,57,43,.7)';}),borderRadius:4}],bopt('val',false));
+  mkC('cMarg','line',M,[{label:'MB%',data:D.mb.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#27AE60',borderWidth:2,pointRadius:3,pointBackgroundColor:'#27AE60',tension:.35,fill:false},{label:'EBITDA%',data:D.eb.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#C9A84C',borderWidth:2,pointRadius:3,pointBackgroundColor:'#C9A84C',tension:.35,fill:false},{label:'LL%',data:D.ll.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#2980B9',borderWidth:2,pointRadius:3,pointBackgroundColor:'#2980B9',tension:.35,fill:false}],bopt('pct',false));
+  mkC('cRop','bar',M,[{label:'Res. Op.',data:D.ro,backgroundColor:D.ro.map(function(v){return v>=0?'rgba(39,174,96,.65)':'rgba(192,57,43,.65)';}),borderRadius:4},{label:'EBITDA',data:D.eb,type:'line',borderColor:'#C9A84C',borderWidth:2,pointRadius:3,pointBackgroundColor:'#C9A84C',tension:.35,fill:false}],bopt('val',false));
+  mkC('cDsp','doughnut',['Comerciais','Operacionais','Financeiras','Outros'],[{data:[sum(D.dc),sum(D.dop),sum(D.dfn),Math.abs(sum(D.out))],backgroundColor:['rgba(41,128,185,.85)','rgba(201,168,76,.85)','rgba(39,174,96,.85)','rgba(127,140,141,.6)'],borderWidth:0,hoverOffset:5}],{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ctx.label+': '+fmt(ctx.raw);}}}},scales:{x:{display:false},y:{display:false}}});
+}
+
+var PER={all:[0,1,2,3,4,5,6,7,8,9,10,11],s1:[0,1,2,3,4,5],s2:[6,7,8,9,10,11],t1:[0,1,2],t2:[3,4,5],t3:[6,7,8],t4:[9,10,11]};
+var DROWS=[
+  {l:'RECEITA BRUTA',k:'rb',t:'rt'},{l:'( - ) Deduções',k:'ded',t:'rs'},
+  {l:'RECEITA LÍQUIDA',k:'rl',t:'rt'},{l:'( - ) Custos',k:'custos',t:'rs'},
+  {l:'( - ) Depr. Fábrica',k:'df',t:'rs'},{l:'≈ MARGEM BRUTA',k:'mb',t:'rst'},
+  {l:'DESPESAS TOTAIS',k:'dt',t:'rt'},{l:'Desp. Comerciais',k:'dc',t:'rst'},
+  {l:'Despesas Vendas',k:'dv',t:'rs'},{l:'Despesas Marketing',k:'dm',t:'rs'},
+  {l:'Desp. Operacionais',k:'dop',t:'rst'},{l:'Folha de Pagamento',k:'fol',t:'rs'},
+  {l:'Benefícios Func.',k:'ben',t:'rs'},{l:'Ocupação',k:'ocu',t:'rs'},
+  {l:'Desp. Administrativas',k:'adm',t:'rs'},{l:'Desp. Tributárias',k:'trb',t:'rs'},
+  {l:'Depreciação ADM',k:'da',t:'rs'},{l:'Serviços de Terceiros',k:'srv',t:'rs'},
+  {l:'RESULTADO OPERACIONAL',k:'ro',t:'rt'},{l:'RESULTADO FINANCEIRO',k:'rf',t:'rst'},
+  {l:'Despesa Financeira',k:'dfn',t:'rs'},{l:'Receita Financeira',k:'rcf',t:'rs'},
+  {l:'OUTRAS RECEITAS E DESPESAS',k:'out',t:'rst'},
+  {l:'RES. ANTES IRPJ E CSLL',k:'ai',t:'rt'},
+  {l:'PROVISÃO IRPJ E CSLL',cx:function(i){return D.ir[i]+D.cs[i];},t:'rst'},
+  {l:'IRPJ',k:'ir',t:'rs'},{l:'CSLL',k:'cs',t:'rs'},
+  {l:'LUCRO LÍQUIDO',k:'ll',t:'rt'},{l:'EBITDA',k:'eb',t:'rt'}
+];
+function buildDRE(){
+  var m=document.getElementById('dMes').value;
+  var per=document.getElementById('dPer').value;
+  var view=document.getElementById('dView').value;
+  var base=document.getElementById('dBase').value;
+  var bk=base==='rl'?'rl':'rb';
+  var ci=m!=='all'?[parseInt(m)]:PER[per]||PER.all;
+  var h='<table class="dt"><thead><tr><th>Conta</th>';
+  ci.forEach(function(i){h+='<th>'+M[i]+'</th>';});
+  if(ci.length>1)h+='<th>ANUAL</th>';
+  h+='</tr></thead><tbody>';
+  DROWS.forEach(function(row){
+    var anual=0;
+    var vals=ci.map(function(i){var v=row.cx?row.cx(i):D[row.k][i];anual+=v;return v;});
+    var totB=ci.reduce(function(s,i){return s+D[bk][i];},0);
+    var desc=DESCS[row.l]||'';
+    var bg=row.t==='rt'?'background:rgba(201,168,76,.08)':row.t==='rst'?'background:rgba(255,255,255,.02)':'background:transparent';
+    h+='<tr class="'+row.t+'"><td style="'+bg+'">';
+    if(desc)h+='<div class="dwrap"><span class="dlbl">'+row.l+'</span><div class="dtip">'+desc+'</div></div>';
+    else h+=row.l;
+    h+='</td>';
+    vals.forEach(function(v,ci2){
+      var i=ci[ci2];var bv=D[bk][i];var p=bv?v/bv:0;
+      var arr='▬';
+      if(ci2>0){var pv=row.cx?row.cx(ci[ci2-1]):D[row.k][ci[ci2-1]];var pp=D[bk][ci[ci2-1]]?pv/D[bk][ci[ci2-1]]:0;arr=p>pp?'▲':p<pp?'▼':'▬';}
+      var nc=v<0?' vn':'';var ac=arr==='▲'?'au':arr==='▼'?'ad':'an';
+      if(view==='val')h+='<td class="'+nc+'">'+fmt(v)+' <span class="'+ac+'">'+arr+'</span></td>';
+      else if(view==='pct')h+='<td><span class="vpc">'+(p*100).toFixed(1)+'%</span><span class="'+ac+'">'+arr+'</span></td>';
+      else h+='<td class="'+nc+'">'+fmt(v)+'<span class="vpc">'+(p*100).toFixed(1)+'% <span class="'+ac+'">'+arr+'</span></span></td>';
+    });
+    if(ci.length>1){
+      var tp=totB?anual/totB:0;
+      if(view==='val')h+='<td class="'+(anual<0?' vn':'')+'">'+fmt(anual)+'</td>';
+      else if(view==='pct')h+='<td><span class="vpc">'+(tp*100).toFixed(1)+'%</span></td>';
+      else h+='<td class="'+(anual<0?' vn':'')+'">'+fmt(anual)+'<span class="vpc">'+(tp*100).toFixed(1)+'%</span></td>';
+    }
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('dTable').innerHTML=h;
+}
+
+function buildAV(){
+  var m=document.getElementById('avMes').value;
+  var base=document.getElementById('avBase').value;
+  var bk=base==='rl'?'rl':'rb';
+  var ci=cols(m);
+  document.getElementById('avSub').textContent='% mensais com setas de tendência · s/ Rec. '+(base==='rl'?'Líquida':'Bruta');
+  document.getElementById('avCTit').textContent='Análise Vertical — s/ Rec. '+(base==='rl'?'Líquida':'Bruta');
+  var items=[{n:'Receita Bruta',k:'rb'},{n:'Receita Líquida',k:'rl'},{n:'Margem Bruta',k:'mb'},{n:'EBITDA',k:'eb'},{n:'Res. Operacional',k:'ro'},{n:'Lucro Líquido',k:'ll'}];
+  document.getElementById('avCards').innerHTML=items.map(function(x){
+    var sv=ci.reduce(function(a,i){return a+D[x.k][i];},0);
+    var sb=ci.reduce(function(a,i){return a+D[bk][i];},0);
+    var p=sb?sv/sb:0;
+    var col=p<0?'var(--red2)':p>0.3?'var(--green2)':'var(--gold)';
+    return '<div class="acard"><div class="an2">'+x.n+'</div><div class="av">'+(p*100).toFixed(1)+'%</div><div class="aamt">'+fmt(sv)+'</div><div class="abar"><div class="abf" style="width:'+Math.min(Math.abs(p)*100,100)+'%;background:'+col+'"></div></div></div>';
+  }).join('');
+  mkC('cAVC','line',M,[{label:'MB%',data:D.mb.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#27AE60',borderWidth:2,pointRadius:3,pointBackgroundColor:'#27AE60',tension:.35,fill:false},{label:'EBITDA%',data:D.eb.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#C9A84C',borderWidth:2,pointRadius:3,pointBackgroundColor:'#C9A84C',tension:.35,fill:false},{label:'LL%',data:D.ll.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'#2980B9',borderWidth:2,pointRadius:3,pointBackgroundColor:'#2980B9',tension:.35,fill:false},{label:'Desp%',data:D.dt.map(function(v,i){return +(v/D[bk][i]*100).toFixed(2);}),borderColor:'rgba(192,57,43,.7)',borderWidth:2,pointRadius:3,pointBackgroundColor:'rgba(192,57,43,.7)',tension:.35,fill:false}],bopt('pct',false));
+}
+
+function buildInd(){
+  var m=document.getElementById('iMes').value;
+  var ci=cols(m);
+  var mn=m==='all'?'Anual':MF[parseInt(m)];
+  var s=function(k){return ci.reduce(function(a,i){return a+D[k][i];},0);};
+  var rb=s('rb'),rl=s('rl'),mb=s('mb'),eb=s('eb'),ro=s('ro'),ll=s('ll');
+  var prl=function(v){return pf(v,rl);};var prb=function(v){return pf(v,rb);};
+  document.getElementById('iGrid').innerHTML=
+    '<div class="icard"><div class="ictitle">Resultado — '+mn+'</div>'+
+    '<div class="irow"><span class="iname">Receita Bruta</span><div class="ivals"><div class="ival">'+fmt(rb)+'</div><span class="ipct">100,0% RB</span></div></div>'+
+    '<div class="irow"><span class="iname">( - ) Deduções</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('ded'))+'</div><span class="ipct">'+prb(s('ded'))+'</span></div></div>'+
+    '<div class="irow"><span class="iname">Receita Líquida</span><div class="ivals"><div class="ival">'+fmt(rl)+'</div><span class="ipct">'+prb(rl)+' RB</span></div></div>'+
+    '<div class="irow"><span class="iname">( - ) CMV + Depr.</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('custos')+s('df'))+'</div><span class="ipct">'+prl(s('custos')+s('df'))+' RL</span></div></div>'+
+    '<div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">≈ Margem Bruta</span><div class="ivals"><div class="ival" style="color:var(--g2)">'+fmt(mb)+'</div><span class="ipct">'+prl(mb)+' RL</span></div></div></div>'+
+    '<div class="icard"><div class="ictitle">Lucratividade — '+mn+'</div>'+
+    '<div class="irow"><span class="iname">Margem Bruta</span><div class="ivals"><div class="ival">'+prl(mb)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
+    '<div class="irow"><span class="iname">Margem EBITDA</span><div class="ivals"><div class="ival">'+prl(eb)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
+    '<div class="irow"><span class="iname">Margem Operacional</span><div class="ivals"><div class="ival">'+prl(ro)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
+    '<div class="irow"><span class="iname">Margem Líquida</span><div class="ivals"><div class="ival" style="color:'+(ll<0?'var(--red2)':'inherit')+'">'+prl(ll)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
+    '<div class="irow"><span class="iname">EBITDA s/ Rec. Bruta</span><div class="ivals"><div class="ival">'+prb(eb)+'</div><span class="ipct">s/ Rec. Bruta</span></div></div></div>'+
+    '<div class="icard"><div class="ictitle">Despesas — '+mn+'</div>'+
+    '<div class="irow"><span class="iname">Desp. Comerciais</span><div class="ivals"><div class="ival">'+fmt(s('dc'))+'</div><span class="ipct">'+prl(s('dc'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Despesas Vendas</span><div class="ivals"><div class="ival">'+fmt(s('dv'))+'</div><span class="ipct">'+prl(s('dv'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Desp. Marketing</span><div class="ivals"><div class="ival">'+fmt(s('dm'))+'</div><span class="ipct">'+prl(s('dm'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Folha de Pagamento</span><div class="ivals"><div class="ival">'+fmt(s('fol'))+'</div><span class="ipct">'+prl(s('fol'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Serviços de Terceiros</span><div class="ivals"><div class="ival">'+fmt(s('srv'))+'</div><span class="ipct">'+prl(s('srv'))+' RL</span></div></div></div>'+
+    '<div class="icard"><div class="ictitle">Financeiro — '+mn+'</div>'+
+    '<div class="irow"><span class="iname">Desp. Financeira</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('dfn'))+'</div><span class="ipct">'+prl(s('dfn'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Rec. Financeira</span><div class="ivals"><div class="ival" style="color:var(--green2)">'+fmt(Math.abs(s('rcf')))+'</div><span class="ipct">'+prl(Math.abs(s('rcf')))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Res. Financeiro Líq.</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('rf'))+'</div><span class="ipct">'+prl(s('rf'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Provisão IRPJ</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('ir'))+'</div></div></div>'+
+    '<div class="irow"><span class="iname">Provisão CSLL</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('cs'))+'</div></div></div></div>';
+  mkC('cWF','bar',['Rec.Líq.','(-) CMV','(-) Desp.','Res.Op.','(-) Fin.','(-) Out.','LL'],[{data:[rl,-s('custos')-s('df'),-s('dt'),ro,-s('rf'),-Math.abs(s('out')),ll],backgroundColor:['rgba(41,128,185,.7)','rgba(192,57,43,.6)','rgba(192,57,43,.6)','rgba(39,174,96,.7)','rgba(192,57,43,.6)','rgba(127,140,141,.5)','rgba(39,174,96,.9)'],borderRadius:4}],bopt('val',false));
+  mkC('cLL','bar',M,[{label:'LL',data:D.ll,backgroundColor:D.ll.map(function(v){return v>=0?'rgba(39,174,96,.65)':'rgba(192,57,43,.65)';}),borderRadius:4}],bopt('val',false));
+  mkC('cDopM','bar',M,[{label:'Folha',data:D.fol,backgroundColor:'rgba(41,128,185,.7)',borderRadius:2,stack:'s'},{label:'Serviços',data:D.srv,backgroundColor:'rgba(201,168,76,.7)',borderRadius:2,stack:'s'},{label:'Outros',data:D.ben.map(function(v,i){return v+D.ocu[i]+D.adm[i]+D.trb[i]+D.da[i];}),backgroundColor:'rgba(39,174,96,.5)',borderRadius:2,stack:'s'}],bopt('val',true));
+}
+
+function buildBal(){
+  mkC('cIdx','radar',['Liq. Imediata','Liq. Seca','Liq. Corrente','Liq. Geral'],[{data:[0.2873,1.0111,1.2887,1.0106],backgroundColor:'rgba(201,168,76,.15)',borderColor:'rgba(201,168,76,.7)',borderWidth:2,pointBackgroundColor:'#C9A84C',pointRadius:4}],{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ctx.label+': '+ctx.raw.toFixed(2);}}}},scales:{r:{grid:{color:'rgba(201,168,76,.1)'},pointLabels:{color:'#A0B0BE',font:{size:11,family:'Inter',weight:'500'}},ticks:{color:'#6E7E8E',font:{size:9},backdropColor:'transparent'},suggestedMin:0,suggestedMax:1.5}}});
+  mkC('cPassivo','doughnut',['Fornecedores','Empréstimos','Obrig. Trib.','Obrig. Trab.','Outros PNC'],[{data:[BAL.forn,BAL.empCP+BAL.empLP,BAL.obrTrib,BAL.obrT,BAL.outPNC],backgroundColor:['rgba(192,57,43,.85)','rgba(231,76,60,.7)','rgba(230,126,34,.8)','rgba(52,152,219,.7)','rgba(127,140,141,.6)'],borderWidth:0,hoverOffset:5}],{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ctx.label+': R$ '+(ctx.raw/1e6).toFixed(2)+'M';}}}},scales:{x:{display:false},y:{display:false}}});
+}
+
+function setPage(n,el){
+  document.querySelectorAll('.nav-item').forEach(function(e){e.classList.remove('active');});
+  document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active');});
+  if(el)el.classList.add('active');
+  document.getElementById('page-'+n).classList.add('active');
+  if(n==='bal')buildBal();
+}
+
+updateOV();buildDRE();buildAV();buildInd();
+</script>
+</body>
+</html>
