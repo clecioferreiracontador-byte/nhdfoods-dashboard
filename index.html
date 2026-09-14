@@ -339,6 +339,14 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:"Int
 
 <!-- BALANÇO & ÍNDICES -->
 <section id="page-bal" class="page">
+  <div class="fbar">
+    <span class="fl">Mês:</span>
+    <select class="fs" id="balMes" onchange="onBalMesChange()">
+      <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
+      <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
+      <option value="6" selected>Julho</option>
+    </select>
+  </div>
   <div style="margin:18px 0 16px"><div class="ptitle">Balanço &amp; Índices de Liquidez</div><div class="psub" id="balSub">Balancete NHD Foods 2026 · Saldos em 31/07/2026 · Fonte: Audicon Contadores</div></div>
   <div class="sec-hdr">Índices de Liquidez</div>
   <div class="idx-grid" id="idxGrid1"></div>
@@ -382,7 +390,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:"Int
 const M=["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"];
 const MF=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
 var numMeses=7;
-var BALMES=6;
+var balSelMes=6;
 const gc="rgba(201,168,76,.08)",tc="#6E7E8E";
 const D={
   rb:[7153131.65,7213966.25,9544467.37,10092665.8,8218958.26,8439249.36,11123700.16],
@@ -414,7 +422,7 @@ const D={
   ll:[-1585830.72,944829.24,2160110.94,2053793.88,820751.39,1150710.87,1717850.84],
   eb:[516174.63,1177131.46,2169399.24,2536183.12,1211856.93,1498311.04,2457824.65]
 };
-const BAL={at:33818347.55,ac:25361566.48,anc:8456781.07,caixa:4901236.01,cred:14757127.69,trib:11682.84,est:5691519.94,rlp:798.23,inv:213856.51,imo:8242126.33,intang:0.0,pt:33818347.55,pc:16961936.66,pnc:10444143.63,pl:6412267.26,forn:6408830.31,empCP:2087375.45,obrT:1110977.02,obrTrib:7037302.17,outrosPC:317451.71,empLP:6351580.33,outPNC:4092563.3,capSoc:1000000.0,resLucros:0.0,ajusteAval:-4879342.9,lucrosAcum:3029393.71,resExerc:7262216.45};
+var BALHIST={0:{at:25521108.48,ac:20140076.08,anc:5381032.4,caixa:2605941.22,cred:9541232.38,trib:4586320.28,est:3406582.2,rlp:0.0,inv:151985.89,imo:5229046.51,intang:0.0,pt:25521108.48,pc:25055460.78,pnc:1251120.14,pl:-785472.44,forn:4167156.85,empCP:2452882.68,obrT:964603.15,obrTrib:14335096.0,outrosPC:3135722.1,empLP:967670.47,outPNC:283449.67,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-3229035.44,lucrosAcum:3029393.71,resExerc:-1585830.71},1:{at:25724590.23,ac:20067699.57,anc:5656890.66,caixa:3262554.58,cred:9814562.47,trib:3829523.29,est:3161059.23,rlp:0.0,inv:162297.66,imo:5494593.0,intang:0.0,pt:25724590.23,pc:24483251.46,pnc:1295046.44,pl:-53707.67,forn:4533581.96,empCP:2437519.37,obrT:1189120.3,obrTrib:13136510.19,outrosPC:3186519.64,empLP:967670.47,outPNC:327375.97,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-3442099.9,lucrosAcum:3029393.71,resExerc:-641001.48},2:{at:27619530.04,ac:21174160.46,anc:6445369.58,caixa:3252140.45,cred:11596615.31,trib:2902610.94,est:3422793.76,rlp:0.0,inv:172609.43,imo:6272760.15,intang:0.0,pt:27619530.04,pc:25266875.63,pnc:1201530.04,pl:1151124.37,forn:6295757.38,empCP:1954364.86,obrT:1396895.05,obrTrib:12782247.05,outrosPC:2837611.29,empLP:967670.47,outPNC:233859.57,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-4397378.81,lucrosAcum:3029393.71,resExerc:1519109.47},3:{at:31359930.88,ac:24803602.44,anc:6556328.44,caixa:6452135.42,cred:12939653.67,trib:1831359.09,est:3580454.26,rlp:0.0,inv:182921.2,imo:6373407.24,intang:0.0,pt:31359930.88,pc:26858877.55,pnc:4233861.9,pl:267191.43,forn:5855600.61,empCP:2737980.28,obrT:1435986.31,obrTrib:15211218.01,outrosPC:1618092.34,empLP:4383197.67,outPNC:-149335.77,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-7335105.6,lucrosAcum:3029393.71,resExerc:3572903.32},4:{at:30193678.37,ac:23474757.14,anc:6718921.23,caixa:6027241.22,cred:12732764.2,trib:0.0,est:4714751.72,rlp:0.0,inv:193232.97,imo:6525688.26,intang:0.0,pt:30193678.37,pc:16079078.3,pnc:10770368.38,pl:3344231.69,forn:6432628.9,empCP:2516259.22,obrT:809406.52,obrTrib:5983238.26,outrosPC:337545.4,empLP:6351580.33,outPNC:4418788.05,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-5078816.76,lucrosAcum:3029393.71,resExerc:4393654.74},5:{at:31594229.62,ac:24316371.48,anc:7277858.14,caixa:5269468.3,cred:13356973.11,trib:5253.68,est:5684676.39,rlp:-0.0,inv:203544.74,imo:7074313.4,intang:-0.0,pt:31594229.62,pc:16564077.9,pnc:10535209.16,pl:4494942.56,forn:6901600.72,empCP:2491700.01,obrT:892543.41,obrTrib:5986206.14,outrosPC:292027.62,empLP:6351580.33,outPNC:4183628.83,capSoc:1000000.0,resLucros:0.0,ajusteAval:-5078816.76,lucrosAcum:3029393.71,resExerc:5544365.61},6:{at:33818347.55,ac:25361566.48,anc:8456781.07,caixa:4901236.01,cred:14757127.69,trib:11682.84,est:5691519.94,rlp:798.23,inv:213856.51,imo:8242126.33,intang:0.0,pt:33818347.55,pc:16961936.66,pnc:10444143.63,pl:6412267.26,forn:6408830.31,empCP:2087375.45,obrT:1110977.02,obrTrib:7037302.17,outrosPC:317451.71,empLP:6351580.33,outPNC:4092563.3,capSoc:1000000.0,resLucros:-0.0,ajusteAval:-4879342.9,lucrosAcum:3029393.71,resExerc:7262216.45}};
 const DRE_RECIPE={6:{t:"L",x:[["3.1.01.1",1,"CD"]]},7:{t:"L",x:[["3.1.01.2",1,"DC"]]},8:{t:"L",x:[["3.1.01.2002",1,"DC"]]},9:{t:"L",x:[["3.1.01.2003",1,"DC"]]},10:{t:"L",x:[["3.1.01.2004",1,"DC"]]},11:{t:"L",x:[["3.1.01.2006",1,"DC"]]},12:{t:"L",x:[["3.1.01.2007",1,"DC"]]},13:{t:"L",x:[["3.1.01.2008",1,"DC"]]},14:{t:"C",x:[[6,1],[7,-1]]},15:{t:"C",x:[[16,1],[17,1],[21,1],[24,1],[34,1],[39,1],[53,1],[57,-1]]},16:{t:"L",x:[["3.1.01.3",1,"DC"]]},17:{t:"L",x:[["3.9.01",1,"DC"]]},18:{t:"L",x:[["3.9.01.1001",1,"DC"]]},19:{t:"L",x:[["3.9.01.1002",1,"DC"]]},20:{t:"L",x:[["3.9.01.1003",1,"DC"]]},21:{t:"L",x:[["3.9.02.1",1,"DC"]]},22:{t:"L",x:[["3.9.02.1001",1,"DC"]]},23:{t:"L",x:[["3.9.02.1002",1,"DC"]]},24:{t:"L",x:[["3.9.02.2",1,"DC"]]},25:{t:"L",x:[["3.9.02.2003",1,"DC"]]},26:{t:"L",x:[["3.9.02.2005",1,"DC"]]},27:{t:"L",x:[["3.9.02.2006",1,"DC"]]},28:{t:"L",x:[["3.9.02.2007",1,"DC"]]},29:{t:"L",x:[["3.9.02.2008",1,"DC"]]},30:{t:"L",x:[["3.9.02.2009",1,"DC"]]},31:{t:"L",x:[["3.9.02.2010",1,"DC"]]},32:{t:"L",x:[["3.9.02.2011",1,"DC"]]},33:{t:"L",x:[["3.9.02.2012",1,"DC"]]},34:{t:"L",x:[["3.9.02.3",1,"DC"]]},35:{t:"L",x:[["3.9.02.3001",1,"DC"]]},36:{t:"L",x:[["3.9.02.3002",1,"DC"]]},37:{t:"L",x:[["3.9.02.3003",1,"DC"]]},38:{t:"L",x:[["3.9.02.3882",1,"DC"]]},39:{t:"L",x:[["3.9.02.4",1,"DC"],["3.9.02.4003",-1,"DC"]]},40:{t:"L",x:[["3.9.02.4001",1,"DC"]]},41:{t:"L",x:[["3.9.02.4004",1,"DC"]]},42:{t:"L",x:[["3.9.02.4005",1,"DC"]]},43:{t:"L",x:[["3.9.02.4006",1,"DC"]]},44:{t:"L",x:[["3.9.02.4007",1,"DC"]]},45:{t:"L",x:[["3.9.02.4008",1,"DC"]]},46:{t:"L",x:[["3.9.02.4009",1,"DC"]]},47:{t:"L",x:[["3.9.02.4010",1,"DC"]]},48:{t:"L",x:[["3.9.02.4011",1,"DC"]]},49:{t:"L",x:[["3.9.02.4012",1,"DC"]]},50:{t:"L",x:[["3.9.02.4013",1,"DC"]]},51:{t:"L",x:[["3.9.02.4015",1,"DC"]]},52:{t:"L",x:[["3.9.02.4016",1,"DC"]]},53:{t:"L",x:[["3.9.02.5",1,"DC"]]},54:{t:"L",x:[["3.9.02.5001",1,"DC"]]},55:{t:"L",x:[["3.9.02.5002",1,"DC"]]},56:{t:"L",x:[["3.9.02.5003",1,"DC"]]},57:{t:"L",x:[["3.9.09.9",1,"CD"]]},58:{t:"L",x:[["3.9.02.4003",1,"DC"]]},59:{t:"L",x:[["3.2.01.5003",1,"DC"]]},60:{t:"C",x:[[14,1],[15,-1],[59,-1],[58,-1]]},61:{t:"C",x:[[62,1],[69,1]]},62:{t:"C",x:[[63,1],[64,1],[65,1],[66,1],[67,1],[68,1]]},63:{t:"L",x:[["3.1.01.4001",1,"DC"]]},64:{t:"L",x:[["3.1.01.4002",1,"DC"]]},65:{t:"L",x:[["3.1.01.4003",1,"DC"]]},66:{t:"L",x:[["3.1.01.4005",1,"DC"]]},67:{t:"L",x:[["3.1.01.4007",1,"DC"]]},68:{t:"L",x:[["3.1.01.4008",1,"DC"]]},69:{t:"C",x:[[70,1],[71,1],[72,1],[73,1],[74,1],[75,1],[76,1],[77,1]]},70:{t:"L",x:[["3.2.01.1",1,"DC"]]},71:{t:"L",x:[["3.2.01.2",1,"DC"]]},72:{t:"L",x:[["3.2.01.3",1,"DC"]]},73:{t:"L",x:[["3.2.01.4",1,"DC"]]},74:{t:"L",x:[["3.2.01.5",1,"DC"],["3.2.01.5003",-1,"DC"]]},75:{t:"L",x:[["3.2.01.6",1,"DC"]]},76:{t:"L",x:[["3.2.01.7",1,"DC"]]},77:{t:"L",x:[["3.2.01.8",1,"DC"]]},78:{t:"C",x:[[60,1],[61,-1]]},79:{t:"C",x:[[81,1],[80,1]]},80:{t:"L",x:[["3.3.01.1",1,"DC"]]},81:{t:"L",x:[["3.3.01.2",1,"DC"]]},82:{t:"C",x:[[84,1],[83,1]]},83:{t:"L",x:[["3.3.02.1",1,"DC"]]},84:{t:"L",x:[["3.3.02.2",1,"DC"]]},85:{t:"C",x:[[78,1],[79,-1],[82,-1]]},86:{t:"C",x:[[87,1],[88,1]]},87:{t:"L",x:[["3.2.01.9001",1,"DC"]]},88:{t:"L",x:[["3.2.01.9002",1,"DC"]]},89:{t:"C",x:[[85,1],[86,-1]]},90:{t:"C",x:[[78,1],[59,1],[58,1]]}};
 const DRE_ORDER=[14,62,69,15,61,60,78,79,82,85,86,89,90];
 const ROW2DKEY={6:'rb',7:'ded',14:'rl',15:'custos',58:'df',59:'da',60:'mb',61:'dt',62:'dc',69:'dop',70:'fol',71:'ben',74:'ocu',77:'trb',75:'srv',78:'ro',82:'rf',84:'dfn',83:'rcf',79:'out',85:'ai',87:'ir',88:'cs',89:'ll',90:'eb'};
@@ -663,7 +671,12 @@ function mkIdxCard(cls,lbl,val,ref,sub,pct,tip,big){
     '<div class="idx-bar"><div class="idx-bar-fill" style="width:'+Math.max(0,Math.min(pct,100))+'%;background:'+barColor+'"></div></div></div>';
 }
 function renderBalPage(){
-  var b=BAL;
+  var b=BALHIST[balSelMes];
+  if(!b){
+    var avail=Object.keys(BALHIST).map(Number).sort(function(a,c){return a-c;});
+    balSelMes=avail.length?avail[avail.length-1]:0;
+    b=BALHIST[balSelMes]||{};
+  }
   var liqIm=b.pc?b.caixa/b.pc:0, liqSeca=b.pc?(b.ac-b.est)/b.pc:0, liqCorr=b.pc?b.ac/b.pc:0;
   var liqGeral=(b.pc+Math.abs(b.pnc))?b.ac/(b.pc+Math.abs(b.pnc)):0;
   var endGeral=b.at?(b.pc+Math.abs(b.pnc))/b.at:0, pcPl=b.pl?b.pc/b.pl:0;
@@ -676,9 +689,9 @@ function renderBalPage(){
   var clsPcPl=pcPl>3?'bad':pcPl>1.5?'warn':'ok';
   var clsAlav=alav>2.5?'bad':alav>1.8?'warn':'ok';
   var clsCgl=cgl<0?'bad':'ok';
-  var lastDay=new Date(2026,BALMES+1,0).getDate();
+  var lastDay=new Date(2026,balSelMes+1,0).getDate();
 
-  document.getElementById('balSub').textContent='Balancete NHD Foods 2026 · Saldos em '+lastDay+'/'+String(BALMES+1).padStart(2,'0')+'/2026 · Fonte: Audicon Contadores';
+  document.getElementById('balSub').textContent='Balancete NHD Foods 2026 · Saldos em '+lastDay+'/'+String(balSelMes+1).padStart(2,'0')+'/2026 · Fonte: Audicon Contadores';
 
   document.getElementById('idxGrid1').innerHTML=
     mkIdxCard(clsIm,'Liquidez Imediata',fmtx(liqIm),'Caixa / Passivo Circulante',fmt(b.caixa)+' / '+fmt(b.pc),liqIm*100,'Mede quanto do Passivo Circulante a empresa cobre só com caixa e equivalentes, sem contar recebíveis ou estoques. Abaixo de 0,30 indica dependência do fluxo de caixa operacional para honrar compromissos imediatos.')+
@@ -721,14 +734,14 @@ function renderBalPage(){
     '<div class="bal-row tot" style="border-top:2px solid rgba(201,168,76,.4);margin-top:16px"><span>PASSIVO + PL</span><span>'+fmt(b.pt)+'</span></div>'+
     '<div style="position:relative;height:130px;margin-top:14px"><canvas id="cIdx"></canvas></div></div>';
 
-  var ebAcum=sumAll(D.eb);
+  var ebAcum=D.eb.slice(0,balSelMes+1).reduce(function(a,v){return a+v;},0);
   document.getElementById('balInterp').innerHTML=
     '<strong>Interpretação:</strong><br>'+
     (liqCorr>=1?'▲':'▼')+' <strong>Liquidez Corrente '+fmtx(liqCorr)+'</strong> — '+fmt(b.ac)+' de AC para '+fmt(b.pc)+' de PC. '+(cgl>=0?'Capital de giro positivo de '+fmt(cgl)+'.':'Capital de giro negativo de '+fmt(Math.abs(cgl))+'.')+'<br>'+
     (liqSeca>=1?'▲':'▼')+' <strong>Liquidez Seca '+fmtx(liqSeca)+'</strong> — '+(liqSeca>=1?'Mesmo excluindo estoques, cobre com folga o passivo circulante.':'Excluindo estoques, não cobre integralmente o passivo circulante.')+'<br>'+
     (liqIm>=0.3?'▲':'▼')+' <strong>Liquidez Imediata '+fmtx(liqIm)+'</strong> — Caixa cobre apenas '+(liqIm*100).toFixed(0)+'% das obrigações imediatas.'+(liqIm<0.3?' Atenção ao fluxo de caixa de curto prazo.':' Posição de caixa confortável.')+'<br>'+
-    '⚠ <strong>Endividamento '+(endGeral*100).toFixed(1).replace('.',',')+'%</strong> — Estrutura '+(endGeral>0.6?'ainda financiada majoritariamente por terceiros':'com equilíbrio entre capital próprio e de terceiros')+'. EBITDA acumulado de '+fmt(ebAcum)+' (Jan–'+M[numMeses-1]+') demonstra '+(ebAcum>0?'boa capacidade de geração de caixa para servir a dívida':'geração de caixa limitada no período')+'.<br>'+
-    '▲ <strong>PL '+fmt(b.pl)+'</strong> — Patrimônio Líquido em '+MF[BALMES]+'/2026, composto por Capital Social ('+fmt(b.capSoc)+'), Ajuste de Avaliação Patrimonial ('+fmt(b.ajusteAval)+'), Lucros Acumulados ('+fmt(lucrosAcumTot)+') e Resultado do Exercício ('+fmt(b.resExerc)+').';
+    '⚠ <strong>Endividamento '+(endGeral*100).toFixed(1).replace('.',',')+'%</strong> — Estrutura '+(endGeral>0.6?'ainda financiada majoritariamente por terceiros':'com equilíbrio entre capital próprio e de terceiros')+'. EBITDA acumulado de '+fmt(ebAcum)+' (Jan–'+M[balSelMes]+') demonstra '+(ebAcum>0?'boa capacidade de geração de caixa para servir a dívida':'geração de caixa limitada no período')+'.<br>'+
+    '▲ <strong>PL '+fmt(b.pl)+'</strong> — Patrimônio Líquido em '+MF[balSelMes]+'/2026, composto por Capital Social ('+fmt(b.capSoc)+'), Ajuste de Avaliação Patrimonial ('+fmt(b.ajusteAval)+'), Lucros Acumulados ('+fmt(lucrosAcumTot)+') e Resultado do Exercício ('+fmt(b.resExerc)+').';
 
   mkC('cIdx','radar',['Liq. Imediata','Liq. Seca','Liq. Corrente','Liq. Geral'],[{data:[+liqIm.toFixed(2),+liqSeca.toFixed(2),+liqCorr.toFixed(2),+liqGeral.toFixed(2)],backgroundColor:'rgba(201,168,76,.15)',borderColor:'rgba(201,168,76,.7)',borderWidth:2,pointBackgroundColor:'#C9A84C',pointRadius:4}],{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ctx.label+': '+ctx.raw.toFixed(2);}}}},scales:{r:{grid:{color:'rgba(201,168,76,.1)'},pointLabels:{color:'#A0B0BE',font:{size:11,family:'Inter',weight:'500'}},ticks:{color:'#6E7E8E',font:{size:9},backdropColor:'transparent'},suggestedMin:0,suggestedMax:1.5}}});
   mkC('cPassivo','doughnut',['Fornecedores','Empréstimos','Obrig. Trib.','Obrig. Trab.','Outros PNC'],[{data:[b.forn,b.empCP+b.empLP,b.obrTrib,b.obrT,b.outPNC],backgroundColor:['rgba(192,57,43,.85)','rgba(231,76,60,.7)','rgba(230,126,34,.8)','rgba(52,152,219,.7)','rgba(127,140,141,.6)'],borderWidth:0,hoverOffset:5}],{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{...tip,callbacks:{label:function(ctx){return ctx.label+': R$ '+(ctx.raw/1e6).toFixed(2)+'M';}}}},scales:{x:{display:false},y:{display:false}}});
@@ -736,7 +749,13 @@ function renderBalPage(){
 
 function buildBal(){
   ensureTip();
+  var mEl=document.getElementById('balMes');
+  if(mEl)mEl.value=balSelMes;
   renderBalPage();
+}
+function onBalMesChange(){
+  balSelMes=parseInt(document.getElementById('balMes').value);
+  buildBal();
 }
 
 function parseSaldoDC(v){
@@ -851,6 +870,13 @@ function rebuildMonthSelectors(){
   if(badge)badge.textContent='2026 · Jan–'+lastM;
   var impMesEl=document.getElementById('impMes');
   if(impMesEl)impMesEl.value=Math.min(numMeses,11);
+  var balEl=document.getElementById('balMes');
+  if(balEl){
+    var balMonths=Object.keys(BALHIST).map(Number).sort(function(a,c){return a-c;});
+    balEl.innerHTML=balMonths.map(function(i){return '<option value="'+i+'">'+MF[i]+'</option>';}).join('');
+    if(balMonths.indexOf(balSelMes)===-1)balSelMes=balMonths.length?balMonths[balMonths.length-1]:0;
+    balEl.value=balSelMes;
+  }
 }
 function findBalanceteSheet(wb){
   var names=wb.SheetNames;
@@ -871,8 +897,8 @@ function doImport(mIdx,codeMap){
   var rowvals=computeDREFromBalancete(codeMap);
   applyDVals(rowvals,mIdx);
   applyDTREEVals(DTREE,rowvals,mIdx);
-  Object.assign(BAL,computeBALFromBalancete(codeMap));
-  BALMES=mIdx;
+  BALHIST[mIdx]=computeBALFromBalancete(codeMap);
+  balSelMes=mIdx;
   rebuildMonthSelectors();
   updateOV();buildDRE();buildAV();buildInd();buildBal();
 }
@@ -909,7 +935,7 @@ function handleBalanceteFile(file){
 function saveCurrentBase(){
   var statusEl=document.getElementById('impStatus');
   try{
-    var state={numMeses:numMeses,D:D,DTREE:DTREE,BAL:BAL,BALMES:BALMES,savedAt:new Date().toISOString()};
+    var state={numMeses:numMeses,D:D,DTREE:DTREE,BALHIST:BALHIST,balSelMes:balSelMes,savedAt:new Date().toISOString()};
     localStorage.setItem('nhdDashBase',JSON.stringify(state));
     statusEl.textContent='💾 Base salva com sucesso em '+new Date().toLocaleString('pt-BR')+'. Esta base será carregada automaticamente na próxima vez que este dashboard for aberto neste navegador — importar um novo mês não apaga os meses já salvos.';
     statusEl.style.color='var(--green2)';
@@ -923,12 +949,18 @@ function loadSavedBase(){
     var raw=localStorage.getItem('nhdDashBase');
     if(!raw)return;
     var state=JSON.parse(raw);
-    if(!state||!state.D||!state.DTREE||!state.BAL)return;
+    if(!state||!state.D||!state.DTREE)return;
     numMeses=state.numMeses||7;
     Object.keys(state.D).forEach(function(k){if(D.hasOwnProperty(k))D[k]=state.D[k];});
     DTREE=state.DTREE;
-    Object.assign(BAL,state.BAL);
-    BALMES=(state.BALMES!==undefined)?state.BALMES:numMeses-1;
+    if(state.BALHIST){
+      BALHIST=state.BALHIST;
+      balSelMes=(state.balSelMes!==undefined)?state.balSelMes:numMeses-1;
+    }else if(state.BAL){
+      var legacyMes=(state.BALMES!==undefined)?state.BALMES:numMeses-1;
+      BALHIST[legacyMes]=state.BAL;
+      balSelMes=legacyMes;
+    }
   }catch(err){console.warn('Falha ao carregar base salva',err);}
 }
 
