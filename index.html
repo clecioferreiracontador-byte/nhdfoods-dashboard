@@ -110,10 +110,8 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .idx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .idx-card{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 15px;position:relative;overflow:hidden}
 .idx-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px}
-.idx-card.ok::before{background:var(--green2)}.idx-card.warn::before{background:var(--amber)}.idx-card.bad::before{background:var(--red2)}
 .idx-lbl{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
-.idx-val{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:27px;letter-spacing:-.03em;line-height:1;margin-bottom:5px}
-.idx-val.ok{color:var(--green2)}.idx-val.warn{color:var(--amber)}.idx-val.bad{color:var(--red2)}
+.idx-val{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:27px;color:var(--white);letter-spacing:-.03em;line-height:1;margin-bottom:5px}
 .idx-ref{font-size:12px;color:var(--gray);margin-top:3px}
 .idx-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:10px;overflow:hidden}
 .idx-bar-fill{height:100%;border-radius:2px}
@@ -659,10 +657,10 @@ function buildInd(){
 }
 
 function mkIdxCard(cls,lbl,val,ref,sub,pct,tip,big){
-  var barColor=cls==='bad'?'var(--red2)':cls==='warn'?'var(--amber)':'var(--green2)';
-  return '<div class="idx-card '+cls+' idx-tip" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+
+  var barColor='var(--gold)';
+  return '<div class="idx-card idx-tip" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+
     '<div class="idx-lbl">'+lbl+'</div>'+
-    '<div class="idx-val '+cls+'"'+(big?' style="font-size:20px"':'')+'>'+val+'</div>'+
+    '<div class="idx-val"'+(big?' style="font-size:20px"':'')+'>'+val+'</div>'+
     '<div class="idx-ref">'+ref+'</div>'+
     '<div style="font-size:12px;color:var(--gray);margin-top:4px">'+sub+'</div>'+
     '<div class="idx-bar"><div class="idx-bar-fill" style="width:'+Math.max(0,Math.min(pct,100))+'%;background:'+barColor+'"></div></div></div>';
