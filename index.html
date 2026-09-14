@@ -30,7 +30,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .sdiv{margin:6px 14px;border:none;border-top:1px solid var(--bdr)}
 .skpi{margin:4px 9px;background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px}
 .skpi-l{font-size:11.5px;color:var(--gray);margin-bottom:2px;font-weight:500;letter-spacing:.02em}
-.skpi-v{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:18px;color:var(--gold);letter-spacing:-.02em}
+.skpi-v{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:18px;color:var(--white);letter-spacing:-.02em}
 .skpi-p{font-size:12px;color:var(--green2);margin-top:2px;font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums}
 .sb-bottom{border-top:1px solid var(--bdr);padding:14px 12px 12px;display:flex;align-items:center;gap:9px;background:var(--n3);flex-shrink:0}
 .sb-aud-img{height:30px;width:auto;object-fit:contain;filter:brightness(.95)}
@@ -53,7 +53,6 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .krow{display:grid;grid-template-columns:repeat(4,1fr);gap:11px;margin-bottom:18px}
 .kcard{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;position:relative;overflow:hidden}
 .kcard::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px;border-radius:var(--r) var(--r) 0 0}
-.kcard.g::before{background:var(--gold)}.kcard.gr::before{background:var(--green2)}.kcard.bl::before{background:var(--blue2)}.kcard.am::before{background:var(--amber)}.kcard.rd::before{background:var(--red2)}
 .klbl{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:7px}
 .kval{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:25px;color:var(--white);line-height:1;margin-bottom:5px;letter-spacing:-.03em}
 .kmeta{font-size:13px;display:flex;gap:6px;align-items:center}
@@ -632,15 +631,15 @@ function buildInd(){
   document.getElementById('iGrid').innerHTML=
     '<div class="icard"><div class="ictitle">Resultado — '+mn+'</div>'+
     '<div class="irow"><span class="iname">Receita Bruta</span><div class="ivals"><div class="ival">'+fmt(rb)+'</div><span class="ipct">100,0% RB</span></div></div>'+
-    '<div class="irow"><span class="iname">( - ) Deduções</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('ded'))+'</div><span class="ipct">'+prb(s('ded'))+'</span></div></div>'+
+    '<div class="irow"><span class="iname">( - ) Deduções</span><div class="ivals"><div class="ival">'+fmt(s('ded'))+'</div><span class="ipct">'+prb(s('ded'))+'</span></div></div>'+
     '<div class="irow"><span class="iname">Receita Líquida</span><div class="ivals"><div class="ival">'+fmt(rl)+'</div><span class="ipct">'+prb(rl)+' RB</span></div></div>'+
-    '<div class="irow"><span class="iname">( - ) CMV + Depr.</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('custos')+s('df'))+'</div><span class="ipct">'+prl(s('custos')+s('df'))+' RL</span></div></div>'+
-    '<div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">≈ Margem Bruta</span><div class="ivals"><div class="ival" style="color:var(--g2)">'+fmt(mb)+'</div><span class="ipct">'+prl(mb)+' RL</span></div></div></div>'+
+    '<div class="irow"><span class="iname">( - ) CMV + Depr.</span><div class="ivals"><div class="ival">'+fmt(s('custos')+s('df'))+'</div><span class="ipct">'+prl(s('custos')+s('df'))+' RL</span></div></div>'+
+    '<div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">≈ Margem Bruta</span><div class="ivals"><div class="ival">'+fmt(mb)+'</div><span class="ipct">'+prl(mb)+' RL</span></div></div></div>'+
     '<div class="icard"><div class="ictitle">Lucratividade — '+mn+'</div>'+
     '<div class="irow"><span class="iname">Margem Bruta</span><div class="ivals"><div class="ival">'+prl(mb)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
     '<div class="irow"><span class="iname">Margem EBITDA</span><div class="ivals"><div class="ival">'+prl(eb)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
     '<div class="irow"><span class="iname">Margem Operacional</span><div class="ivals"><div class="ival">'+prl(ro)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
-    '<div class="irow"><span class="iname">Margem Líquida</span><div class="ivals"><div class="ival" style="color:'+(ll<0?'var(--red2)':'inherit')+'">'+prl(ll)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
+    '<div class="irow"><span class="iname">Margem Líquida</span><div class="ivals"><div class="ival">'+prl(ll)+'</div><span class="ipct">s/ Rec. Líquida</span></div></div>'+
     '<div class="irow"><span class="iname">EBITDA s/ Rec. Bruta</span><div class="ivals"><div class="ival">'+prb(eb)+'</div><span class="ipct">s/ Rec. Bruta</span></div></div></div>'+
     '<div class="icard"><div class="ictitle">Despesas — '+mn+'</div>'+
     '<div class="irow"><span class="iname">Desp. Comerciais</span><div class="ivals"><div class="ival">'+fmt(s('dc'))+'</div><span class="ipct">'+prl(s('dc'))+' RL</span></div></div>'+
@@ -649,11 +648,11 @@ function buildInd(){
     '<div class="irow"><span class="iname">Folha de Pagamento</span><div class="ivals"><div class="ival">'+fmt(s('fol'))+'</div><span class="ipct">'+prl(s('fol'))+' RL</span></div></div>'+
     '<div class="irow"><span class="iname">Serviços de Terceiros</span><div class="ivals"><div class="ival">'+fmt(s('srv'))+'</div><span class="ipct">'+prl(s('srv'))+' RL</span></div></div></div>'+
     '<div class="icard"><div class="ictitle">Financeiro — '+mn+'</div>'+
-    '<div class="irow"><span class="iname">Desp. Financeira</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('dfn'))+'</div><span class="ipct">'+prl(s('dfn'))+' RL</span></div></div>'+
-    '<div class="irow"><span class="iname">Rec. Financeira</span><div class="ivals"><div class="ival" style="color:var(--green2)">'+fmt(Math.abs(s('rcf')))+'</div><span class="ipct">'+prl(Math.abs(s('rcf')))+' RL</span></div></div>'+
-    '<div class="irow"><span class="iname">Res. Financeiro Líq.</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('rf'))+'</div><span class="ipct">'+prl(s('rf'))+' RL</span></div></div>'+
-    '<div class="irow"><span class="iname">Provisão IRPJ</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('ir'))+'</div></div></div>'+
-    '<div class="irow"><span class="iname">Provisão CSLL</span><div class="ivals"><div class="ival" style="color:var(--red2)">'+fmt(s('cs'))+'</div></div></div></div>';
+    '<div class="irow"><span class="iname">Desp. Financeira</span><div class="ivals"><div class="ival">'+fmt(s('dfn'))+'</div><span class="ipct">'+prl(s('dfn'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Rec. Financeira</span><div class="ivals"><div class="ival">'+fmt(Math.abs(s('rcf')))+'</div><span class="ipct">'+prl(Math.abs(s('rcf')))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Res. Financeiro Líq.</span><div class="ivals"><div class="ival">'+fmt(s('rf'))+'</div><span class="ipct">'+prl(s('rf'))+' RL</span></div></div>'+
+    '<div class="irow"><span class="iname">Provisão IRPJ</span><div class="ivals"><div class="ival">'+fmt(s('ir'))+'</div></div></div>'+
+    '<div class="irow"><span class="iname">Provisão CSLL</span><div class="ivals"><div class="ival">'+fmt(s('cs'))+'</div></div></div></div>';
   mkC('cWF','bar',['Rec.Líq.','(-) CMV','(-) Desp.','Res.Op.','(-) Fin.','(-) Out.','LL'],[{data:[rl,-s('custos')-s('df'),-s('dt'),ro,-s('rf'),-Math.abs(s('out')),ll],backgroundColor:['rgba(41,128,185,.7)','rgba(192,57,43,.6)','rgba(192,57,43,.6)','rgba(39,174,96,.7)','rgba(192,57,43,.6)','rgba(127,140,141,.5)','rgba(39,174,96,.9)'],borderRadius:4}],bopt('val',false));
   mkC('cLL','bar',M.slice(0,numMeses),[{label:'LL',data:D.ll,backgroundColor:D.ll.map(function(v){return v>=0?'rgba(39,174,96,.65)':'rgba(192,57,43,.65)';}),borderRadius:4}],bopt('val',false));
   mkC('cDopM','bar',M.slice(0,numMeses),[{label:'Folha',data:D.fol,backgroundColor:'rgba(41,128,185,.7)',borderRadius:2,stack:'s'},{label:'Serviços',data:D.srv,backgroundColor:'rgba(201,168,76,.7)',borderRadius:2,stack:'s'},{label:'Outros',data:D.ben.map(function(v,i){return v+D.ocu[i]+D.adm[i]+D.trb[i]+D.da[i];}),backgroundColor:'rgba(39,174,96,.5)',borderRadius:2,stack:'s'}],bopt('val',true));
