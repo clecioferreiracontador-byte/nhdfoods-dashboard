@@ -184,12 +184,27 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 <section id="page-ov" class="page active">
   <div class="fbar">
     <span class="fl">Período:</span>
-    <select class="fs" id="ovMes" onchange="updateOV()">
+    <select class="fs" id="ovMes" onchange="onOvMesChange()">
       <option value="all">Anual (Jan–Jul)</option>
+      <option value="range">Escolher período…</option>
       <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
       <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
       <option value="6">Julho</option>
     </select>
+    <span id="ovRangeWrap" style="display:none;align-items:center;gap:6px">
+      <span class="fl">de:</span>
+      <select class="fs" id="ovDe" onchange="updateOV()">
+        <option value="0">Jan</option><option value="1">Fev</option><option value="2">Mar</option>
+        <option value="3">Abr</option><option value="4">Mai</option><option value="5">Jun</option>
+        <option value="6">Jul</option>
+      </select>
+      <span class="fl">até:</span>
+      <select class="fs" id="ovAte" onchange="updateOV()">
+        <option value="0">Jan</option><option value="1">Fev</option><option value="2">Mar</option>
+        <option value="3">Abr</option><option value="4">Mai</option><option value="5">Jun</option>
+        <option value="6" selected>Jul</option>
+      </select>
+    </span>
     <div class="fdiv"></div>
     <span class="fl">Base %:</span>
     <select class="fs" id="ovBase" onchange="updateOV()">
@@ -441,13 +456,25 @@ function bopt(yF,stk){
 }
 function mkC(id,type,labels,ds,opts){var el=document.getElementById(id);if(!el)return;var e=Chart.getChart(el);if(e)e.destroy();return new Chart(el,{type:type,data:{labels:labels,datasets:ds},options:opts});}
 
+function onOvMesChange(){
+  var m=document.getElementById('ovMes').value;
+  document.getElementById('ovRangeWrap').style.display=(m==='range')?'inline-flex':'none';
+  updateOV();
+}
 function updateOV(){
   var m=document.getElementById('ovMes').value;
   var base=document.getElementById('ovBase').value;
   var bk=base==='rl'?'rl':'rb';
-  var ci=cols(m);
-  var mn=m==='all'?'Jan–'+M[numMeses-1]+' 2026':MF[parseInt(m)]+' 2026';
-  var s=function(k){return ci.reduce(function(a,i){return a+D[k][i];},0);};
+  var ci,mn;
+  if(m==='all'){ci=cols('all');mn='Jan–'+M[numMeses-1]+' 2026';}
+  else if(m==='range'){
+    var deEl=document.getElementById('ovDe'),ateEl=document.getElementById('ovAte');
+    var de=parseInt(deEl.value),ate=parseInt(ateEl.value);
+    if(de>ate){var t=de;de=ate;ate=t;deEl.value=de;ateEl.value=ate;}
+    ci=[];for(var i=de;i<=ate;i++)ci.push(i);
+    mn=(ci.length===1?MF[ci[0]]:MF[ci[0]]+'–'+MF[ci[ci.length-1]])+' 2026';
+  }else{ci=[parseInt(m)];mn=MF[parseInt(m)]+' 2026';}
+  var s=function(k){return ci.reduce(function(a,i){return a+(D[k][i]||0);},0);};
   var rb=s('rb'),rl=s('rl'),mb=s('mb'),eb=s('eb'),ro=s('ro'),ll=s('ll'),dt=s('dt');
   var bv=base==='rl'?rl:rb;
   var p=function(v){return pf(v,bv);};
@@ -849,12 +876,16 @@ function rebuildMonthSelectors(){
   for(var i=0;i<numMeses;i++){monthOpts+='<option value="'+i+'">'+MF[i]+'</option>';monthOptsShort+='<option value="'+i+'">'+M[i]+'</option>';}
   var monthOptsAll='',monthOptsShortAll='';
   for(var j=0;j<12;j++){monthOptsAll+='<option value="'+j+'">'+MF[j]+'</option>';monthOptsShortAll+='<option value="'+j+'">'+M[j]+'</option>';}
-  ['ovMes','avMes'].forEach(function(id){
+  var ovEl=document.getElementById('ovMes');
+  if(ovEl){var cur=ovEl.value;ovEl.innerHTML='<option value="all">Anual (Jan–'+lastM+')</option><option value="range">Escolher período…</option>'+monthOpts;if(Array.from(ovEl.options).some(function(o){return o.value===cur;}))ovEl.value=cur;}
+  ['ovDe','ovAte'].forEach(function(id){
     var el=document.getElementById(id);if(!el)return;
     var cur=el.value;
-    el.innerHTML='<option value="all">Anual (Jan–'+lastM+')</option>'+monthOpts;
-    if(Array.from(el.options).some(function(o){return o.value===cur;}))el.value=cur;
+    el.innerHTML=monthOptsShortAll;
+    if(Array.from(el.options).some(function(o){return o.value===cur;}))el.value=cur;else el.value=(id==='ovAte')?(numMeses-1):0;
   });
+  var avEl=document.getElementById('avMes');
+  if(avEl){var cur=avEl.value;avEl.innerHTML='<option value="all">Anual (Jan–'+lastM+')</option>'+monthOpts;if(Array.from(avEl.options).some(function(o){return o.value===cur;}))avEl.value=cur;}
   var iEl=document.getElementById('iMes');
   if(iEl){var cur=iEl.value;iEl.innerHTML='<option value="all">Anual (Jan–'+lastM+')</option>'+monthOpts;if(Array.from(iEl.options).some(function(o){return o.value===cur;}))iEl.value=cur;}
   var dEl=document.getElementById('dMes');
