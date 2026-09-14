@@ -741,19 +741,19 @@ function renderBalPage(){
     '<div class="bal-row tot"><span>Ativo Não Circulante</span><span>'+fmt(b.anc)+'</span></div>'+
     '<div class="bal-row tot" style="border-top:2px solid rgba(201,168,76,.4);margin-top:8px"><span>ATIVO TOTAL</span><span>'+fmt(b.at)+'</span></div></div>'+
     '<div class="bal-section"><div class="bal-title">PASSIVO CIRCULANTE</div>'+
-    '<div class="bal-row"><span class="bal-name">Fornecedores</span><span class="bal-val" style="color:var(--red2)">'+fmt(b.forn)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Empréstimos CP</span><span class="bal-val" style="color:var(--red2)">'+fmt(b.empCP)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Obrig. Trabalhistas</span><span class="bal-val" style="color:var(--red2)">'+fmt(b.obrT)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Obrig. Tributárias</span><span class="bal-val" style="color:var(--red2)">'+fmt(b.obrTrib)+'</span></div>'+
-    '<div class="bal-row tot"><span>Passivo Circulante</span><span style="color:var(--red2)">'+fmt(b.pc)+'</span></div>'+
-    '<div class="bal-row" style="margin-top:8px"><span class="bal-name">Empréstimos LP</span><span class="bal-val" style="color:var(--amber)">'+fmt(b.empLP)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Outros PNC</span><span class="bal-val" style="color:var(--amber)">'+fmt(b.outPNC)+'</span></div>'+
-    '<div class="bal-row tot"><span>Passivo Não Circ.</span><span style="color:var(--amber)">'+fmt(b.pnc)+'</span></div></div>'+
+    '<div class="bal-row"><span class="bal-name">Fornecedores</span><span class="bal-val">'+fmt(b.forn)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Empréstimos CP</span><span class="bal-val">'+fmt(b.empCP)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Obrig. Trabalhistas</span><span class="bal-val">'+fmt(b.obrT)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Obrig. Tributárias</span><span class="bal-val">'+fmt(b.obrTrib)+'</span></div>'+
+    '<div class="bal-row tot"><span>Passivo Circulante</span><span>'+fmt(b.pc)+'</span></div>'+
+    '<div class="bal-row" style="margin-top:8px"><span class="bal-name">Empréstimos LP</span><span class="bal-val">'+fmt(b.empLP)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Outros PNC</span><span class="bal-val">'+fmt(b.outPNC)+'</span></div>'+
+    '<div class="bal-row tot"><span>Passivo Não Circ.</span><span>'+fmt(b.pnc)+'</span></div></div>'+
     '<div class="bal-section"><div class="bal-title">PATRIMÔNIO LÍQUIDO</div>'+
     '<div class="bal-row"><span class="bal-name">Capital Social</span><span class="bal-val">'+fmt(b.capSoc)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Ajuste Aval. Patrimonial</span><span class="bal-val" style="color:'+(b.ajusteAval<0?'var(--red2)':'inherit')+'">'+fmt(b.ajusteAval)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Ajuste Aval. Patrimonial</span><span class="bal-val">'+fmt(b.ajusteAval)+'</span></div>'+
     '<div class="bal-row"><span class="bal-name">Lucros Acumulados</span><span class="bal-val">'+fmt(lucrosAcumTot)+'</span></div>'+
-    '<div class="bal-row"><span class="bal-name">Resultado do Exercício</span><span class="bal-val" style="color:'+(b.resExerc>=0?'var(--green2)':'var(--red2)')+'">'+fmt(b.resExerc)+'</span></div>'+
+    '<div class="bal-row"><span class="bal-name">Resultado do Exercício</span><span class="bal-val">'+fmt(b.resExerc)+'</span></div>'+
     '<div class="bal-row tot"><span>Patrimônio Líquido</span><span style="color:var(--gold)">'+fmt(b.pl)+'</span></div>'+
     '<div class="bal-row tot" style="border-top:2px solid rgba(201,168,76,.4);margin-top:16px"><span>PASSIVO + PL</span><span>'+fmt(b.pt)+'</span></div>'+
     '<div style="position:relative;height:130px;margin-top:14px"><canvas id="cIdx"></canvas></div></div>';
