@@ -81,6 +81,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .rs td:first-child{color:var(--gray);padding-left:20px;font-size:16px;background:transparent}
 .rs td{background:transparent;color:var(--gray2)}
 .vn{color:var(--red2)!important}
+.dre-blank{color:rgba(160,176,190,.35)!important;text-align:center!important}
 .vpc{font-size:13px;color:var(--amber);display:block;font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;line-height:1.3}
 .au{color:var(--green2);font-size:11.5px}.ad{color:var(--red2);font-size:11.5px}.an{color:var(--gray);font-size:11.5px}
 .dlbl{cursor:help;border-bottom:1px dotted rgba(201,168,76,.5)}
@@ -535,8 +536,8 @@ function renderTreeRows(nodes,ci,view,base,bk,depth){
     var hasKids=!!node.c;
     var expanded=hasKids&&dreExpanded[node.r];
     var anual=0;
-    var vals=ci.map(function(i){var val=node.v[i];anual+=val;return val;});
-    var totB=ci.reduce(function(s,i){return s+D[bk][i];},0);
+    var vals=ci.map(function(i){var val=node.v[i];if(val!==undefined)anual+=val;return val;});
+    var totB=ci.reduce(function(s,i){return s+(D[bk][i]||0);},0);
     var desc=DESCS[node.l]||'';
     var bg=node.t==='rt'?'background:rgba(201,168,76,.08)':node.t==='rst'?'background:rgba(255,255,255,.02)':'background:transparent';
     var pad=12+depth*18;
@@ -546,9 +547,10 @@ function renderTreeRows(nodes,ci,view,base,bk,depth){
     else h+=node.l;
     h+='</td>';
     vals.forEach(function(v,ci2){
+      if(v===undefined){h+='<td class="dre-blank">—</td>';return;}
       var i=ci[ci2];var bv=D[bk][i];var p=bv?v/bv:0;
       var arr='▬';
-      if(ci2>0){var pv=node.v[ci[ci2-1]];var pp=D[bk][ci[ci2-1]]?pv/D[bk][ci[ci2-1]]:0;arr=p>pp?'▲':p<pp?'▼':'▬';}
+      if(ci2>0){var pv=node.v[ci[ci2-1]];if(pv!==undefined){var pp=D[bk][ci[ci2-1]]?pv/D[bk][ci[ci2-1]]:0;arr=p>pp?'▲':p<pp?'▼':'▬';}}
       var nc=v<0?' vn':'';var ac=arr==='▲'?'au':arr==='▼'?'ad':'an';
       if(view==='val')h+='<td class="'+nc+'">'+fmt(v)+' <span class="'+ac+'">'+arr+'</span></td>';
       else if(view==='pct')h+='<td><span class="vpc">'+(p*100).toFixed(1)+'%</span><span class="'+ac+'">'+arr+'</span></td>';
@@ -579,7 +581,7 @@ function buildDRE(){
   var base=document.getElementById('dBase').value;
   var bk=base==='rl'?'rl':'rb';
   var ci;
-  if(m==='all'){ci=Array.from({length:numMeses},(_,i)=>i);}
+  if(m==='all'){ci=Array.from({length:12},(_,i)=>i);}
   else if(m==='range'){
     var de=parseInt(deEl.value),ate=parseInt(ateEl.value);
     if(de>ate){var t=de;de=ate;ate=t;deEl.value=de;ateEl.value=ate;}
@@ -587,7 +589,7 @@ function buildDRE(){
   }
   else{ci=[parseInt(m)];}
   var mnLbl;
-  if(m==='all')mnLbl='Jan–'+M[numMeses-1]+' 2026 (completo)';
+  if(m==='all')mnLbl='Jan–Dez 2026';
   else if(m==='range')mnLbl=(ci.length===1?MF[ci[0]]:MF[ci[0]]+'–'+MF[ci[ci.length-1]])+' 2026';
   else mnLbl=MF[parseInt(m)]+' 2026';
   var subEl=document.getElementById('dSub');
@@ -845,6 +847,8 @@ function rebuildMonthSelectors(){
   var lastM=M[numMeses-1];
   var monthOpts='',monthOptsShort='';
   for(var i=0;i<numMeses;i++){monthOpts+='<option value="'+i+'">'+MF[i]+'</option>';monthOptsShort+='<option value="'+i+'">'+M[i]+'</option>';}
+  var monthOptsAll='',monthOptsShortAll='';
+  for(var j=0;j<12;j++){monthOptsAll+='<option value="'+j+'">'+MF[j]+'</option>';monthOptsShortAll+='<option value="'+j+'">'+M[j]+'</option>';}
   ['ovMes','avMes'].forEach(function(id){
     var el=document.getElementById(id);if(!el)return;
     var cur=el.value;
@@ -854,11 +858,11 @@ function rebuildMonthSelectors(){
   var iEl=document.getElementById('iMes');
   if(iEl){var cur=iEl.value;iEl.innerHTML='<option value="all">Anual (Jan–'+lastM+')</option>'+monthOpts;if(Array.from(iEl.options).some(function(o){return o.value===cur;}))iEl.value=cur;}
   var dEl=document.getElementById('dMes');
-  if(dEl){var cur=dEl.value;dEl.innerHTML='<option value="all">Todos (Jan–'+lastM+')</option><option value="range">Escolher período…</option>'+monthOpts;if(Array.from(dEl.options).some(function(o){return o.value===cur;}))dEl.value=cur;}
+  if(dEl){var cur=dEl.value;dEl.innerHTML='<option value="all">Todos (Jan–Dez)</option><option value="range">Escolher período…</option>'+monthOptsAll;if(Array.from(dEl.options).some(function(o){return o.value===cur;}))dEl.value=cur;}
   ['dDe','dAte'].forEach(function(id){
     var el=document.getElementById(id);if(!el)return;
     var cur=el.value;
-    el.innerHTML=monthOptsShort;
+    el.innerHTML=monthOptsShortAll;
     if(Array.from(el.options).some(function(o){return o.value===cur;}))el.value=cur;else el.value=(id==='dAte')?(numMeses-1):0;
   });
   var badge=document.getElementById('tbBadge');
