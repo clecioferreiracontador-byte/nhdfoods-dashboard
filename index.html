@@ -793,7 +793,8 @@ function buildInd(){
 function computeLALUR(uptoIdx){
   var out=[];
   var lucroAcum=0,subvAcum=0,irApuradoPrev=0,csApuradoPrev=0;
-  for(var i=0;i<=uptoIdx;i++){
+  var lastReal=Math.min(uptoIdx,numMeses-1);
+  for(var i=0;i<=lastReal;i++){
     lucroAcum+=D.ai[i]||0;
     subvAcum+=D.subv[i]||0;
     var adicAcum=0;
@@ -814,6 +815,7 @@ function computeLALUR(uptoIdx){
     var prejTransp=baseAntes<0?lalurPrejFiscalIni:(lalurPrejFiscalIni-prejComp);
     out.push({lucroAcum:lucroAcum,adicAcum:adicAcum,subvAcum:subvAcum,exclAcum:exclAcum,baseAntes:baseAntes,limite30:limite30,prejComp:prejComp,baseIR:baseIR,ir15:ir15,adicIR:adicIR,irApurado:irApurado,irMes:irMes,csApurado:csApurado,csMes:csMes,prejTransp:prejTransp});
   }
+  for(var j=lastReal+1;j<=uptoIdx;j++)out.push(null);
   return out;
 }
 function parseBR(v){
@@ -848,35 +850,40 @@ function lalurRow(lbl,tip,cls,vals,pad){
   if(tip)h+='<span class="dlbl" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+lbl+'</span>';
   else h+=lbl;
   h+='</td>';
-  vals.forEach(function(v){h+='<td'+(v<0?' class="vn"':'')+'>'+fmt(v)+'</td>';});
+  vals.forEach(function(v){
+    if(v===undefined||v===null){h+='<td class="dre-blank">—</td>';return;}
+    h+='<td'+(v<0?' class="vn"':'')+'>'+fmt(v)+'</td>';
+  });
   h+='</tr>';
   return h;
 }
 function buildLalurTable(){
-  var n=numMeses;
+  var n=12;
   var ci=Array.from({length:n},function(_,i){return i;});
   var calc=computeLALUR(n-1);
   var totalMes=[],totalProv=[],totalDif=[];
   for(var i=0;i<n;i++){
+    if(!calc[i]){totalMes.push(null);totalProv.push(null);totalDif.push(null);continue;}
     var tm=calc[i].irMes+calc[i].csMes;
     var tp=(D.ir[i]||0)+(D.cs[i]||0);
     totalMes.push(tm);totalProv.push(tp);totalDif.push(tm-tp);
   }
+  var g=function(k){return calc.map(function(c){return c?c[k]:undefined;});};
   var h='<table class="dt"><thead><tr><th>Conta</th>';
   ci.forEach(function(i){h+='<th>'+M[i]+'</th>';});
   h+='</tr></thead><tbody>';
-  h+=lalurRow('Lucro Líquido Acumulado','Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE.','rst',calc.map(function(c){return c.lucroAcum;}));
-  h+=lalurRow('( + ) Adições',null,'rs',calc.map(function(c){return c.adicAcum;}),24);
-  h+=lalurRow('( - ) Excl. Subvenção ICMS','Conta 3.3.01.1004 — SUBVENÇÃO ICMS (saldo credor acumulado, automático).','rs',calc.map(function(c){return c.subvAcum;}),24);
-  h+=lalurRow('( - ) Excl. Ajustes Ex. Anteriores','Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES (valor manual).','rs',calc.map(function(){return lalurAjusteExAnt;}),24);
-  h+=lalurRow('Base Cálc. antes Compensação',null,'rst',calc.map(function(c){return c.baseAntes;}));
-  h+=lalurRow('( - ) Compensação Prejuízo Fiscal',null,'rs',calc.map(function(c){return c.prejComp;}),24);
-  h+=lalurRow('Base de Cálculo IR/CSLL',null,'rst',calc.map(function(c){return c.baseIR;}));
-  h+=lalurRow('IR (15%)',null,'rs',calc.map(function(c){return c.ir15;}),24);
-  h+=lalurRow('Adicional IR (10%)',null,'rs',calc.map(function(c){return c.adicIR;}),24);
-  h+=lalurRow('IRPJ a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9001 — PROVISÃO IRPJ.','rt',calc.map(function(c){return c.irMes;}));
-  h+=lalurRow('CSLL (9%)',null,'rs',calc.map(function(c){return c.csApurado;}),24);
-  h+=lalurRow('CSLL a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9002 — PROVISÃO CSLL.','rt',calc.map(function(c){return c.csMes;}));
+  h+=lalurRow('Lucro Líquido Acumulado','Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE.','rst',g('lucroAcum'));
+  h+=lalurRow('( + ) Adições',null,'rs',g('adicAcum'),24);
+  h+=lalurRow('( - ) Excl. Subvenção ICMS','Conta 3.3.01.1004 — SUBVENÇÃO ICMS (saldo credor acumulado, automático).','rs',g('subvAcum'),24);
+  h+=lalurRow('( - ) Excl. Ajustes Ex. Anteriores','Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES (valor manual).','rs',calc.map(function(c){return c?lalurAjusteExAnt:undefined;}),24);
+  h+=lalurRow('Base Cálc. antes Compensação',null,'rst',g('baseAntes'));
+  h+=lalurRow('( - ) Compensação Prejuízo Fiscal',null,'rs',g('prejComp'),24);
+  h+=lalurRow('Base de Cálculo IR/CSLL',null,'rst',g('baseIR'));
+  h+=lalurRow('IR (15%)',null,'rs',g('ir15'),24);
+  h+=lalurRow('Adicional IR (10%)',null,'rs',g('adicIR'),24);
+  h+=lalurRow('IRPJ a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9001 — PROVISÃO IRPJ.','rt',g('irMes'));
+  h+=lalurRow('CSLL (9%)',null,'rs',g('csApurado'),24);
+  h+=lalurRow('CSLL a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9002 — PROVISÃO CSLL.','rt',g('csMes'));
   h+=lalurRow('TOTAL a Recolher (IRPJ+CSLL)',null,'rt',totalMes);
   h+=lalurRow('Provisão no Balancete (IRPJ+CSLL)',null,'rs',totalProv,24);
   h+=lalurRow('Diferença',null,'rs',totalDif,24);
@@ -890,16 +897,22 @@ function buildLalur(){
   document.getElementById('lalurTableWrap').style.display=tableMode?'block':'none';
   document.getElementById('lalurCardsWrap').style.display=tableMode?'none':'block';
   if(tableMode){
-    document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · Ano completo (Jan–'+M[numMeses-1]+' 2026)';
+    document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · Ano completo (Jan–Dez 2026)';
     buildLalurTable();
     return;
   }
   var m=parseInt(mEl.value);
-  if(m>numMeses-1){m=numMeses-1;mEl.value=m;}
   var calc=computeLALUR(m);
   var cur=calc[m];
   document.getElementById('lalurAjusteInput').value=fmtBR(lalurAjusteExAnt);
   document.getElementById('lalurPrejIniInput').value=fmtBR(lalurPrejFiscalIni);
+  if(!cur){
+    document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · '+MF[m]+' 2026 (balancete ainda não importado)';
+    ['lIrLucro','lIrAdic','lIrExclSubv','lIrExclAjuste','lIrBaseAntes','lIrComp','lIrBase','lIr15','lIrAdicional','lIrApurado','lIrAnterior','lIrMes','lCsLucro','lCsAdic','lCsExclSubv','lCsExclAjuste','lCsBaseAntes','lCsComp','lCsBase','lCs9','lCsApurado','lCsAnterior','lCsMes','lPrejTransp','lTotalMes','lTotalProvisao','lTotalDif'].forEach(function(id){
+      var el=document.getElementById(id);el.textContent='—';el.style.color='';
+    });
+    return;
+  }
   document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · Acumulado Jan–'+M[m]+' 2026';
   document.getElementById('lIrLucro').textContent=fmt(cur.lucroAcum);
   document.getElementById('lIrAdic').textContent=fmt(cur.adicAcum);
@@ -1158,7 +1171,7 @@ function rebuildMonthSelectors(){
     balEl.value=balSelMes;
   }
   var lalurEl=document.getElementById('lalurMes');
-  if(lalurEl){var cur=lalurEl.value;lalurEl.innerHTML='<option value="all">Ano Completo (tabela)</option>'+monthOpts;if(Array.from(lalurEl.options).some(function(o){return o.value===cur;}))lalurEl.value=cur;else lalurEl.value=numMeses-1;}
+  if(lalurEl){var cur=lalurEl.value;lalurEl.innerHTML='<option value="all">Ano Completo (tabela)</option>'+monthOptsAll;if(Array.from(lalurEl.options).some(function(o){return o.value===cur;}))lalurEl.value=cur;else lalurEl.value=numMeses-1;}
 }
 function findBalanceteSheet(wb){
   var names=wb.SheetNames;
