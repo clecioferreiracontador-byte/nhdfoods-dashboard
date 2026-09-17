@@ -429,20 +429,23 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
   <div class="fbar">
     <span class="fl">Mês:</span>
     <select class="fs" id="lalurMes" onchange="buildLalur()">
+      <option value="all">Ano Completo (tabela)</option>
       <option value="0">Janeiro</option><option value="1">Fevereiro</option><option value="2">Março</option>
       <option value="3">Abril</option><option value="4">Maio</option><option value="5">Junho</option>
       <option value="6" selected>Julho</option>
     </select>
-    <span class="finfo">💡 Cálculo acumulado Jan → mês selecionado (Lucro Real Anual, balanço de redução/suspensão)</span>
+    <span class="finfo">💡 Cálculo acumulado Jan → mês selecionado (Lucro Real Anual, balanço de redução/suspensão) · passe o mouse sobre uma linha para ver de qual conta ela vem</span>
   </div>
   <div style="margin:18px 0 16px"><div class="ptitle">LALUR</div><div class="psub" id="lalurSub">Livro de Apuração do Lucro Real · Jan–Jul 2026</div></div>
+  <div id="lalurTableWrap" style="display:none;margin-bottom:18px"></div>
+  <div id="lalurCardsWrap">
   <div class="igrid">
     <div class="icard">
       <div class="ictitle">Apuração — IRPJ</div>
-      <div class="irow"><span class="iname">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lIrLucro"></div></div></div>
-      <div class="irow"><span class="iname">( + ) Adições</span><div class="ivals"><div class="ival" id="lIrAdic"></div></div></div>
-      <div class="irow"><span class="iname">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lIrExclSubv"></div></div></div>
-      <div class="irow"><span class="iname">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lIrExclAjuste"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE (Jan até o mês selecionado).">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lIrLucro"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Multas de trânsito, outras despesas indedutíveis e ajustes de exercícios anteriores lançados a débito — hoje sem lançamentos no período.">( + ) Adições</span><div class="ivals"><div class="ival" id="lIrAdic"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Conta 3.3.01.1004 — SUBVENÇÃO ICMS. Saldo credor acumulado da conta, extraído automaticamente do balancete importado.">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lIrExclSubv"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES. Valor fixado por julgamento profissional (não vem automaticamente do balancete) — editável em 'Parâmetros Manuais'.">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lIrExclAjuste"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base Cálc. antes Comp. Prej. Fiscal</span><div class="ivals"><div class="ival" id="lIrBaseAntes"></div></div></div>
       <div class="irow"><span class="iname">( - ) Compensação Prejuízo Fiscal (limite 30%)</span><div class="ivals"><div class="ival" id="lIrComp"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base de Cálculo do IR</span><div class="ivals"><div class="ival" id="lIrBase"></div></div></div>
@@ -450,21 +453,21 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
       <div class="irow"><span class="iname">Adicional IR (10% s/ excedente)</span><div class="ivals"><div class="ival" id="lIrAdicional"></div></div></div>
       <div class="irow"><span class="iname">IR Apurado (acumulado)</span><div class="ivals"><div class="ival" id="lIrApurado"></div></div></div>
       <div class="irow"><span class="iname">( - ) Já recolhido em meses anteriores</span><div class="ivals"><div class="ival" id="lIrAnterior"></div></div></div>
-      <div class="irow" style="background:rgba(52,152,219,.1);border-radius:6px"><span class="iname" style="font-weight:700;color:var(--blue)">IRPJ a Recolher/Recuperar no Mês</span><div class="ivals"><div class="ival" style="font-weight:700;color:var(--blue)" id="lIrMes"></div></div></div>
+      <div class="irow" style="background:rgba(52,152,219,.1);border-radius:6px"><span class="iname dlbl" style="font-weight:700;color:var(--blue)" data-tip="Este valor corresponde à provisão contabilizada na conta 3.2.01.9001 — PROVISÃO IRPJ do balancete.">IRPJ a Recolher/Recuperar no Mês</span><div class="ivals"><div class="ival" style="font-weight:700;color:var(--blue)" id="lIrMes"></div></div></div>
     </div>
     <div class="icard">
       <div class="ictitle">Apuração — CSLL</div>
-      <div class="irow"><span class="iname">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lCsLucro"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE (Jan até o mês selecionado).">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lCsLucro"></div></div></div>
       <div class="irow"><span class="iname">( + ) Adições</span><div class="ivals"><div class="ival" id="lCsAdic"></div></div></div>
-      <div class="irow"><span class="iname">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lCsExclSubv"></div></div></div>
-      <div class="irow"><span class="iname">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lCsExclAjuste"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Conta 3.3.01.1004 — SUBVENÇÃO ICMS. Saldo credor acumulado da conta, extraído automaticamente do balancete importado.">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lCsExclSubv"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES. Valor fixado por julgamento profissional (não vem automaticamente do balancete) — editável em 'Parâmetros Manuais'.">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lCsExclAjuste"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base Cálc. antes Comp. Base Negativa</span><div class="ivals"><div class="ival" id="lCsBaseAntes"></div></div></div>
       <div class="irow"><span class="iname">( - ) Compensação Base Negativa (limite 30%)</span><div class="ivals"><div class="ival" id="lCsComp"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base de Cálculo da CSLL</span><div class="ivals"><div class="ival" id="lCsBase"></div></div></div>
       <div class="irow"><span class="iname">CSLL (9%)</span><div class="ivals"><div class="ival" id="lCs9"></div></div></div>
       <div class="irow"><span class="iname">CSLL Apurada (acumulado)</span><div class="ivals"><div class="ival" id="lCsApurado"></div></div></div>
       <div class="irow"><span class="iname">( - ) Já recolhido em meses anteriores</span><div class="ivals"><div class="ival" id="lCsAnterior"></div></div></div>
-      <div class="irow" style="background:rgba(52,152,219,.1);border-radius:6px"><span class="iname" style="font-weight:700;color:var(--blue)">CSLL a Recolher/Recuperar no Mês</span><div class="ivals"><div class="ival" style="font-weight:700;color:var(--blue)" id="lCsMes"></div></div></div>
+      <div class="irow" style="background:rgba(52,152,219,.1);border-radius:6px"><span class="iname dlbl" style="font-weight:700;color:var(--blue)" data-tip="Este valor corresponde à provisão contabilizada na conta 3.2.01.9002 — PROVISÃO CSLL do balancete.">CSLL a Recolher/Recuperar no Mês</span><div class="ivals"><div class="ival" style="font-weight:700;color:var(--blue)" id="lCsMes"></div></div></div>
       <div class="irow" style="margin-top:10px"><span class="iname">Prejuízo Fiscal / Base Negativa a Transportar</span><div class="ivals"><div class="ival" id="lPrejTransp"></div></div></div>
     </div>
   </div>
@@ -475,6 +478,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
       <div class="icard" style="padding:12px 14px"><div class="klbl">PROVISÃO NO BALANCETE (IRPJ+CSLL)</div><div class="kval" id="lTotalProvisao" style="font-size:20px"></div></div>
       <div class="icard" style="padding:12px 14px"><div class="klbl">DIFERENÇA</div><div class="kval" id="lTotalDif" style="font-size:20px"></div></div>
     </div>
+  </div>
   </div>
   <div class="cc" style="margin-top:16px">
     <div class="ctop"><div><div class="ctitle">Parâmetros Manuais</div><div class="cdesc">Valores de julgamento profissional que não vêm automaticamente do balancete — ajuste se necessário</div></div></div>
@@ -839,8 +843,57 @@ function loadLalurParams(){
     if(st.prejIni!==undefined)lalurPrejFiscalIni=st.prejIni;
   }catch(e){}
 }
+function lalurRow(lbl,tip,cls,vals,pad){
+  var h='<tr class="'+cls+'"><td style="padding-left:'+(pad||12)+'px">';
+  if(tip)h+='<span class="dlbl" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+lbl+'</span>';
+  else h+=lbl;
+  h+='</td>';
+  vals.forEach(function(v){h+='<td'+(v<0?' class="vn"':'')+'>'+fmt(v)+'</td>';});
+  h+='</tr>';
+  return h;
+}
+function buildLalurTable(){
+  var n=numMeses;
+  var ci=Array.from({length:n},function(_,i){return i;});
+  var calc=computeLALUR(n-1);
+  var totalMes=[],totalProv=[],totalDif=[];
+  for(var i=0;i<n;i++){
+    var tm=calc[i].irMes+calc[i].csMes;
+    var tp=(D.ir[i]||0)+(D.cs[i]||0);
+    totalMes.push(tm);totalProv.push(tp);totalDif.push(tm-tp);
+  }
+  var h='<table class="dt"><thead><tr><th>Conta</th>';
+  ci.forEach(function(i){h+='<th>'+M[i]+'</th>';});
+  h+='</tr></thead><tbody>';
+  h+=lalurRow('Lucro Líquido Acumulado','Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE.','rst',calc.map(function(c){return c.lucroAcum;}));
+  h+=lalurRow('( + ) Adições',null,'rs',calc.map(function(c){return c.adicAcum;}),24);
+  h+=lalurRow('( - ) Excl. Subvenção ICMS','Conta 3.3.01.1004 — SUBVENÇÃO ICMS (saldo credor acumulado, automático).','rs',calc.map(function(c){return c.subvAcum;}),24);
+  h+=lalurRow('( - ) Excl. Ajustes Ex. Anteriores','Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES (valor manual).','rs',calc.map(function(){return lalurAjusteExAnt;}),24);
+  h+=lalurRow('Base Cálc. antes Compensação',null,'rst',calc.map(function(c){return c.baseAntes;}));
+  h+=lalurRow('( - ) Compensação Prejuízo Fiscal',null,'rs',calc.map(function(c){return c.prejComp;}),24);
+  h+=lalurRow('Base de Cálculo IR/CSLL',null,'rst',calc.map(function(c){return c.baseIR;}));
+  h+=lalurRow('IR (15%)',null,'rs',calc.map(function(c){return c.ir15;}),24);
+  h+=lalurRow('Adicional IR (10%)',null,'rs',calc.map(function(c){return c.adicIR;}),24);
+  h+=lalurRow('IRPJ a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9001 — PROVISÃO IRPJ.','rt',calc.map(function(c){return c.irMes;}));
+  h+=lalurRow('CSLL (9%)',null,'rs',calc.map(function(c){return c.csApurado;}),24);
+  h+=lalurRow('CSLL a Recolher/Recuperar no Mês','Provisão contabilizada na conta 3.2.01.9002 — PROVISÃO CSLL.','rt',calc.map(function(c){return c.csMes;}));
+  h+=lalurRow('TOTAL a Recolher (IRPJ+CSLL)',null,'rt',totalMes);
+  h+=lalurRow('Provisão no Balancete (IRPJ+CSLL)',null,'rs',totalProv,24);
+  h+=lalurRow('Diferença',null,'rs',totalDif,24);
+  h+='</tbody></table>';
+  document.getElementById('lalurTableWrap').innerHTML='<div class="tw">'+h+'</div>';
+}
 function buildLalur(){
+  ensureTip();
   var mEl=document.getElementById('lalurMes');
+  var tableMode=mEl.value==='all';
+  document.getElementById('lalurTableWrap').style.display=tableMode?'block':'none';
+  document.getElementById('lalurCardsWrap').style.display=tableMode?'none':'block';
+  if(tableMode){
+    document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · Ano completo (Jan–'+M[numMeses-1]+' 2026)';
+    buildLalurTable();
+    return;
+  }
   var m=parseInt(mEl.value);
   if(m>numMeses-1){m=numMeses-1;mEl.value=m;}
   var calc=computeLALUR(m);
@@ -1105,7 +1158,7 @@ function rebuildMonthSelectors(){
     balEl.value=balSelMes;
   }
   var lalurEl=document.getElementById('lalurMes');
-  if(lalurEl){var cur=lalurEl.value;lalurEl.innerHTML=monthOpts;if(Array.from(lalurEl.options).some(function(o){return o.value===cur;}))lalurEl.value=cur;else lalurEl.value=numMeses-1;}
+  if(lalurEl){var cur=lalurEl.value;lalurEl.innerHTML='<option value="all">Ano Completo (tabela)</option>'+monthOpts;if(Array.from(lalurEl.options).some(function(o){return o.value===cur;}))lalurEl.value=cur;else lalurEl.value=numMeses-1;}
 }
 function findBalanceteSheet(wb){
   var names=wb.SheetNames;
