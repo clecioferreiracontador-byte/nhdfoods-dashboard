@@ -953,7 +953,7 @@ function buildLalur(){
 function mkIdxCard(cls,lbl,val,ref,sub,pct,tip,big){
   var barColor='var(--gold)';
   var statusOk=cls==='ok';
-  var statusHtml='<span class="idx-status '+(statusOk?'ok':'warn')+'">'+(statusOk?'✅ Saudável':'⚠ Atenção')+'</span>';
+  var statusHtml='<span class="idx-status '+(statusOk?'ok':'warn')+'">'+(statusOk?'Saudável':'Atenção')+'</span>';
   return '<div class="idx-card idx-tip" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+
     '<div class="idx-lbl"><span>'+lbl+'</span>'+statusHtml+'</div>'+
     '<div class="idx-val"'+(big?' style="font-size:20px"':'')+'>'+val+'</div>'+
