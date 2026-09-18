@@ -111,7 +111,10 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .idx-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
 .idx-card{background:var(--n3);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 15px;position:relative;overflow:hidden}
 .idx-card::before{content:"";position:absolute;top:0;left:0;right:0;height:2.5px}
-.idx-lbl{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.idx-lbl{font-size:11px;color:var(--gray);font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.idx-status{font-size:9.5px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:.02em;text-transform:none}
+.idx-status.ok{color:var(--green2);background:rgba(46,204,113,.14)}
+.idx-status.warn{color:var(--amber);background:rgba(230,126,34,.14)}
 .idx-val{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-variant-numeric:tabular-nums;font-weight:500;font-size:27px;color:var(--white);letter-spacing:-.03em;line-height:1;margin-bottom:5px}
 .idx-ref{font-size:12px;color:var(--gray);margin-top:3px}
 .idx-bar{height:3px;background:rgba(255,255,255,.07);border-radius:2px;margin-top:10px;overflow:hidden}
@@ -949,8 +952,10 @@ function buildLalur(){
 }
 function mkIdxCard(cls,lbl,val,ref,sub,pct,tip,big){
   var barColor='var(--gold)';
+  var statusOk=cls==='ok';
+  var statusHtml='<span class="idx-status '+(statusOk?'ok':'warn')+'">'+(statusOk?'✅ Saudável':'⚠ Atenção')+'</span>';
   return '<div class="idx-card idx-tip" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+
-    '<div class="idx-lbl">'+lbl+'</div>'+
+    '<div class="idx-lbl"><span>'+lbl+'</span>'+statusHtml+'</div>'+
     '<div class="idx-val"'+(big?' style="font-size:20px"':'')+'>'+val+'</div>'+
     '<div class="idx-ref">'+ref+'</div>'+
     '<div style="font-size:12px;color:var(--gray);margin-top:4px">'+sub+'</div>'+
