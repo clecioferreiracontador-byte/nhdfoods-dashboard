@@ -1417,7 +1417,9 @@ function exportPageExcel(){
     if(kp.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(kp),'Indicadores');
     var moneyRe=/^(-?)R\$\s*([\d.]+),(\d{2})$/;
     page.querySelectorAll('table').forEach(function(t,i){
-      var ws=XLSX.utils.table_to_sheet(t,{raw:true});
+      var tc=t.cloneNode(true);
+      tc.querySelectorAll('.vpc').forEach(function(x){x.remove();});
+      var ws=XLSX.utils.table_to_sheet(tc,{raw:true});
       Object.keys(ws).forEach(function(k){
         if(k[0]==='!')return;
         var c=ws[k];
@@ -1466,12 +1468,31 @@ function exportPageExcel(){
       var lines=page.innerText.split('\n').map(function(x){return [toCell(x.trim())];}).filter(function(r){return r[0]!=='';});
       XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lines),'Resumo');
     }
+    var refSel=[].filter.call(page.querySelectorAll('select'),function(s){return s.id!=='impMes';})[0];
+    var refTxt=refSel&&refSel.selectedOptions[0]?refSel.selectedOptions[0].textContent.trim():'';
+    var head=[['NHD Foods — '+activePageName().replace('Ana','Aná').replace('Visao','Visão').replace('Balanco e Indices','Balanço & Índices')],
+      ['Referência: '+(refTxt||'Ano 2026')+' · Fonte: Audicon Contadores'],
+      ['Gerado em '+new Date().toLocaleString('pt-BR')],['']];
+    var SH=head.length;
+    wb.SheetNames.forEach(function(n){
+      var old=wb.Sheets[n];if(!old['!ref'])return;
+      var ws={};
+      Object.keys(old).forEach(function(k){
+        if(k[0]==='!')return;
+        var a=XLSX.utils.decode_cell(k);a.r+=SH;ws[XLSX.utils.encode_cell(a)]=old[k];
+      });
+      var r0=XLSX.utils.decode_range(old['!ref']);r0.s.r+=SH;r0.e.r+=SH;
+      ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:r0.s.c},e:r0.e});
+      if(old['!merges'])ws['!merges']=old['!merges'].map(function(m){return {s:{r:m.s.r+SH,c:m.s.c},e:{r:m.e.r+SH,c:m.e.c}};});
+      XLSX.utils.sheet_add_aoa(ws,head,{origin:'A1'});
+      wb.Sheets[n]=ws;
+    });
     wb.SheetNames.forEach(function(n){
       var ws=wb.Sheets[n];if(!ws['!ref'])return;
       var rg=XLSX.utils.decode_range(ws['!ref']),w=[];
       for(var c=rg.s.c;c<=rg.e.c;c++){
         var mx=10;
-        for(var r=rg.s.r;r<=rg.e.r;r++){var cell=ws[XLSX.utils.encode_cell({r:r,c:c})];if(cell&&cell.v!=null)mx=Math.max(mx,Math.min(60,String(cell.t==='n'?cell.v.toFixed(2):cell.v).length+4));}
+        for(var r=SH;r<=rg.e.r;r++){var cell=ws[XLSX.utils.encode_cell({r:r,c:c})];if(cell&&cell.v!=null)mx=Math.max(mx,Math.min(60,String(cell.t==='n'?cell.v.toFixed(2):cell.v).length+4));}
         w.push({wch:mx});
       }
       ws['!cols']=w;
