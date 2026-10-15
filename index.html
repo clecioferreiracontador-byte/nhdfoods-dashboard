@@ -421,6 +421,8 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
       <input type="file" id="impFile" accept=".xlsx,.xls" style="display:none" onchange="handleBalanceteFile(this.files[0])">
       <button class="fs" style="cursor:pointer" onclick="document.getElementById('impFile').click()">📂 Selecionar balancete (.xlsx)</button>
       <button class="fs" id="impSaveBtn" style="cursor:pointer;display:none;border-color:rgba(46,204,113,.5);color:var(--green2)" onclick="saveCurrentBase()">💾 Salvar base atual</button>
+      <button class="fs" id="impPubBtn" style="cursor:pointer;display:none;border-color:rgba(52,152,219,.5);color:var(--blue)" onclick="publishBaseToGitHub()">🌐 Publicar para todos (GitHub)</button>
+      <button class="fs" style="cursor:pointer" onclick="resetGhToken()" title="Esquecer o token do GitHub guardado neste navegador">🔑 Trocar token</button>
     </div>
     <div id="impStatus" style="font-size:13px;color:var(--gray);margin-top:10px;line-height:1.6"></div>
   </div>
@@ -1249,6 +1251,7 @@ function handleBalanceteFile(file){
       statusEl.textContent='✅ Balancete de '+MF[mIdx]+'/2026 importado com sucesso — '+Object.keys(codeMap).length+' contas processadas. DRE, índices e balanço já foram atualizados. Revise os dados e clique em "Salvar base atual" para manter esta atualização na próxima vez que abrir o dashboard.';
       statusEl.style.color='var(--green2)';
       document.getElementById('impSaveBtn').style.display='inline-block';
+      document.getElementById('impPubBtn').style.display='inline-block';
     }catch(err){
       statusEl.textContent='⚠ Erro ao processar o arquivo: '+err.message;
       statusEl.style.color='var(--red2)';
@@ -1260,7 +1263,7 @@ function handleBalanceteFile(file){
 function saveCurrentBase(){
   var statusEl=document.getElementById('impStatus');
   try{
-    var state={numMeses:numMeses,D:D,DTREE:DTREE,BALHIST:BALHIST,balSelMes:balSelMes,savedAt:new Date().toISOString()};
+    var state=buildBaseState();
     localStorage.setItem('nhdDashBase',JSON.stringify(state));
     statusEl.textContent='💾 Base salva com sucesso em '+new Date().toLocaleString('pt-BR')+'. Esta base será carregada automaticamente na próxima vez que este dashboard for aberto neste navegador — importar um novo mês não apaga os meses já salvos.';
     statusEl.style.color='var(--green2)';
@@ -1268,6 +1271,69 @@ function saveCurrentBase(){
     statusEl.textContent='⚠ Não foi possível salvar localmente: '+err.message;
     statusEl.style.color='var(--red2)';
   }
+}
+var GH_REPO='clecioferreiracontador-byte/nhdfoods-dashboard',GH_FILE='base.json',GH_BRANCH='main';
+function buildBaseState(){
+  return {numMeses:numMeses,D:D,DTREE:DTREE,BALHIST:BALHIST,balSelMes:balSelMes,savedAt:new Date().toISOString()};
+}
+function resetGhToken(){
+  try{localStorage.removeItem('nhdGhToken');}catch(e){}
+  var s=document.getElementById('impStatus');
+  s.textContent='🔑 Token esquecido. Na próxima publicação será pedido um novo.';s.style.color='var(--gray)';
+}
+async function publishBaseToGitHub(){
+  var s=document.getElementById('impStatus');
+  var token='';
+  try{token=localStorage.getItem('nhdGhToken')||'';}catch(e){}
+  if(!token){
+    token=(prompt('Cole seu token do GitHub (fine-grained, repositório nhdfoods-dashboard, permissão Contents: Read and write).\nEle fica guardado só neste navegador.')||'').trim();
+    if(!token)return;
+  }
+  s.textContent='Publicando no GitHub...';s.style.color='var(--gray)';
+  try{
+    var state=buildBaseState();
+    try{localStorage.setItem('nhdDashBase',JSON.stringify(state));}catch(e){}
+    var api='https://api.github.com/repos/'+GH_REPO+'/contents/'+GH_FILE;
+    var hdr={'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'};
+    var sha;
+    var g=await fetch(api+'?ref='+GH_BRANCH+'&t='+Date.now(),{headers:hdr,cache:'no-store'});
+    if(g.status===200)sha=(await g.json()).sha;
+    else if(g.status!==404)throw new Error(g.status===401||g.status===403?'token inválido ou sem permissão':'GitHub respondeu '+g.status);
+    var body={message:'Atualiza base de balancetes ('+new Date().toLocaleString('pt-BR')+')',branch:GH_BRANCH,
+      content:btoa(unescape(encodeURIComponent(JSON.stringify(state))))};
+    if(sha)body.sha=sha;
+    var p=await fetch(api,{method:'PUT',headers:Object.assign({'Content-Type':'application/json'},hdr),body:JSON.stringify(body)});
+    if(!p.ok)throw new Error(p.status===401||p.status===403||p.status===404?'token inválido ou sem permissão de escrita no repositório':'GitHub respondeu '+p.status);
+    try{localStorage.setItem('nhdGhToken',token);}catch(e){}
+    s.textContent='🌐 Base publicada no GitHub em '+new Date().toLocaleString('pt-BR')+'. Todos os usuários verão a atualização em ~1 minuto (tempo do GitHub Pages).';
+    s.style.color='var(--green2)';
+  }catch(err){
+    s.textContent='⚠ Falha ao publicar: '+err.message;s.style.color='var(--red2)';
+  }
+}
+function applyBaseState(state){
+  if(!state||!state.D||!state.DTREE)return;
+  numMeses=state.numMeses||7;
+  Object.keys(state.D).forEach(function(k){if(D.hasOwnProperty(k))D[k]=state.D[k];});
+  DTREE=state.DTREE;
+  if(state.BALHIST){
+    Object.keys(state.BALHIST).forEach(function(k){
+      BALHIST[k]=Object.assign({},BALHIST[k]||{},state.BALHIST[k]);
+    });
+    balSelMes=(state.balSelMes!==undefined)?state.balSelMes:numMeses-1;
+  }
+}
+async function loadRemoteBase(){
+  try{
+    var r=await fetch(GH_FILE+'?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)return;
+    var remote=await r.json();
+    var local=null;
+    try{local=JSON.parse(localStorage.getItem('nhdDashBase')||'null');}catch(e){}
+    if(local&&local.savedAt&&remote.savedAt&&local.savedAt>remote.savedAt)return;
+    applyBaseState(remote);
+    rebuildMonthSelectors();updateOV();buildDRE();buildAV();buildInd();buildBal();
+  }catch(err){console.warn('Base remota indisponível',err);}
 }
 function loadSavedBase(){
   try{
@@ -1319,6 +1385,7 @@ function initSkpiState(){
 initSkpiState();
 loadLalurParams();
 loadSavedBase();rebuildMonthSelectors();updateOV();buildDRE();buildAV();buildInd();
+if(location.protocol.indexOf('http')===0)loadRemoteBase();
 </script>
 </body>
 </html>
