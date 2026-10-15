@@ -1428,7 +1428,29 @@ function exportPageExcel(){
       });
       XLSX.utils.book_append_sheet(wb,ws,'Tabela '+(i+1));
     });
-    var toCell=function(s){var m=moneyRe.exec(s);return m?parseFloat((m[1]||'')+m[2].replace(/\./g,'')+'.'+m[3]):s;};
+    var toCell=function(s){var m=moneyRe.exec(s);if(m)return parseFloat((m[1]||'')+m[2].replace(/\./g,'')+'.'+m[3]);return /^-?\d+,\d+$/.test(s)?parseFloat(s.replace(',','.')):s;};
+    var txt=function(e,s){var x=e.querySelector(s);return x?x.textContent.trim():'';};
+    var idx=[['Índice','Situação','Valor','Fórmula','Detalhe']];
+    page.querySelectorAll('.idx-card').forEach(function(c){
+      idx.push([txt(c,'.idx-lbl span:first-child'),txt(c,'.idx-status'),toCell(txt(c,'.idx-val')),txt(c,'.idx-ref'),(c.querySelector('.idx-ref')&&c.querySelector('.idx-ref').nextElementSibling&&!c.querySelector('.idx-ref').nextElementSibling.classList.contains('idx-bar'))?c.querySelector('.idx-ref').nextElementSibling.textContent.trim():'']);
+    });
+    if(idx.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(idx),'Índices');
+    var bal=[['Grupo','Conta','Valor']];
+    page.querySelectorAll('.bal-section').forEach(function(s){
+      var g=txt(s,'.bal-title');
+      s.querySelectorAll('.bal-row').forEach(function(r){
+        var sp=r.querySelectorAll('span');if(sp.length<2)return;
+        var nm=sp[0].textContent.trim();
+        if(r.classList.contains('tot'))nm='TOTAL — '+nm;
+        bal.push([g,nm,toCell(sp[1].textContent.trim())]);
+      });
+    });
+    if(bal.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(bal),'Balanço');
+    var ip=document.getElementById('balInterp');
+    if(page.id==='page-bal'&&ip){
+      var il=ip.innerText.split('\n').map(function(x){return [x.trim()];}).filter(function(r){return r[0];});
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(il),'Interpretação');
+    }
     var rows=[['Item','Valor']];
     page.querySelectorAll('.irow').forEach(function(r){
       var n=r.querySelector('.iname');if(!n)return;
@@ -1444,6 +1466,17 @@ function exportPageExcel(){
       var lines=page.innerText.split('\n').map(function(x){return [toCell(x.trim())];}).filter(function(r){return r[0]!=='';});
       XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lines),'Resumo');
     }
+    wb.SheetNames.forEach(function(n){
+      var ws=wb.Sheets[n];if(!ws['!ref'])return;
+      var rg=XLSX.utils.decode_range(ws['!ref']),w=[];
+      for(var c=rg.s.c;c<=rg.e.c;c++){
+        var mx=10;
+        for(var r=rg.s.r;r<=rg.e.r;r++){var cell=ws[XLSX.utils.encode_cell({r:r,c:c})];if(cell&&cell.v!=null)mx=Math.max(mx,Math.min(60,String(cell.t==='n'?cell.v.toFixed(2):cell.v).length+4));}
+        w.push({wch:mx});
+      }
+      ws['!cols']=w;
+      for(var k in ws){if(k[0]!=='!'&&ws[k].t==='n'&&!ws[k].z)ws[k].z='#,##0.00';}
+    });
     XLSX.writeFile(wb,'NHD Foods - '+activePageName()+' - '+new Date().toISOString().slice(0,10)+'.xlsx');
   }catch(err){alert('Falha ao gerar Excel: '+err.message);}
   if(!prev){FULLVALS=false;rebuildAllViews();}
