@@ -249,6 +249,11 @@ body.rel-open{overflow:hidden}
   body.printing-rel .rp-sheet{width:auto!important;margin:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;break-after:page;page-break-after:always}
   body.printing-rel .rp-sheet:last-child{break-after:auto;page-break-after:auto}
 }
+/* DRE: botões da barra no padrão monocromático */
+.dre-tbtn{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+.dre-tbtn .niv{opacity:.75}
+.dre-tbtn:hover .niv{opacity:1}
+.dre-tbtn:disabled{opacity:.55;cursor:wait}
 /* LALUR: lançamentos editáveis */
 .lal-in{width:100%;min-width:84px;background:#2A2416;border:1px solid rgba(230,126,34,.75);border-radius:7px;color:var(--white);text-align:right;padding:5px 8px;font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:14px;font-variant-numeric:tabular-nums}
 .lal-in:focus{outline:none;border-color:var(--g2);box-shadow:0 0 0 2px rgba(201,168,76,.25)}
@@ -403,8 +408,8 @@ body.rel-open{overflow:hidden}
     <span class="dre-zlbl" id="dZoomLbl">100%</span>
     <button class="fs dre-zbtn" onclick="dreZoom(10)">+</button>
     <div class="fdiv"></div>
-    <button class="fs" id="dreAllBtn" style="cursor:pointer" onclick="toggleDreAll()">⊞ Expandir contas</button>
-    <button class="fs" id="dreXlsBtn" style="cursor:pointer;border-color:rgba(46,204,113,.5);color:var(--green2)" onclick="exportDREXlsx()">📊 Exportar DRE (.xlsx)</button>
+    <button class="fs dre-tbtn" id="dreAllBtn" onclick="toggleDreAll()"><svg class="niv" id="dreAllIco" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.4"/><path id="dreAllPath" d="M5 8h6M8 5v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span id="dreAllLbl">Expandir contas</span></button>
+    <button class="fs dre-tbtn" id="dreXlsBtn" onclick="exportDREXlsx()"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M8 2v8M4.8 7L8 10.2 11.2 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M2.5 11.5v1.5a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span id="dreXlsLbl">Exportar DRE (.xlsx)</span></button>
     <span class="finfo">💡 Passe o mouse sobre a conta para ver a descrição</span>
   </div>
   <div style="margin:18px 0 14px"><div class="ptitle">DRE</div><div class="psub" id="dSub">Demonstrativo completo · consulte por mês ou período</div></div>
@@ -1971,8 +1976,9 @@ function toggleDreAll(){
   buildDRE();
 }
 function refreshDreAllBtn(){
-  var b=document.getElementById('dreAllBtn');
-  if(b)b.textContent=dreAllExpanded()?'⊟ Recolher contas':'⊞ Expandir contas';
+  var l=document.getElementById('dreAllLbl'),p=document.getElementById('dreAllPath'),ex=dreAllExpanded();
+  if(l)l.textContent=ex?'Recolher contas':'Expandir contas';
+  if(p)p.setAttribute('d',ex?'M5 8h6':'M5 8h6M8 5v6');
 }
 function dreSel(){
   var m=document.getElementById('dMes').value,ci;
@@ -2101,8 +2107,8 @@ async function buildDREWorkbook(){
   return {wb:wb,name:emp+' - DRE Gerencial 2026 - '+per.replace(/[–\s]+/g,'-')+'.xlsx'};
 }
 async function exportDREXlsx(){
-  var btn=document.getElementById('dreXlsBtn'),old=btn?btn.textContent:'';
-  if(btn){btn.disabled=true;btn.textContent='⏳ Gerando Excel...';}
+  var btn=document.getElementById('dreXlsBtn'),lbl=document.getElementById('dreXlsLbl'),old=lbl?lbl.textContent:'';
+  if(btn)btn.disabled=true;if(lbl)lbl.textContent='Gerando Excel...';
   try{
     var out=await buildDREWorkbook();
     var buf=await out.wb.xlsx.writeBuffer();
@@ -2111,7 +2117,7 @@ async function exportDREXlsx(){
     document.body.appendChild(a);a.click();
     setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);
   }catch(err){alert('Falha ao gerar o Excel da DRE: '+err.message);}
-  if(btn){btn.disabled=false;btn.textContent=old;}
+  if(btn)btn.disabled=false;if(lbl)lbl.textContent=old;
 }
 
 function setPage(n,el){
