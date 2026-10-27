@@ -249,6 +249,12 @@ body.rel-open{overflow:hidden}
   body.printing-rel .rp-sheet{width:auto!important;margin:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;break-after:page;page-break-after:always}
   body.printing-rel .rp-sheet:last-child{break-after:auto;page-break-after:auto}
 }
+/* LALUR: lançamentos editáveis */
+.lal-in{width:100%;min-width:84px;background:#2A2416;border:1px solid rgba(230,126,34,.75);border-radius:7px;color:var(--white);text-align:right;padding:5px 8px;font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:14px;font-variant-numeric:tabular-nums}
+.lal-in:focus{outline:none;border-color:var(--g2);box-shadow:0 0 0 2px rgba(201,168,76,.25)}
+.lal-strip{display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px;margin-bottom:14px}
+.lal-strip .lal-in{width:170px}
+.lal-strip .lal-note{font-size:12px;color:var(--gray);flex:1;min-width:220px}
 </style>
 </head>
 <body>
@@ -277,8 +283,6 @@ body.rel-open{overflow:hidden}
     <div class="ssec"><span>Exibição e Exportação</span></div>
     <div style="display:flex;flex-direction:column;gap:6px;padding:4px 14px 8px">
       <button class="fs" id="fullBtn" style="cursor:pointer;width:100%" onclick="toggleFullValues()">🔢 Valores completos</button>
-      <button class="fs" style="cursor:pointer;width:100%" onclick="exportPageExcel()">📊 Exportar aba em Excel</button>
-      <button class="fs" style="cursor:pointer;width:100%" onclick="exportPagePDF()">📄 Exportar aba em PDF</button>
       <button class="fs" style="cursor:pointer;width:100%;border-color:rgba(201,168,76,.7);color:var(--g2);font-weight:700" onclick="openRelatorio()">📑 Relatório consolidado</button>
     </div>
     <hr class="sdiv">
@@ -400,6 +404,9 @@ body.rel-open{overflow:hidden}
     <button class="fs dre-zbtn" onclick="dreZoom(-10)">−</button>
     <span class="dre-zlbl" id="dZoomLbl">100%</span>
     <button class="fs dre-zbtn" onclick="dreZoom(10)">+</button>
+    <div class="fdiv"></div>
+    <button class="fs" id="dreAllBtn" style="cursor:pointer" onclick="toggleDreAll()">⊞ Expandir contas</button>
+    <button class="fs" id="dreXlsBtn" style="cursor:pointer;border-color:rgba(46,204,113,.5);color:var(--green2)" onclick="exportDREXlsx()">📊 Exportar DRE (.xlsx)</button>
     <span class="finfo">💡 Passe o mouse sobre a conta para ver a descrição</span>
   </div>
   <div style="margin:18px 0 14px"><div class="ptitle">DRE</div><div class="psub" id="dSub">Demonstrativo completo · consulte por mês ou período</div></div>
@@ -528,13 +535,14 @@ body.rel-open{overflow:hidden}
   <div style="margin:18px 0 16px"><div class="ptitle">LALUR</div><div class="psub" id="lalurSub">Livro de Apuração do Lucro Real · Jan–Jul 2026</div></div>
   <div id="lalurTableWrap" style="display:none;margin-bottom:18px"></div>
   <div id="lalurCardsWrap">
+  <div class="cc lal-strip" id="lalurMesEdit"></div>
   <div class="igrid">
     <div class="icard">
       <div class="ictitle">Apuração — IRPJ</div>
       <div class="irow"><span class="iname dlbl" data-tip="Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE (Jan até o mês selecionado).">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lIrLucro"></div></div></div>
-      <div class="irow"><span class="iname dlbl" data-tip="Multas de trânsito, outras despesas indedutíveis e ajustes de exercícios anteriores lançados a débito — hoje sem lançamentos no período.">( + ) Adições</span><div class="ivals"><div class="ival" id="lIrAdic"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Adições lançadas mês a mês aqui no LALUR (multas, despesas indedutíveis etc.), acumuladas de janeiro até o mês selecionado.">( + ) Adições (acumuladas)</span><div class="ivals"><div class="ival" id="lIrAdic"></div></div></div>
       <div class="irow"><span class="iname dlbl" data-tip="Conta 3.3.01.1004 — SUBVENÇÃO ICMS. Saldo credor acumulado da conta, extraído automaticamente do balancete importado.">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lIrExclSubv"></div></div></div>
-      <div class="irow"><span class="iname dlbl" data-tip="Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES. Valor fixado por julgamento profissional (não vem automaticamente do balancete) — editável em 'Parâmetros Manuais'.">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lIrExclAjuste"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Exclusões lançadas mês a mês aqui no LALUR (inclui ajustes de exercícios anteriores — conta 2.3.01.3001), acumuladas de janeiro até o mês selecionado.">( - ) Exclusões manuais (acumuladas)</span><div class="ivals"><div class="ival" id="lIrExclAjuste"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base Cálc. antes Comp. Prej. Fiscal</span><div class="ivals"><div class="ival" id="lIrBaseAntes"></div></div></div>
       <div class="irow"><span class="iname">( - ) Compensação Prejuízo Fiscal (limite 30%)</span><div class="ivals"><div class="ival" id="lIrComp"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base de Cálculo do IR</span><div class="ivals"><div class="ival" id="lIrBase"></div></div></div>
@@ -547,9 +555,9 @@ body.rel-open{overflow:hidden}
     <div class="icard">
       <div class="ictitle">Apuração — CSLL</div>
       <div class="irow"><span class="iname dlbl" data-tip="Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE (Jan até o mês selecionado).">Lucro Líquido Acumulado (antes IRPJ/CSLL)</span><div class="ivals"><div class="ival" id="lCsLucro"></div></div></div>
-      <div class="irow"><span class="iname">( + ) Adições</span><div class="ivals"><div class="ival" id="lCsAdic"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Adições lançadas mês a mês aqui no LALUR, acumuladas de janeiro até o mês selecionado.">( + ) Adições (acumuladas)</span><div class="ivals"><div class="ival" id="lCsAdic"></div></div></div>
       <div class="irow"><span class="iname dlbl" data-tip="Conta 3.3.01.1004 — SUBVENÇÃO ICMS. Saldo credor acumulado da conta, extraído automaticamente do balancete importado.">( - ) Exclusão · Subvenção ICMS</span><div class="ivals"><div class="ival" id="lCsExclSubv"></div></div></div>
-      <div class="irow"><span class="iname dlbl" data-tip="Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES. Valor fixado por julgamento profissional (não vem automaticamente do balancete) — editável em 'Parâmetros Manuais'.">( - ) Exclusão · Ajustes Ex. Anteriores</span><div class="ivals"><div class="ival" id="lCsExclAjuste"></div></div></div>
+      <div class="irow"><span class="iname dlbl" data-tip="Exclusões lançadas mês a mês aqui no LALUR (inclui ajustes de exercícios anteriores — conta 2.3.01.3001), acumuladas de janeiro até o mês selecionado.">( - ) Exclusões manuais (acumuladas)</span><div class="ivals"><div class="ival" id="lCsExclAjuste"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base Cálc. antes Comp. Base Negativa</span><div class="ivals"><div class="ival" id="lCsBaseAntes"></div></div></div>
       <div class="irow"><span class="iname">( - ) Compensação Base Negativa (limite 30%)</span><div class="ivals"><div class="ival" id="lCsComp"></div></div></div>
       <div class="irow" style="background:rgba(201,168,76,.07);border-radius:6px"><span class="iname" style="font-weight:600;color:var(--g2)">Base de Cálculo da CSLL</span><div class="ivals"><div class="ival" id="lCsBase"></div></div></div>
@@ -570,15 +578,14 @@ body.rel-open{overflow:hidden}
   </div>
   </div>
   <div class="cc" style="margin-top:16px">
-    <div class="ctop"><div><div class="ctitle">Parâmetros Manuais</div><div class="cdesc">Valores de julgamento profissional que não vêm automaticamente do balancete — ajuste se necessário</div></div></div>
+    <div class="ctop"><div><div class="ctitle">Parâmetros Manuais</div><div class="cdesc">Adições e exclusões agora são lançadas mês a mês dentro do próprio LALUR (acima). Os lançamentos ficam salvos neste navegador; para que todos vejam, use “Publicar para todos”.</div></div></div>
     <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-end">
-      <div>
-        <div class="fl" style="margin-bottom:5px">Exclusão · Ajustes de Exercícios Anteriores (aplicada em todos os meses)</div>
-        <input type="text" id="lalurAjusteInput" class="fs" style="width:180px" value="763905,19" onchange="onLalurParamChange()">
-      </div>
       <div>
         <div class="fl" style="margin-bottom:5px">Saldo Inicial de Prejuízo Fiscal (ano anterior)</div>
         <input type="text" id="lalurPrejIniInput" class="fs" style="width:180px" value="0,00" onchange="onLalurParamChange()">
+      </div>
+      <div>
+        <button class="fs" style="cursor:pointer;border-color:rgba(52,152,219,.5);color:var(--blue)" onclick="publishLalur()">🌐 Publicar para todos (GitHub)</button>
       </div>
     </div>
     <div id="lalurParamStatus" style="font-size:11.5px;color:var(--gray);margin-top:8px"></div>
@@ -617,6 +624,7 @@ var numMeses=7;
 var balSelMes=6;
 var lalurAjusteExAnt=763905.19;
 var lalurPrejFiscalIni=0;
+var lalurAdic=[0,0,0,0,0,0,0,0,0,0,0,0],lalurExcl=[0,0,0,0,0,0,0,0,0,0,0,0],lalurAt='';
 const gc="rgba(201,168,76,.08)",tc="#6E7E8E";
 const D={
   rb:[7153131.65,7213966.25,9544467.37,10092665.8,8218958.26,8439249.36,11123700.16],
@@ -845,6 +853,7 @@ function buildDRE(){
   h+=renderTreeRows(DTREE,ci,view,base,bk,0);
   h+='</tbody></table>';
   document.getElementById('dTable').innerHTML=h;
+  refreshDreAllBtn();
 }
 
 function buildAV(){
@@ -904,13 +913,15 @@ function buildInd(){
 
 function computeLALUR(uptoIdx){
   var out=[];
-  var lucroAcum=0,subvAcum=0,irApuradoPrev=0,csApuradoPrev=0;
+  var lucroAcum=0,subvAcum=0,irApuradoPrev=0,csApuradoPrev=0,adicAcumR=0,exclManAcum=0;
   var lastReal=Math.min(uptoIdx,numMeses-1);
   for(var i=0;i<=lastReal;i++){
     lucroAcum+=D.ai[i]||0;
     subvAcum+=D.subv[i]||0;
-    var adicAcum=0;
-    var exclAcum=subvAcum+lalurAjusteExAnt;
+    adicAcumR+=lalurAdic[i]||0;
+    exclManAcum+=lalurExcl[i]||0;
+    var adicAcum=adicAcumR;
+    var exclAcum=subvAcum+exclManAcum;
     var baseAntes=lucroAcum+adicAcum-exclAcum;
     var limite30=baseAntes>0?baseAntes*0.3:0;
     var prejComp=Math.min(limite30,lalurPrejFiscalIni);
@@ -925,7 +936,7 @@ function computeLALUR(uptoIdx){
     var csMes=csApurado-csApuradoPrev;
     csApuradoPrev=csApurado;
     var prejTransp=baseAntes<0?lalurPrejFiscalIni:(lalurPrejFiscalIni-prejComp);
-    out.push({lucroAcum:lucroAcum,adicAcum:adicAcum,subvAcum:subvAcum,exclAcum:exclAcum,baseAntes:baseAntes,limite30:limite30,prejComp:prejComp,baseIR:baseIR,ir15:ir15,adicIR:adicIR,irApurado:irApurado,irMes:irMes,csApurado:csApurado,csMes:csMes,prejTransp:prejTransp});
+    out.push({adicMes:lalurAdic[i]||0,exclMes:lalurExcl[i]||0,exclManAcum:exclManAcum,lucroAcum:lucroAcum,adicAcum:adicAcum,subvAcum:subvAcum,exclAcum:exclAcum,baseAntes:baseAntes,limite30:limite30,prejComp:prejComp,baseIR:baseIR,ir15:ir15,adicIR:adicIR,irApurado:irApurado,irMes:irMes,csApurado:csApurado,csMes:csMes,prejTransp:prejTransp});
   }
   for(var j=lastReal+1;j<=uptoIdx;j++)out.push(null);
   return out;
@@ -936,26 +947,64 @@ function parseBR(v){
   return isNaN(n)?0:n;
 }
 function fmtBR(v){return v.toFixed(2).replace('.',',');}
+function saveLalurParams(keepAt){
+  if(!keepAt)lalurAt=new Date().toISOString();
+  try{localStorage.setItem('nhdLalurParams',JSON.stringify({v:2,prejIni:lalurPrejFiscalIni,adic:lalurAdic,excl:lalurExcl,at:lalurAt}));return true;}catch(e){return false;}
+}
+function lalurSetArrays(st){
+  if(st&&Array.isArray(st.adic))for(var i=0;i<12;i++)lalurAdic[i]=+st.adic[i]||0;
+  if(st&&Array.isArray(st.excl))for(var j=0;j<12;j++)lalurExcl[j]=+st.excl[j]||0;
+}
+function applyLalurState(l){
+  if(!l||!Array.isArray(l.excl))return;
+  if(l.at&&lalurAt&&l.at<=lalurAt)return;
+  lalurSetArrays(l);
+  if(l.prejIni!==undefined)lalurPrejFiscalIni=l.prejIni;
+  lalurAt=l.at||lalurAt;
+  saveLalurParams(true);
+}
 function onLalurParamChange(){
-  lalurAjusteExAnt=parseBR(document.getElementById('lalurAjusteInput').value);
   lalurPrejFiscalIni=parseBR(document.getElementById('lalurPrejIniInput').value);
-  document.getElementById('lalurAjusteInput').value=fmtBR(lalurAjusteExAnt);
   document.getElementById('lalurPrejIniInput').value=fmtBR(lalurPrejFiscalIni);
-  try{
-    localStorage.setItem('nhdLalurParams',JSON.stringify({ajuste:lalurAjusteExAnt,prejIni:lalurPrejFiscalIni}));
+  if(saveLalurParams()){
     document.getElementById('lalurParamStatus').textContent='💾 Parâmetro salvo.';
     document.getElementById('lalurParamStatus').style.color='var(--green2)';
-  }catch(e){}
+  }
   buildLalur();
 }
+function onLalurCell(el){
+  var arr=el.getAttribute('data-k')==='adic'?lalurAdic:lalurExcl,i=+el.getAttribute('data-m');
+  arr[i]=parseBR(el.value);
+  saveLalurParams();
+  var st=document.getElementById('lalurParamStatus');
+  if(st){st.textContent='💾 Lançamento de '+MF[i]+' salvo neste navegador.';st.style.color='var(--green2)';}
+  setTimeout(function(){
+    var act=document.activeElement,aid=act&&act.id;
+    buildLalur();
+    if(aid){var e=document.getElementById(aid);if(e&&e.tagName==='INPUT'){e.focus();try{e.select();}catch(x){}}}
+  },0);
+}
+function lalurInVal(v){return v?v.toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}):'0';}
+function lalurInput(k,i){
+  var arr=k==='adic'?lalurAdic:lalurExcl;
+  return '<input class="lal-in" id="lal_'+k+'_'+i+'" data-k="'+k+'" data-m="'+i+'" value="'+lalurInVal(arr[i])+'" onchange="onLalurCell(this)" onfocus="this.select()" inputmode="decimal">';
+}
+function lalurInRow(lbl,tip,k,calc){
+  var h='<tr class="rs"><td style="padding-left:24px"><span class="dlbl" data-tip="'+tip.replace(/"/g,'&quot;')+'">'+lbl+'</span></td>';
+  calc.forEach(function(c,i){h+=c?'<td>'+lalurInput(k,i)+'</td>':'<td class="dre-blank">—</td>';});
+  return h+'</tr>';
+}
+async function publishLalur(){
+  await publishBaseToGitHub();
+  var a=document.getElementById('impStatus'),b=document.getElementById('lalurParamStatus');
+  if(a&&b){b.textContent=a.textContent;b.style.color=a.style.color;}
+}
 function loadLalurParams(){
-  try{
-    var raw=localStorage.getItem('nhdLalurParams');
-    if(!raw)return;
-    var st=JSON.parse(raw);
-    if(st.ajuste!==undefined)lalurAjusteExAnt=st.ajuste;
-    if(st.prejIni!==undefined)lalurPrejFiscalIni=st.prejIni;
-  }catch(e){}
+  var st=null;
+  try{st=JSON.parse(localStorage.getItem('nhdLalurParams')||'null');}catch(e){}
+  if(st&&st.prejIni!==undefined)lalurPrejFiscalIni=st.prejIni;
+  if(st&&Array.isArray(st.excl)){lalurSetArrays(st);lalurAt=st.at||'';}
+  else lalurExcl[0]=(st&&st.ajuste!==undefined)?st.ajuste:lalurAjusteExAnt; // migração: o ajuste fixo de exercícios anteriores vira exclusão de janeiro (efeito acumulado idêntico)
 }
 function lalurRow(lbl,tip,cls,vals,pad){
   var h='<tr class="'+cls+'"><td style="padding-left:'+(pad||12)+'px">';
@@ -985,9 +1034,11 @@ function buildLalurTable(){
   ci.forEach(function(i){h+='<th>'+M[i]+'</th>';});
   h+='</tr></thead><tbody>';
   h+=lalurRow('Lucro Líquido Acumulado','Resultado acumulado do exercício antes de IRPJ/CSLL, apurado na DRE.','rst',g('lucroAcum'));
-  h+=lalurRow('( + ) Adições',null,'rs',g('adicAcum'),24);
-  h+=lalurRow('( - ) Excl. Subvenção ICMS','Conta 3.3.01.1004 — SUBVENÇÃO ICMS (saldo credor acumulado, automático).','rs',g('subvAcum'),24);
-  h+=lalurRow('( - ) Excl. Ajustes Ex. Anteriores','Conta 2.3.01.3001 — AJUSTE DE EXERCÍCIOS ANTERIORES (valor manual).','rs',calc.map(function(c){return c?lalurAjusteExAnt:undefined;}),24);
+  h+=lalurInRow('( + ) Adições do período','Digite as adições do mês (multas, despesas indedutíveis etc.). O cálculo acumula de janeiro até cada mês.','adic',calc);
+  h+=lalurInRow('( − ) Exclusões / ajustes do período','Digite as exclusões do mês (ex.: ajustes de exercícios anteriores — conta 2.3.01.3001). O cálculo acumula de janeiro até cada mês.','excl',calc);
+  h+=lalurRow('( + ) Adições acumuladas',null,'rs',g('adicAcum'),24);
+  h+=lalurRow('( - ) Excl. Subvenção ICMS (acum.)','Conta 3.3.01.1004 — SUBVENÇÃO ICMS (saldo credor acumulado, automático do balancete).','rs',g('subvAcum'),24);
+  h+=lalurRow('( - ) Exclusões manuais acumuladas',null,'rs',g('exclManAcum'),24);
   h+=lalurRow('Base Cálc. antes Compensação',null,'rst',g('baseAntes'));
   h+=lalurRow('( - ) Compensação Prejuízo Fiscal',null,'rs',g('prejComp'),24);
   h+=lalurRow('Base de Cálculo IR/CSLL',null,'rst',g('baseIR'));
@@ -1016,8 +1067,13 @@ function buildLalur(){
   var m=parseInt(mEl.value);
   var calc=computeLALUR(m);
   var cur=calc[m];
-  document.getElementById('lalurAjusteInput').value=fmtBR(lalurAjusteExAnt);
   document.getElementById('lalurPrejIniInput').value=fmtBR(lalurPrejFiscalIni);
+  var edEl=document.getElementById('lalurMesEdit');
+  if(edEl)edEl.innerHTML=cur?
+    '<div><div class="fl" style="margin-bottom:5px">( + ) Adições de '+MF[m]+'</div>'+lalurInput('adic',m)+'</div>'+
+    '<div><div class="fl" style="margin-bottom:5px">( − ) Exclusões / ajustes de '+MF[m]+'</div>'+lalurInput('excl',m)+'</div>'+
+    '<div class="lal-note">Lançamentos do mês selecionado. O LALUR acumula de janeiro até o mês — para lançar ou conferir todos os meses de uma vez, escolha “Ano Completo (tabela)”.</div>'
+    :'<div class="lal-note">Importe o balancete de '+MF[m]+' para lançar adições e exclusões deste mês.</div>';
   if(!cur){
     document.getElementById('lalurSub').textContent='Livro de Apuração do Lucro Real · '+MF[m]+' 2026 (balancete ainda não importado)';
     ['lIrLucro','lIrAdic','lIrExclSubv','lIrExclAjuste','lIrBaseAntes','lIrComp','lIrBase','lIr15','lIrAdicional','lIrApurado','lIrAnterior','lIrMes','lCsLucro','lCsAdic','lCsExclSubv','lCsExclAjuste','lCsBaseAntes','lCsComp','lCsBase','lCs9','lCsApurado','lCsAnterior','lCsMes','lPrejTransp','lTotalMes','lTotalProvisao','lTotalDif'].forEach(function(id){
@@ -1029,7 +1085,7 @@ function buildLalur(){
   document.getElementById('lIrLucro').textContent=fmt(cur.lucroAcum);
   document.getElementById('lIrAdic').textContent=fmt(cur.adicAcum);
   document.getElementById('lIrExclSubv').textContent=fmt(cur.subvAcum);
-  document.getElementById('lIrExclAjuste').textContent=fmt(lalurAjusteExAnt);
+  document.getElementById('lIrExclAjuste').textContent=fmt(cur.exclManAcum);
   document.getElementById('lIrBaseAntes').textContent=fmt(cur.baseAntes);
   document.getElementById('lIrComp').textContent=fmt(cur.prejComp);
   document.getElementById('lIrBase').textContent=fmt(cur.baseIR);
@@ -1041,7 +1097,7 @@ function buildLalur(){
   document.getElementById('lCsLucro').textContent=fmt(cur.lucroAcum);
   document.getElementById('lCsAdic').textContent=fmt(cur.adicAcum);
   document.getElementById('lCsExclSubv').textContent=fmt(cur.subvAcum);
-  document.getElementById('lCsExclAjuste').textContent=fmt(lalurAjusteExAnt);
+  document.getElementById('lCsExclAjuste').textContent=fmt(cur.exclManAcum);
   document.getElementById('lCsBaseAntes').textContent=fmt(cur.baseAntes);
   document.getElementById('lCsComp').textContent=fmt(cur.prejComp);
   document.getElementById('lCsBase').textContent=fmt(cur.baseIR);
@@ -1382,7 +1438,7 @@ function saveCurrentBase(){
 }
 var GH_REPO='clecioferreiracontador-byte/nhdfoods-dashboard',GH_FILE='base.json',GH_BRANCH='main';
 function buildBaseState(){
-  return {numMeses:numMeses,D:D,DTREE:DTREE,BALHIST:BALHIST,balSelMes:balSelMes,savedAt:new Date().toISOString()};
+  return {numMeses:numMeses,D:D,DTREE:DTREE,BALHIST:BALHIST,balSelMes:balSelMes,lalur:{v:2,adic:lalurAdic,excl:lalurExcl,prejIni:lalurPrejFiscalIni,at:lalurAt},savedAt:new Date().toISOString()};
 }
 function resetGhToken(){
   try{localStorage.removeItem('nhdGhToken');}catch(e){}
@@ -1421,6 +1477,7 @@ async function publishBaseToGitHub(){
 }
 function applyBaseState(state){
   if(!state||!state.D||!state.DTREE)return;
+  applyLalurState(state.lalur);
   numMeses=state.numMeses||7;
   Object.keys(state.D).forEach(function(k){if(D.hasOwnProperty(k))D[k]=state.D[k];});
   DTREE=state.DTREE;
@@ -1476,122 +1533,6 @@ function toggleFullValues(){
   FULLVALS=!FULLVALS;
   try{localStorage.setItem('nhdFullVals',FULLVALS?'1':'0');}catch(e){}
   refreshFullBtn();rebuildAllViews();
-}
-function activePageEl(){return document.querySelector('.page.active');}
-function activePageName(){
-  var p=activePageEl();var id=p?p.id.replace('page-',''):'ov';
-  var n={ov:'Visao Geral',dre:'DRE',av:'Analise Vertical',ind:'Indicadores',bal:'Balanco e Indices',lalur:'LALUR'};
-  return n[id]||id;
-}
-function exportPagePDF(){
-  var old=document.title;
-  document.title='NHD Foods - '+activePageName()+' - '+new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  var prev=FULLVALS;
-  if(!prev){FULLVALS=true;rebuildAllViews();}
-  setTimeout(function(){
-    window.print();
-    document.title=old;
-    if(!prev){FULLVALS=false;rebuildAllViews();}
-  },300);
-}
-function exportPageExcel(){
-  var page=activePageEl();if(!page)return;
-  var prev=FULLVALS;
-  if(!prev){FULLVALS=true;rebuildAllViews();}
-  try{
-    var wb=XLSX.utils.book_new();
-    var kp=[['Indicador','Valor']];
-    page.querySelectorAll('.klbl').forEach(function(l){
-      var v=l.parentElement&&l.parentElement.querySelector('.kval');
-      if(v)kp.push([l.textContent.trim(),v.textContent.trim()]);
-    });
-    if(kp.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(kp),'Indicadores');
-    var moneyRe=/^(-?)R\$\s*([\d.]+),(\d{2})$/;
-    page.querySelectorAll('table').forEach(function(t,i){
-      var tc=t.cloneNode(true);
-      tc.querySelectorAll('.vpc').forEach(function(x){x.remove();});
-      var ws=XLSX.utils.table_to_sheet(tc,{raw:true});
-      Object.keys(ws).forEach(function(k){
-        if(k[0]==='!')return;
-        var c=ws[k];
-        if(c&&c.t==='s'){
-          var m=moneyRe.exec(String(c.v).trim());
-          if(m){c.t='n';c.v=parseFloat((m[1]||'')+m[2].replace(/\./g,'')+'.'+m[3]);c.z='#,##0.00';delete c.w;}
-        }
-      });
-      XLSX.utils.book_append_sheet(wb,ws,'Tabela '+(i+1));
-    });
-    var toCell=function(s){var m=moneyRe.exec(s);if(m)return parseFloat((m[1]||'')+m[2].replace(/\./g,'')+'.'+m[3]);return /^-?\d+,\d+$/.test(s)?parseFloat(s.replace(',','.')):s;};
-    var txt=function(e,s){var x=e.querySelector(s);return x?x.textContent.trim():'';};
-    var idx=[['Índice','Situação','Valor','Fórmula','Detalhe']];
-    page.querySelectorAll('.idx-card').forEach(function(c){
-      idx.push([txt(c,'.idx-lbl span:first-child'),txt(c,'.idx-status'),toCell(txt(c,'.idx-val')),txt(c,'.idx-ref'),(c.querySelector('.idx-ref')&&c.querySelector('.idx-ref').nextElementSibling&&!c.querySelector('.idx-ref').nextElementSibling.classList.contains('idx-bar'))?c.querySelector('.idx-ref').nextElementSibling.textContent.trim():'']);
-    });
-    if(idx.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(idx),'Índices');
-    var bal=[['Grupo','Conta','Valor']];
-    page.querySelectorAll('.bal-section').forEach(function(s){
-      var g=txt(s,'.bal-title');
-      s.querySelectorAll('.bal-row').forEach(function(r){
-        var sp=r.querySelectorAll('span');if(sp.length<2)return;
-        var nm=sp[0].textContent.trim();
-        if(r.classList.contains('tot'))nm='TOTAL — '+nm;
-        bal.push([g,nm,toCell(sp[1].textContent.trim())]);
-      });
-    });
-    if(bal.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(bal),'Balanço');
-    var ip=document.getElementById('balInterp');
-    if(page.id==='page-bal'&&ip){
-      var il=ip.innerText.split('\n').map(function(x){return [x.trim()];}).filter(function(r){return r[0];});
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(il),'Interpretação');
-    }
-    var rows=[['Item','Valor']];
-    page.querySelectorAll('.irow').forEach(function(r){
-      var n=r.querySelector('.iname');if(!n)return;
-      var vals=[].map.call(r.querySelectorAll('.ival'),function(x){return toCell(x.textContent.trim());});
-      rows.push([n.textContent.trim()].concat(vals));
-    });
-    page.querySelectorAll('.acard').forEach(function(c){
-      var n=c.querySelector('.an2'),p=c.querySelector('.av'),a=c.querySelector('.aamt');
-      if(n)rows.push([n.textContent.trim(),p?p.textContent.trim():'',a?toCell(a.textContent.trim()):'']);
-    });
-    if(rows.length>1)XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),'Detalhamento');
-    if(!wb.SheetNames.length){
-      var lines=page.innerText.split('\n').map(function(x){return [toCell(x.trim())];}).filter(function(r){return r[0]!=='';});
-      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(lines),'Resumo');
-    }
-    var refSel=[].filter.call(page.querySelectorAll('select'),function(s){return s.id!=='impMes';})[0];
-    var refTxt=refSel&&refSel.selectedOptions[0]?refSel.selectedOptions[0].textContent.trim():'';
-    var head=[['NHD Foods — '+activePageName().replace('Ana','Aná').replace('Visao','Visão').replace('Balanco e Indices','Balanço & Índices')],
-      ['Referência: '+(refTxt||'Ano 2026')+' · Fonte: Audicon Contadores'],
-      ['Gerado em '+new Date().toLocaleString('pt-BR')],['']];
-    var SH=head.length;
-    wb.SheetNames.forEach(function(n){
-      var old=wb.Sheets[n];if(!old['!ref'])return;
-      var ws={};
-      Object.keys(old).forEach(function(k){
-        if(k[0]==='!')return;
-        var a=XLSX.utils.decode_cell(k);a.r+=SH;ws[XLSX.utils.encode_cell(a)]=old[k];
-      });
-      var r0=XLSX.utils.decode_range(old['!ref']);r0.s.r+=SH;r0.e.r+=SH;
-      ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:r0.s.c},e:r0.e});
-      if(old['!merges'])ws['!merges']=old['!merges'].map(function(m){return {s:{r:m.s.r+SH,c:m.s.c},e:{r:m.e.r+SH,c:m.e.c}};});
-      XLSX.utils.sheet_add_aoa(ws,head,{origin:'A1'});
-      wb.Sheets[n]=ws;
-    });
-    wb.SheetNames.forEach(function(n){
-      var ws=wb.Sheets[n];if(!ws['!ref'])return;
-      var rg=XLSX.utils.decode_range(ws['!ref']),w=[];
-      for(var c=rg.s.c;c<=rg.e.c;c++){
-        var mx=10;
-        for(var r=SH;r<=rg.e.r;r++){var cell=ws[XLSX.utils.encode_cell({r:r,c:c})];if(cell&&cell.v!=null)mx=Math.max(mx,Math.min(60,String(cell.t==='n'?cell.v.toFixed(2):cell.v).length+4));}
-        w.push({wch:mx});
-      }
-      ws['!cols']=w;
-      for(var k in ws){if(k[0]!=='!'&&ws[k].t==='n'&&!ws[k].z)ws[k].z='#,##0.00';}
-    });
-    XLSX.writeFile(wb,'NHD Foods - '+activePageName()+' - '+new Date().toISOString().slice(0,10)+'.xlsx');
-  }catch(err){alert('Falha ao gerar Excel: '+err.message);}
-  if(!prev){FULLVALS=false;rebuildAllViews();}
 }
 /* ================= RELATÓRIO CONSOLIDADO ================= */
 var REL={init:false,unit:'rs',last:null};
@@ -1918,9 +1859,9 @@ function relSecLalur(d){
   var pIr=relNum(D.ir[bm]),pCs=relNum(D.cs[bm]);
   var R=[
     ['Lucro antes do IRPJ e CSLL (acumulado)',c.lucroAcum,c.lucroAcum,'rst'],
-    ['( + ) Adições',c.adicAcum,c.adicAcum,'rs'],
+    ['( + ) Adições (acumuladas)',c.adicAcum,c.adicAcum,'rs'],
     ['( − ) Exclusão · Subvenção ICMS',c.subvAcum,c.subvAcum,'rs'],
-    ['( − ) Exclusão · Ajustes de Exercícios Anteriores',lalurAjusteExAnt,lalurAjusteExAnt,'rs'],
+    ['( − ) Exclusões manuais (acumuladas)',c.exclManAcum,c.exclManAcum,'rs'],
     ['= Base antes da compensação',c.baseAntes,c.baseAntes,'rst'],
     ['( − ) Compensação prejuízo fiscal / base negativa (30%)',c.prejComp,c.prejComp,'rs'],
     ['= Base de cálculo',c.baseIR,c.baseIR,'rst'],
@@ -1950,7 +1891,7 @@ function relSecLalur(d){
     h+='<tr class="rs"><td>'+MF[i]+'</td><td>'+relN(x.lucroAcum,2)+'</td><td>'+relN(x.baseIR,2)+'</td><td>'+relN(x.irMes,2)+'</td><td>'+relN(x.csMes,2)+'</td><td class="tot">'+relN(t,2)+'</td><td>'+relN(pv,2)+'</td><td'+(Math.abs(t-pv)>=1?' class="neg"':'')+'>'+relN(t-pv,2)+'</td></tr>';
     xm.push([MF[i],x.lucroAcum,x.baseIR,x.irMes,x.csMes,t,pv,t-pv]);
   });
-  h+='</tbody></table><div class="rp-note">Lucro Real anual por balanço de suspensão/redução: apuração acumulada de janeiro até o mês. Exclusão de ajustes de exercícios anteriores e saldo de prejuízo fiscal conforme parâmetros manuais da aba LALUR.</div>';
+  h+='</tbody></table><div class="rp-note">Lucro Real anual por balanço de suspensão/redução: apuração acumulada de janeiro até o mês. Adições e exclusões conforme lançamentos mês a mês na aba LALUR; saldo de prejuízo fiscal conforme parâmetros manuais.</div>';
   return {html:h,xl:{name:'LALUR',rows:xr.concat(xm),w:[50,18,18,16,16,16,20,14]}};
 }
 
@@ -2017,6 +1958,154 @@ function exportRelatorioExcel(){
     L.out.forEach(function(o,i){XLSX.utils.book_append_sheet(wb,relSheet((i+1)+'. '+L.secs[i][0],d,o.xl.rows,o.xl.w),o.xl.name);});
     XLSX.writeFile(wb,relFileBase(d)+'.xlsx');
   }catch(err){alert('Falha ao gerar Excel: '+err.message);}
+}
+
+/* ---------- DRE: expandir/recolher tudo e exportação .xlsx no modelo DRE Gerencial ---------- */
+function dreAllExpanded(){
+  var all=true;
+  (function w(ns){ns.forEach(function(n){if(n.c){if(!dreExpanded[n.r])all=false;w(n.c);}});})(DTREE);
+  return all;
+}
+function toggleDreAll(){
+  var exp=!dreAllExpanded();
+  (function w(ns){ns.forEach(function(n){if(n.c){dreExpanded[n.r]=exp;w(n.c);}});})(DTREE);
+  buildDRE();
+}
+function refreshDreAllBtn(){
+  var b=document.getElementById('dreAllBtn');
+  if(b)b.textContent=dreAllExpanded()?'⊟ Recolher contas':'⊞ Expandir contas';
+}
+function dreSel(){
+  var m=document.getElementById('dMes').value,ci;
+  if(m==='all')ci=Array.from({length:12},function(_,i){return i;});
+  else if(m==='range'){
+    var de=+document.getElementById('dDe').value,ate=+document.getElementById('dAte').value;
+    if(de>ate){var t=de;de=ate;ate=t;}
+    ci=[];for(var i=de;i<=ate;i++)ci.push(i);
+  }else ci=[parseInt(m)];
+  return {ci:ci,all:m==='all',bk:document.getElementById('dBase').value==='rl'?'rl':'rb'};
+}
+function loadExcelJS(){
+  if(window.ExcelJS)return Promise.resolve();
+  return new Promise(function(res,rej){
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js';
+    sc.onload=function(){res();};
+    sc.onerror=function(){rej(new Error('não foi possível carregar a biblioteca de Excel (verifique a conexão com a internet)'));};
+    document.head.appendChild(sc);
+  });
+}
+async function buildDREWorkbook(){
+  await loadExcelJS();
+  var sel=dreSel(),ci=sel.ci,bk=sel.bk;
+  var baseNm=bk==='rl'?'RECEITA LÍQUIDA':'RECEITA BRUTA',baseAb=bk==='rl'?'%RL':'%RB';
+  var emp=((document.querySelector('.tb-title')||{}).textContent||'Empresa').split('·')[0].trim();
+  var sub=((document.querySelector('.tb-sub')||{}).textContent||'').replace(/\s+/g,' ').trim();
+  var per=sel.all?'JAN–DEZ 2026':(ci.length===1?MF[ci[0]].toUpperCase():M[ci[0]].toUpperCase()+'–'+M[ci[ci.length-1]].toUpperCase())+' 2026';
+  var C=function(hex){return {argb:'FF'+hex};};
+  var fill=function(hex){return {type:'pattern',pattern:'solid',fgColor:C(hex)};};
+  var NC=2+ci.length*3+2;
+  var wb=new ExcelJS.Workbook();wb.creator='Audicon Contadores';wb.created=new Date();
+  var ws=wb.addWorksheet('DRE Gerencial 2026',{
+    views:[{state:'frozen',xSplit:2,ySplit:5,showGridLines:false,zoomScale:130}],
+    properties:{outlineProperties:{summaryBelow:false,summaryRight:false}},
+    pageSetup:{paperSize:9,orientation:'landscape',fitToPage:true,fitToWidth:1,fitToHeight:0,printTitlesRow:'5:5',margins:{left:.3,right:.3,top:.4,bottom:.4,header:.2,footer:.2}}
+  });
+  var cols=[{width:12},{width:38}];
+  ci.forEach(function(){cols.push({width:11.5},{width:6.8},{width:2.8});});
+  cols.push({width:13.5},{width:7.5});
+  ws.columns=cols;
+  var paint=function(r,hex){for(var c=1;c<=NC;c++)ws.getRow(r).getCell(c).fill=fill(hex);};
+  [[1,3.75],[2,72],[3,7.5],[4,15.75]].forEach(function(x){ws.getRow(x[0]).height=x[1];paint(x[0],'0D1B2E');});
+  var tS=NC>=10?4:3,tE=NC>=10?NC-4:NC;
+  if(tE>tS)ws.mergeCells(2,tS,2,tE);
+  var tc=ws.getCell(2,tS);
+  tc.value=emp.toUpperCase()+'\n'+sub+'  |  DRE GERENCIAL 2026  |  '+per;
+  tc.font={name:'Calibri',size:11,bold:true,color:C('E8C96A')};
+  tc.alignment={horizontal:'center',vertical:'middle',wrapText:true};
+  ws.mergeCells(4,2,4,NC);
+  var lc=ws.getCell(4,2);
+  lc.value=' % = Análise Vertical s/ '+baseNm+' DO MÊS  |  ▲ VERDE = % subiu vs mês anterior  |  ▼ VERMELHO = % caiu  |  ▬ Cinza = primeiro mês ou sem variação  |  VERDE = Soma do período';
+  lc.font={name:'Calibri',size:8,italic:true,color:C('F4A021')};
+  lc.alignment={horizontal:'left',vertical:'middle'};
+  var addLogo=function(q,col,h){
+    var im=document.querySelector(q);if(!im||!im.src)return;
+    var ext=/^data:image\/(png|jpe?g|gif);base64,/.exec(im.src);if(!ext)return;
+    var id=wb.addImage({base64:im.src,extension:ext[1]==='jpg'?'jpeg':ext[1]});
+    var ratio=(im.naturalWidth&&im.naturalHeight)?im.naturalWidth/im.naturalHeight:2.2;
+    ws.addImage(id,{tl:{col:col,row:1.12},ext:{width:Math.round(h*ratio),height:h}});
+  };
+  addLogo('.tb-logo',1.04,66);
+  if(NC>=10)addLogo('.tb-aud-logo',NC-3.3,66);
+  var hr=ws.getRow(5);hr.height=19.5;
+  for(var c=1;c<=NC;c++){var hc=hr.getCell(c);hc.fill=fill('1A3A6B');hc.border={bottom:{style:'medium',color:C('C9A84C')}};}
+  var hdr=function(c,v,color,size,al){var cell=hr.getCell(c);cell.value=v;cell.font={name:'Calibri',size:size||8,bold:true,color:C(color||'FFFFFF')};cell.alignment={horizontal:al||'center',vertical:'middle'};};
+  hdr(1,'CONTA','E8C96A',8,'left');
+  hdr(2,'DESCRIÇÃO','E8C96A',9,'left');
+  ci.forEach(function(i,k){var c0=3+k*3;ws.mergeCells(5,c0,5,c0+2);hdr(c0,M[i].toUpperCase());});
+  ws.mergeCells(5,NC-1,5,NC);
+  hdr(NC-1,(sel.all?'ANUAL':'PERÍODO')+'  |  R$  |  '+baseAb,'E8C96A',9);
+  var NF='#,##0;\\(#,##0\\);\\-';
+  var ST={tot:{fa:'C9A84C',fb:'142B45',lb:'E8C96A',v:'4FC3F7',b:true,h:18.75},
+          sub:{fa:'0F2035',fb:'0F2035',lb:'B0BEC5',v:'FFFFFF',b:true,h:18.75},
+          det:{fa:'122540',fb:'122540',lb:'FFFFFF',v:'4FC3F7',b:false,h:15},
+          det2:{fa:'122540',fb:'122540',lb:'D5DCE4',v:'D5DCE4',b:false,h:15}};
+  var r=6;
+  (function walk(nodes,depth,anc){
+    nodes.forEach(function(n){
+      var up=n.l===n.l.toUpperCase();
+      var key=depth===0?((n.t==='rt'||up)?'tot':'sub'):(depth===1?'det':'det2');
+      var S=ST[key],row=ws.getRow(r);
+      row.height=S.h;
+      if(depth>0){row.outlineLevel=Math.min(depth,7);if(anc.some(function(a){return !dreExpanded[a];}))row.hidden=true;}
+      var rc=DRE_RECIPE[n.r],code=(rc&&rc.t==='L'&&rc.x.length)?rc.x[0][0]:'';
+      var put=function(c,v,font,al,nf){
+        var cell=row.getCell(c);cell.value=v;
+        cell.font=Object.assign({name:'Calibri'},font);
+        cell.fill=fill(c===1?S.fa:S.fb);
+        cell.alignment={horizontal:al,vertical:'middle'};
+        if(nf)cell.numFmt=nf;
+        if(c>1)cell.border={bottom:{style:'thin',color:C('1E3A5F')}};
+      };
+      put(1,code,{size:8,bold:key==='tot',color:C(key==='tot'?'0D1B2E':'78909C')},'left');
+      put(2,(key==='tot'?'':key==='sub'?'  ':key==='det'?'    ':'      ')+n.l,{size:9,bold:S.b,color:C(S.lb)},'left');
+      var tot=0,prevP=null;
+      ci.forEach(function(i,k){
+        var v=n.v[i],has=(v!==undefined&&v!==null),b=D[bk][i],c0=3+k*3;
+        var p=(has&&b)?v/b:null;
+        if(has)tot+=v;
+        put(c0,has?v:null,{size:9,bold:S.b,color:C(S.v)},'right',NF);
+        put(c0+1,p,{size:8,bold:S.b,color:C('F4A021')},'center','0.0%');
+        var ar='▬',ac='78909C';
+        if(k>0&&p!==null&&prevP!==null){if(p>prevP+1e-9){ar='▲';ac='00C853';}else if(p<prevP-1e-9){ar='▼';ac='FF1744';}}
+        put(c0+2,ar,{size:9,bold:true,color:C(ac)},'center');
+        prevP=p;
+      });
+      var tb=ci.reduce(function(a,i){return a+(D[bk][i]||0);},0);
+      put(NC-1,tot,{size:9,bold:true,color:C('2ECC71')},'right',NF);
+      put(NC,tb?tot/tb:null,{size:8,bold:S.b,color:C('F4A021')},'center','0.0%');
+      r++;
+      if(n.c)walk(n.c,depth+1,anc.concat([n.r]));
+    });
+  })(DTREE,0,[]);
+  var ft=((document.querySelector('#page-ov .footer')||{}).textContent||'').trim();
+  var fr=ws.getRow(r+1);
+  fr.getCell(2).value=(ft?ft+'  ·  ':'')+'Gerado em '+new Date().toLocaleString('pt-BR');
+  fr.getCell(2).font={name:'Calibri',size:8,italic:true,color:C('78909C')};
+  return {wb:wb,name:emp+' - DRE Gerencial 2026 - '+per.replace(/[–\s]+/g,'-')+'.xlsx'};
+}
+async function exportDREXlsx(){
+  var btn=document.getElementById('dreXlsBtn'),old=btn?btn.textContent:'';
+  if(btn){btn.disabled=true;btn.textContent='⏳ Gerando Excel...';}
+  try{
+    var out=await buildDREWorkbook();
+    var buf=await out.wb.xlsx.writeBuffer();
+    var blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=out.name;
+    document.body.appendChild(a);a.click();
+    setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},2000);
+  }catch(err){alert('Falha ao gerar o Excel da DRE: '+err.message);}
+  if(btn){btn.disabled=false;btn.textContent=old;}
 }
 
 function setPage(n,el){
