@@ -181,6 +181,74 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
   .page:not(.active){display:none!important}
   button,select,.fs,input{display:none!important}
 }
+/* ===== Relatório consolidado ===== */
+body.rel-open{overflow:hidden}
+#relOverlay{display:none;position:fixed;inset:0;z-index:5000;background:#17212F;overflow:auto}
+.rel-bar{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:7px;align-items:center;padding:10px 18px;background:var(--n3);border-bottom:1px solid var(--bdr);box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.rel-tit{font-weight:700;color:var(--g2);font-size:16px;margin-right:8px}
+.rel-bar .sp{flex:1}
+.rel-bar button.fs{cursor:pointer}
+.rel-wrap{padding:24px 16px 60px;overflow-x:auto}
+.rp-sheet{background:#fff;color:#1E2A38;width:1047px;margin:0 auto 24px;padding-bottom:14px;border-radius:4px;box-shadow:0 10px 40px rgba(0,0,0,.45);font-family:Calibri,"Segoe UI",Arial,sans-serif;font-size:12px;line-height:1.4;overflow:hidden}
+.rp-head{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#0D1B2E;padding:10px 20px;border-bottom:3px solid #C9A84C}
+.rp-head img{height:50px;width:auto;object-fit:contain}
+.rp-ht{flex:1;text-align:center}
+.rp-tt{color:#E8C96A;font-weight:700;font-size:19px;letter-spacing:.02em}
+.rp-ts{color:#D5DCE4;font-size:11.5px;margin-top:1px}
+.rp-body{padding:14px 20px 0}
+.rp-sec{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700;color:#0D1B2E;border-bottom:1.5px solid #C9A84C;padding-bottom:5px;margin-bottom:12px}
+.rp-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#0D1B2E;color:#E8C96A;font-size:13px;flex-shrink:0}
+.rp-sub{font-size:12px;font-weight:700;color:#1A3A6B;margin:14px 0 6px;text-transform:uppercase;letter-spacing:.06em}
+.rp-id{display:grid;grid-template-columns:repeat(3,1fr);gap:3px 18px;background:#F7F4EC;border:1px solid #E6DFCC;border-radius:6px;padding:8px 12px;margin-bottom:12px;font-size:11.5px}
+.rp-id b{color:#1A3A6B}.rp-id .full{grid-column:1/-1;border-top:1px solid #E6DFCC;margin-top:3px;padding-top:4px}
+.rp-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:6px}
+.rp-kpis.c1{grid-template-columns:1fr}
+.rp-k{border:1px solid #DDE3EA;border-top:3px solid #C9A84C;border-radius:6px;padding:7px 10px}
+.rp-k .l{font-size:10px;font-weight:700;color:#5B6B7C;text-transform:uppercase;letter-spacing:.05em}
+.rp-k .v{font-size:16.5px;font-weight:700;color:#0D1B2E;font-variant-numeric:tabular-nums;margin-top:1px}
+.rp-k .p{font-size:11px;color:#6E7E8E}
+.rp-k.neg{border-top-color:#C0392B}.rp-k.neg .v{color:#C0392B}
+.rp-dest{margin:0 0 10px;padding:7px 12px 7px 28px;background:#FBF8EF;border-left:3px solid #C9A84C;border-radius:4px}
+.rp-dest li{margin:2px 0}
+.rp-charts{display:grid;gap:10px}
+.rp-charts.c3{grid-template-columns:repeat(3,1fr)}.rp-charts.c2{grid-template-columns:1fr 1fr}
+.rp-c{border:1px solid #E3E7EC;border-radius:6px;padding:8px;break-inside:avoid}
+.rp-c .ct{font-size:11.5px;font-weight:700;color:#1A3A6B;margin-bottom:4px}
+.rp-c .ct:empty{display:none}
+.rp-c img{width:100%;height:auto;display:block}
+.rp-t{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:11px}
+.rp-t thead{display:table-header-group}
+.rp-t tr{break-inside:avoid}
+.rp-t th{background:#0D1B2E;color:#E8C96A;font-weight:700;padding:5px 6px;text-align:right;white-space:nowrap}
+.rp-t th:first-child{text-align:left}
+.rp-t td{padding:3px 6px;text-align:right;border-bottom:1px solid #E8ECF0;white-space:nowrap}
+.rp-t td:first-child{text-align:left;white-space:normal}
+.rp-t tr.rp-rt td{background:#F3EBD3;font-weight:700;color:#0D1B2E;border-top:1px solid #C9A84C}
+.rp-t tr.rp-rst td{background:#F5F7FA;font-weight:700}
+.rp-t tr.rp-rs td{color:#34495E}
+.rp-t td.tot{background:rgba(201,168,76,.10);font-weight:700}
+.rp-t tr.rp-rt td.tot{background:#EADFBF}
+.rp-t td.neg{color:#C0392B}
+.rp-t.dense{font-size:9.6px}.rp-t.dense td,.rp-t.dense th{padding:3px 4px}
+.rp-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start}
+.rp-grid2.w64{grid-template-columns:1.7fr 1fr}
+.pill{display:inline-block;padding:1px 9px;border-radius:9px;font-size:10px;font-weight:700}
+.pill.ok{background:#E3F6EA;color:#1E8449}.pill.warn{background:#FDEBD8;color:#B9600F}.pill.bad{background:#FADBD8;color:#A93226}
+.rp-interp{background:#F5F8FB;border:1px solid #DDE6EF;border-radius:6px;padding:8px 12px;font-size:11.5px;line-height:1.65}
+.rp-note{font-size:10.5px;color:#6E7E8E;margin-top:6px}
+.rp-foot{margin:14px 20px 0;padding-top:6px;border-top:1px solid #E3E7EC;display:flex;justify-content:space-between;gap:12px;font-size:10px;color:#6E7E8E}
+.rp-sign{margin-top:30px;display:flex;justify-content:flex-end}
+.rp-sign div{border-top:1px solid #1E2A38;padding-top:4px;min-width:300px;text-align:center;font-size:11px}
+@media(max-width:860px){.rel-wrap{padding:12px 8px 40px}.rel-bar{padding:8px 10px}.rel-tit{width:100%}}
+@media print{
+  html:has(body.printing-rel),body.printing-rel{background:#fff!important}
+  body.printing-rel .shell{display:none!important}
+  body.printing-rel #relOverlay{position:static!important;display:block!important;overflow:visible!important;background:#fff!important}
+  body.printing-rel .rel-bar{display:none!important}
+  body.printing-rel .rel-wrap{padding:0!important;overflow:visible!important}
+  body.printing-rel .rp-sheet{width:auto!important;margin:0!important;box-shadow:none!important;border-radius:0!important;overflow:visible!important;break-after:page;page-break-after:always}
+  body.printing-rel .rp-sheet:last-child{break-after:auto;page-break-after:auto}
+}
 </style>
 </head>
 <body>
@@ -211,6 +279,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
       <button class="fs" id="fullBtn" style="cursor:pointer;width:100%" onclick="toggleFullValues()">🔢 Valores completos</button>
       <button class="fs" style="cursor:pointer;width:100%" onclick="exportPageExcel()">📊 Exportar aba em Excel</button>
       <button class="fs" style="cursor:pointer;width:100%" onclick="exportPagePDF()">📄 Exportar aba em PDF</button>
+      <button class="fs" style="cursor:pointer;width:100%;border-color:rgba(201,168,76,.7);color:var(--g2);font-weight:700" onclick="openRelatorio()">📑 Relatório consolidado</button>
     </div>
     <hr class="sdiv">
     <div class="ssec" onclick="toggleSkpi()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
@@ -517,6 +586,28 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 </section>
 
 </main>
+</div>
+
+<!-- RELATÓRIO CONSOLIDADO -->
+<div id="relOverlay">
+  <div class="rel-bar">
+    <span class="rel-tit">📑 Relatório Consolidado</span>
+    <span class="fl">De:</span><select class="fs" id="relDe" onchange="onRelPeriodo()"></select>
+    <span class="fl">até:</span><select class="fs" id="relAte" onchange="onRelPeriodo()"></select>
+    <div class="fdiv"></div>
+    <span class="fl">Balanço em:</span><select class="fs" id="relBal" onchange="buildRelatorio()"></select>
+    <div class="fdiv"></div>
+    <span class="fl">Base %:</span><select class="fs" id="relBase" onchange="buildRelatorio()"><option value="rl">s/ Rec. Líquida</option><option value="rb">s/ Rec. Bruta</option></select>
+    <span class="fl">DRE:</span><select class="fs" id="relDreNiv" onchange="buildRelatorio()"><option value="full">Completa</option><option value="n1">Até 1º nível</option><option value="sint">Sintética</option></select>
+    <span class="fl">Valores:</span><select class="fs" id="relUnit" onchange="buildRelatorio()"><option value="rs">R$</option><option value="mil">R$ mil</option></select>
+    <label class="fl" style="display:flex;align-items:center;gap:5px;cursor:pointer"><input type="checkbox" id="relLalur" checked onchange="buildRelatorio()">Incluir LALUR</label>
+    <span class="sp"></span>
+    <button class="fs" onclick="printRelatorio()">🖨️ Imprimir / PDF</button>
+    <button class="fs" onclick="exportRelatorioExcel()">📊 Excel consolidado</button>
+    <button class="fs" onclick="closeRelatorio()">✕ Fechar</button>
+  </div>
+  <div class="rel-wrap"><div id="relDoc"></div></div>
+  <div id="relChartHost" style="position:absolute;left:-10000px;top:0;width:10px;height:10px;overflow:hidden"></div>
 </div>
 
 <script>
@@ -1502,6 +1593,432 @@ function exportPageExcel(){
   }catch(err){alert('Falha ao gerar Excel: '+err.message);}
   if(!prev){FULLVALS=false;rebuildAllViews();}
 }
+/* ================= RELATÓRIO CONSOLIDADO ================= */
+var REL={init:false,unit:'rs',last:null};
+function relEl(id){return document.getElementById(id);}
+function relEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function relTxt(h){return String(h).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&');}
+function relNum(v){return (typeof v==='number'&&isFinite(v))?v:0;}
+function relN(v,dec){
+  v=relNum(v);dec=dec||0;
+  if(REL.unit==='mil'){v=v/1000;dec=0;}
+  if(Math.abs(v)<(dec?0.005:0.5))return '–';
+  var a=Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:dec,maximumFractionDigits:dec});
+  return v<0?'('+a+')':a;
+}
+function relR(v){v=relNum(v);if(Math.abs(v)<0.005)v=0;var t='R$ '+Math.abs(v).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2});return v<0?'-'+t:t;}
+function relPc(v,b){return b?((v/b)*100).toFixed(1).replace('.',',')+'%':'—';}
+function relX(v){return relNum(v).toFixed(2).replace('.',',');}
+function relF(v,b){return b?{p:v/b}:'';}
+function relShort(v){var a=Math.abs(v),s=a>=1e6?(a/1e6).toFixed(1).replace('.',',')+'M':a>=1e3?(a/1e3).toFixed(0)+'K':String(Math.round(a));return (v<0?'-':'')+s;}
+function relEmp(){
+  var t=document.querySelector('.tb-title'),s=document.querySelector('.tb-sub'),f=document.querySelector('#page-ov .footer');
+  var elab='';if(f){var m=/Elaborado por ([^·]+)/.exec(f.textContent);if(m)elab=m[1].trim();}
+  var lb=document.querySelector('.tb-logo'),la=document.querySelector('.tb-aud-logo');
+  return {nome:t?t.textContent.split('·')[0].trim():'Empresa',sub:s?s.textContent.replace(/\s+/g,' ').trim():'',elab:elab,logoCli:lb?lb.src:'',logoAud:la?la.src:''};
+}
+
+/* ---------- seletores / abrir / fechar ---------- */
+function relFillSelectors(){
+  var de=relEl('relDe'),ate=relEl('relAte');
+  var o='';for(var i=0;i<numMeses;i++)o+='<option value="'+i+'">'+MF[i]+'</option>';
+  var pd=de.value,pa=ate.value;
+  de.innerHTML=o;ate.innerHTML=o;
+  de.value=(REL.init&&pd!==''&&+pd<numMeses)?pd:0;
+  ate.value=(REL.init&&pa!==''&&+pa<numMeses)?pa:numMeses-1;
+  REL.init=true;
+  relFillBal(true);
+}
+function relFillBal(auto){
+  var bEl=relEl('relBal'),ate=+relEl('relAte').value,cur=bEl.value;
+  var ks=Object.keys(BALHIST).map(Number).sort(function(a,b){return a-b;});
+  bEl.innerHTML=ks.map(function(k){return '<option value="'+k+'">'+MF[k]+'</option>';}).join('');
+  var le=ks.filter(function(k){return k<=ate;});
+  var pick=le.length?le[le.length-1]:(ks.length?ks[ks.length-1]:'');
+  bEl.value=(auto||cur===''||ks.indexOf(+cur)<0)?pick:cur;
+}
+function openRelatorio(){
+  relFillSelectors();
+  relEl('relOverlay').style.display='block';
+  document.body.classList.add('rel-open');
+  buildRelatorio();
+}
+function closeRelatorio(){relEl('relOverlay').style.display='none';document.body.classList.remove('rel-open');}
+function onRelPeriodo(){relFillBal(true);buildRelatorio();}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&document.body.classList.contains('rel-open'))closeRelatorio();});
+
+/* ---------- gráficos (renderizados como imagem p/ impressão fiel) ---------- */
+function relChart(type,labels,ds,opts,w,h){
+  var host=relEl('relChartHost'),cv=document.createElement('canvas');
+  cv.width=w;cv.height=h;cv.style.width=w+'px';cv.style.height=h+'px';
+  host.appendChild(cv);
+  var url='';
+  try{var ch=new Chart(cv,{type:type,data:{labels:labels,datasets:ds},options:opts});url=ch.toBase64Image('image/png',1);ch.destroy();}catch(e){console.warn('Relatório: falha no gráfico',e);}
+  host.removeChild(cv);
+  return url?'<img src="'+url+'" alt="">':'';
+}
+function relOpt(yF,legend,stk){
+  var t='#4A5868',f={family:'Calibri',size:11};
+  var o={responsive:false,animation:false,devicePixelRatio:2,
+    plugins:{legend:{display:legend!==false,position:'bottom',labels:{color:t,font:f,boxWidth:10,boxHeight:10,padding:10}},tooltip:{enabled:false}},
+    scales:{x:{grid:{display:false},ticks:{color:t,font:f,autoSkip:false,maxRotation:0}},
+            y:{grid:{color:'#E6EAEE'},ticks:{color:t,font:{family:'Calibri',size:10},callback:function(v){return yF==='pct'?v+'%':relShort(v);}}}}};
+  if(stk){o.scales.x.stacked=true;o.scales.y.stacked=true;}
+  return o;
+}
+function relDonutOpt(){
+  return {responsive:false,animation:false,devicePixelRatio:2,cutout:'58%',
+    plugins:{legend:{display:true,position:'right',labels:{color:'#4A5868',font:{family:'Calibri',size:11},boxWidth:10,boxHeight:10,padding:8}},tooltip:{enabled:false}}};
+}
+function relBox(t,img){return '<div class="rp-c"><div class="ct">'+t+'</div>'+img+'</div>';}
+
+/* ---------- contexto ---------- */
+function relCtx(){
+  REL.unit=relEl('relUnit').value;
+  var de=parseInt(relEl('relDe').value),ate=parseInt(relEl('relAte').value);
+  if(isNaN(de))de=0;if(isNaN(ate))ate=numMeses-1;
+  if(de>ate){var t=de;de=ate;ate=t;relEl('relDe').value=de;relEl('relAte').value=ate;}
+  var ci=[];for(var i=de;i<=ate;i++)ci.push(i);
+  var bk=relEl('relBase').value==='rb'?'rb':'rl';
+  var bm=parseInt(relEl('relBal').value);if(isNaN(bm))bm=ate;
+  var ld=new Date(2026,bm+1,0).getDate();
+  return {emp:relEmp(),ci:ci,bk:bk,
+    baseLbl:bk==='rl'?'Receita Líquida':'Receita Bruta',bs:bk==='rl'?'s/ Rec. Líquida':'s/ Rec. Bruta',
+    per:(ci.length===1?M[ci[0]]:M[ci[0]]+'–'+M[ci[ci.length-1]])+' 2026',
+    perLong:(ci.length===1?MF[ci[0]]:MF[ci[0]]+' a '+MF[ci[ci.length-1]])+' de 2026',
+    bm:bm,bmData:ld+'/'+String(bm+1).padStart(2,'0')+'/2026',
+    emis:new Date().toLocaleString('pt-BR'),unitLbl:REL.unit==='mil'?'R$ mil':'R$',
+    s:function(k){return ci.reduce(function(a,i){return a+relNum(D[k][i]);},0);}};
+}
+function relV(k,i){
+  if(k==='dep')return relNum(D.df[i])+relNum(D.da[i]);
+  if(k==='irc')return relNum(D.ir[i])+relNum(D.cs[i]);
+  return relNum(D[k][i]);
+}
+
+/* ---------- 1. Visão Geral ---------- */
+function relSecOV(d){
+  var s=d.s,ci=d.ci,bk=d.bk;
+  var rb=s('rb'),ded=s('ded'),rl=s('rl'),mb=s('mb'),dt=s('dt'),ro=s('ro'),eb=s('eb'),ll=s('ll'),bv=s(bk);
+  var K=[['Receita Bruta',rb,rb,'s/ Rec. Bruta'],['( − ) Deduções',ded,rb,'s/ Rec. Bruta'],['Receita Líquida',rl,rb,'s/ Rec. Bruta'],['Margem Bruta',mb,bv,d.bs],
+         ['Despesas Totais',dt,bv,d.bs],['Resultado Operacional',ro,bv,d.bs],['EBITDA',eb,bv,d.bs],['Lucro Líquido',ll,bv,d.bs]];
+  var dest=[];
+  dest.push('Receita Líquida de <b>'+relR(rl)+'</b> no período ('+relPc(rl,rb)+' da Receita Bruta), média mensal de '+relR(rl/ci.length)+'.');
+  dest.push('Margem Bruta de <b>'+relPc(mb,bv)+'</b>, EBITDA de <b>'+relR(eb)+'</b> ('+relPc(eb,bv)+') e Lucro Líquido de <b>'+relR(ll)+'</b> ('+relPc(ll,bv)+'), percentuais sobre a '+d.baseLbl+'.');
+  if(ci.length>1){
+    var best=ci[0],worst=ci[0];
+    ci.forEach(function(i){if(D.ll[i]>D.ll[best])best=i;if(D.ll[i]<D.ll[worst])worst=i;});
+    dest.push('Melhor mês em lucro líquido: <b>'+MF[best]+'</b> ('+relR(D.ll[best])+'); menor resultado: <b>'+MF[worst]+'</b> ('+relR(D.ll[worst])+').');
+    var a=ci[ci.length-1],b=ci[ci.length-2];
+    if(D.rl[b])dest.push('Receita Líquida de '+MF[a]+' '+(D.rl[a]>=D.rl[b]?'cresceu ':'recuou ')+relPc(Math.abs(D.rl[a]-D.rl[b]),D.rl[b])+' em relação a '+MF[b]+' ('+relR(D.rl[a])+' contra '+relR(D.rl[b])+').');
+  }
+  dest.push('Despesas totais de '+relR(dt)+' ('+relPc(dt,bv)+'): comerciais '+relR(s('dc'))+' ('+relPc(s('dc'),bv)+') e operacionais '+relR(s('dop'))+' ('+relPc(s('dop'),bv)+').');
+  var rf=s('rf');
+  dest.push('Resultado financeiro líquido '+(rf>0?'negativo (despesa líquida) de ':'positivo de ')+relR(Math.abs(rf))+'; provisão de IRPJ e CSLL de '+relR(s('ir')+s('cs'))+'.');
+
+  var lab=ci.map(function(i){return M[i];});
+  var c1=relChart('bar',lab,[{label:'Receita Líquida',data:ci.map(function(i){return D.rl[i];}),backgroundColor:'rgba(41,128,185,.8)',borderRadius:3},
+    {label:'Lucro Líquido',data:ci.map(function(i){return D.ll[i];}),backgroundColor:ci.map(function(i){return D.ll[i]>=0?'rgba(39,174,96,.85)':'rgba(192,57,43,.85)';}),borderRadius:3}],relOpt('val'),320,210);
+  var pc=function(k){return ci.map(function(i){return D[bk][i]?+(D[k][i]/D[bk][i]*100).toFixed(2):0;});};
+  var ln=function(l,k,c){return {label:l,data:pc(k),borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:3,tension:.3,fill:false};};
+  var c2=relChart('line',lab,[ln('Margem Bruta','mb','#27AE60'),ln('EBITDA','eb','#C9A84C'),ln('Lucro Líquido','ll','#2980B9')],relOpt('pct'),320,210);
+  var dsp=[s('dc'),s('dop'),s('dfn'),Math.abs(s('out'))],dl=['Comerciais','Operacionais','Financeiras','Outras'];
+  var dtot=dsp.reduce(function(a,v){return a+v;},0);
+  var c3=relChart('doughnut',dl.map(function(l,i){return l+' '+relPc(dsp[i],dtot);}),[{data:dsp,backgroundColor:['#2980B9','#C9A84C','#27AE60','#95A5A6'],borderWidth:1,borderColor:'#fff'}],relDonutOpt(),320,210);
+
+  var html='<div class="rp-id">'+
+    '<div><b>Empresa:</b> '+relEsc(d.emp.nome)+'</div><div><b>Período analisado:</b> '+d.perLong+'</div><div><b>Balanço (data-base):</b> '+d.bmData+'</div>'+
+    '<div>'+relEsc(d.emp.sub)+'</div><div><b>Base das análises %:</b> '+d.baseLbl+'</div><div><b>Emissão:</b> '+d.emis+'</div>'+
+    '<div class="full"><b>Conteúdo:</b> '+d.secNames.map(function(n,i){return (i+1)+'. '+n;}).join(' · ')+'</div></div>'+
+    '<div class="rp-kpis">'+K.map(function(k){return '<div class="rp-k'+(k[1]<0?' neg':'')+'"><div class="l">'+k[0]+'</div><div class="v">'+relR(k[1])+'</div><div class="p">'+relPc(k[1],k[2])+' '+k[3]+'</div></div>';}).join('')+'</div>'+
+    '<div class="rp-sub">Destaques do período</div><ul class="rp-dest">'+dest.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
+    '<div class="rp-charts c3">'+relBox('Receita Líquida × Lucro Líquido (R$)',c1)+relBox('Margens % '+d.bs,c2)+relBox('Composição das despesas',c3)+'</div>';
+  var xr=[['Indicador','Valor (R$)','%','Base']];
+  K.forEach(function(k){xr.push([k[0],k[1],relF(k[1],k[2]),k[3]]);});
+  xr.push([],['Destaques do período']);
+  dest.forEach(function(x){xr.push(['• '+relTxt(x)]);});
+  return {html:html,xl:{name:'Visão Geral',rows:xr,w:[34,20,10,18]}};
+}
+
+/* ---------- 2. Análise Vertical ---------- */
+var REL_AV=[['Receita Bruta','rb','rt'],['( − ) Deduções','ded','rs'],['Receita Líquida','rl','rt'],['( − ) Custos','custos','rs'],['( − ) Depreciações','dep','rs'],
+  ['Margem Bruta','mb','rst'],['( − ) Despesas Comerciais','dc','rs'],['( − ) Despesas Operacionais','dop','rs'],['Resultado Operacional','ro','rst'],
+  ['( − ) Outras Receitas/Despesas','out','rs'],['( − ) Resultado Financeiro','rf','rs'],['Resultado antes IRPJ/CSLL','ai','rst'],['( − ) IRPJ e CSLL','irc','rs'],
+  ['Lucro Líquido','ll','rt'],['EBITDA','eb','rst']];
+function relSecAV(d){
+  var ci=d.ci,bk=d.bk,totB=d.s(bk);
+  var h='<table class="rp-t'+(ci.length>8?' dense':'')+'"><thead><tr><th>Conta</th>'+ci.map(function(i){return '<th>'+M[i]+'</th>';}).join('')+'<th>Período ('+d.unitLbl+')</th><th>Período %</th></tr></thead><tbody>';
+  var xr=[['Conta'].concat(ci.map(function(i){return M[i]+' %';}),['Período (R$)','Período %'])];
+  REL_AV.forEach(function(r){
+    var tot=ci.reduce(function(a,i){return a+relV(r[1],i);},0),xrow=[r[0]];
+    h+='<tr class="'+r[2]+'"><td>'+r[0]+'</td>';
+    ci.forEach(function(i){
+      var b=relNum(D[bk][i]),v=relV(r[1],i),p=b?v/b:0;
+      h+='<td'+(p<0?' class="neg"':'')+'>'+(b?(p*100).toFixed(1).replace('.',',')+'%':'—')+'</td>';
+      xrow.push(b?{p:p}:'');
+    });
+    h+='<td class="tot'+(tot<0?' neg':'')+'">'+relN(tot)+'</td><td class="tot">'+relPc(tot,totB)+'</td></tr>';
+    xrow.push(tot,relF(tot,totB));xr.push(xrow);
+  });
+  h+='</tbody></table><div class="rp-note">Percentuais de cada mês calculados sobre a '+d.baseLbl+' do próprio mês. Coluna “Período” em '+d.unitLbl+'; valores entre parênteses são negativos.</div>';
+  var lab=ci.map(function(i){return M[i];});
+  var pc=function(k){return ci.map(function(i){return D[bk][i]?+(relV(k,i)/D[bk][i]*100).toFixed(2):0;});};
+  var ln=function(l,k,c){return {label:l,data:pc(k),borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:3,tension:.3,fill:false};};
+  var img=relChart('line',lab,[ln('Margem Bruta','mb','#27AE60'),ln('EBITDA','eb','#C9A84C'),ln('Lucro Líquido','ll','#2980B9'),ln('Despesas Totais','dt','#C0392B')],relOpt('pct'),1000,230);
+  h+='<div class="rp-sub">Evolução das margens % '+d.bs+'</div>'+relBox('',img);
+  return {html:h,xl:{name:'Análise Vertical',rows:xr,w:[32].concat(ci.map(function(){return 10;}),[18,11])}};
+}
+
+/* ---------- 3. Indicadores ---------- */
+function relSecInd(d){
+  var s=d.s,ci=d.ci,rb=s('rb'),rl=s('rl'),mb=s('mb'),eb=s('eb'),ro=s('ro'),ll=s('ll');
+  var cst=s('custos')+s('df')+s('da'),irc=s('ir')+s('cs');
+  var B=[
+    ['Resultado',[['Receita Bruta',rb,rb,'RB'],['( − ) Deduções',s('ded'),rb,'RB'],['Receita Líquida',rl,rb,'RB'],['( − ) Custos + Depreciações',cst,rl,'RL'],['= Margem Bruta',mb,rl,'RL']]],
+    ['Lucratividade',[['Margem Bruta',null,mb/rl,'s/ RL'],['Margem EBITDA',null,eb/rl,'s/ RL'],['Margem Operacional',null,ro/rl,'s/ RL'],['Margem Líquida',null,ll/rl,'s/ RL'],['EBITDA s/ Receita Bruta',null,eb/rb,'s/ RB']]],
+    ['Despesas',[['Despesas Comerciais',s('dc'),rl,'RL'],['   Vendas',s('dv'),rl,'RL'],['   Marketing comercial',s('dm'),rl,'RL'],['Despesas Operacionais',s('dop'),rl,'RL'],['   Folha de Pagamento',s('fol'),rl,'RL'],['   Serviços de Terceiros',s('srv'),rl,'RL']]],
+    ['Financeiro e Tributos',[['Despesa Financeira',s('dfn'),rl,'RL'],['Receita Financeira',Math.abs(s('rcf')),rl,'RL'],['Resultado Financeiro Líquido',s('rf'),rl,'RL'],['Provisão IRPJ',s('ir'),rl,'RL'],['Provisão CSLL',s('cs'),rl,'RL']]]
+  ];
+  var xr=[];
+  var h='<div class="rp-grid2">'+B.map(function(bl){
+    xr.push([bl[0]+' — '+d.per],['Item','Valor (R$)','%','Base']);
+    var t='<table class="rp-t"><thead><tr><th>'+bl[0]+'</th><th>Valor (R$)</th><th>%</th></tr></thead><tbody>'+bl[1].map(function(r){
+      var isPct=r[1]===null,p=isPct?r[2]:(r[2]?r[1]/r[2]:0);
+      xr.push([r[0].trim(),isPct?'':r[1],isFinite(p)?{p:p}:'',r[3]]);
+      return '<tr class="'+(r[0].indexOf('=')===0?'rst':'rs')+'"><td>'+r[0].replace(/^ {3}/,'&nbsp;&nbsp;&nbsp;&nbsp;')+'</td><td'+(!isPct&&r[1]<0?' class="neg"':'')+'>'+(isPct?'':relR(r[1]))+'</td><td>'+(isFinite(p)?(p*100).toFixed(1).replace('.',',')+'% '+r[3]:'—')+'</td></tr>';
+    }).join('')+'</tbody></table>';
+    xr.push([]);
+    return t;
+  }).join('')+'</div>';
+  var steps=[['Rec. Líq.',rl,1],['Custos+Depr.',-cst,0],['Despesas',-s('dt'),0],['Res. Oper.',ro,1],['Outras',-s('out'),0],['Financeiro',-s('rf'),0],['IRPJ/CSLL',-irc,0],['Lucro Líq.',ll,1]];
+  var run=0,data=[],cols=[];
+  steps.forEach(function(st){
+    if(st[2]){data.push([0,st[1]]);run=st[1];cols.push(st[1]>=0?'rgba(41,128,185,.85)':'rgba(192,57,43,.85)');}
+    else{data.push([run,run+st[1]]);cols.push(st[1]>=0?'rgba(39,174,96,.8)':'rgba(192,57,43,.75)');run+=st[1];}
+  });
+  var wf=relChart('bar',steps.map(function(x){return x[0];}),[{data:data,backgroundColor:cols,borderRadius:3}],relOpt('val',false),490,230);
+  var lab=ci.map(function(i){return M[i];});
+  var sk=function(l,k,c){return {label:l,data:ci.map(function(i){return D[k][i];}),backgroundColor:c,stack:'s'};};
+  var st=relChart('bar',lab,[sk('Folha','fol','#2980B9'),sk('Benefícios','ben','#5DADE2'),sk('Serviços','srv','#C9A84C'),sk('Ocupação','ocu','#27AE60'),sk('Administrativas','adm','#95A5A6'),sk('Tributárias','trb','#E67E22')],relOpt('val',true,true),490,230);
+  h+='<div class="rp-charts c2" style="margin-top:12px">'+relBox('Formação do resultado — '+d.per+' (R$)',wf)+relBox('Despesas operacionais — composição mensal (R$)',st)+'</div>';
+  return {html:h,xl:{name:'Indicadores',rows:xr,w:[34,20,10,8]}};
+}
+
+/* ---------- 4. DRE ---------- */
+function relSecDRE(d){
+  var ci=d.ci,bk=d.bk,niv=relEl('relDreNiv').value,maxD=niv==='full'?9:niv==='n1'?1:0;
+  var totB=d.s(bk),multi=ci.length>1;
+  var h='<table class="rp-t'+(ci.length>8?' dense':'')+'"><thead><tr><th>Conta</th>'+ci.map(function(i){return '<th>'+M[i]+'</th>';}).join('')+(multi?'<th>Total</th>':'')+'<th>AV%</th></tr></thead><tbody>';
+  var xr=[['Conta'].concat(ci.map(function(i){return M[i];}),multi?['Total']:[],['AV% '+d.bs])];
+  (function walk(nodes,depth){
+    nodes.forEach(function(n){
+      var tot=0,xrow=['    '.repeat(depth)+n.l];
+      h+='<tr class="'+n.t+'"><td style="padding-left:'+(6+depth*14)+'px">'+relEsc(n.l)+'</td>';
+      ci.forEach(function(i){var v=n.v[i];tot+=relNum(v);h+='<td'+(v<0?' class="neg"':'')+'>'+(v===undefined?'—':relN(v))+'</td>';xrow.push(v===undefined?'':v);});
+      if(multi){h+='<td class="tot'+(tot<0?' neg':'')+'">'+relN(tot)+'</td>';xrow.push(tot);}
+      h+='<td class="tot">'+relPc(tot,totB)+'</td></tr>';
+      xrow.push(relF(tot,totB));xr.push(xrow);
+      if(n.c&&depth<maxD)walk(n.c,depth+1);
+    });
+  })(DTREE,0);
+  h+='</tbody></table><div class="rp-note">Valores em '+d.unitLbl+' (sem centavos), movimento mensal. AV% = participação do total do período sobre a '+d.baseLbl+'. Valores entre parênteses são negativos.</div>';
+  return {html:h,xl:{name:'DRE',rows:xr,w:[44].concat(ci.map(function(){return 15;}),multi?[17]:[],[11])}};
+}
+
+/* ---------- 5. Balanço Patrimonial ---------- */
+var REL_BA=[['Caixa e Equivalentes','caixa'],['Créditos (Clientes)','cred'],['Tributos a Recuperar','trib'],['Estoques','est'],['=Ativo Circulante','ac'],
+  ['Realizável a Longo Prazo','rlp'],['Investimentos','inv'],['Imobilizado','imo'],['Intangível','intang'],['=Ativo Não Circulante','anc'],['#ATIVO TOTAL','at']];
+var REL_BP=[['Fornecedores','forn'],['Empréstimos e Financiamentos CP','empCP'],['Obrigações Trabalhistas','obrT'],['Obrigações Tributárias','obrTrib'],['Outras Obrigações CP','outrosPC'],['=Passivo Circulante','pc'],
+  ['Empréstimos e Financiamentos LP','empLP'],['Tributos Parcelados — Federal','tribFed'],['Tributos Parcelados — Estadual','tribEst'],['=Passivo Não Circulante','pnc'],
+  ['Capital Social','capSoc'],['Reservas de Lucros','resLucros'],['Ajuste de Avaliação Patrimonial','ajusteAval'],['Lucros / Prejuízos Acumulados','lucrosAcum'],['Resultado do Exercício','resExerc'],['=Patrimônio Líquido','pl'],
+  ['#PASSIVO + PATRIMÔNIO LÍQUIDO','pt']];
+function relSecBal(d){
+  var b=BALHIST[d.bm];
+  if(!b)return {html:'<p>Não há balancete importado para a data-base selecionada.</p>',xl:{name:'Balanço',rows:[['Não há balancete importado para a data-base selecionada.']],w:[60]}};
+  var p=BALHIST[d.bm-1],pl=p?MF[d.bm-1]:'';
+  var xr=[['Grupo','Conta',MF[d.bm]].concat(p?[pl,'Variação %']:[])];
+  var tbl=function(title,L){
+    var t='<table class="rp-t"><thead><tr><th>'+title+'</th><th>'+M[d.bm]+'/26</th>'+(p?'<th>'+M[d.bm-1]+'/26</th><th>Var.</th>':'')+'</tr></thead><tbody>';
+    L.forEach(function(it){
+      var lbl=it[0],cls='rs';
+      if(lbl[0]==='='){cls='rst';lbl=lbl.slice(1);}else if(lbl[0]==='#'){cls='rt';lbl=lbl.slice(1);}
+      var v=relNum(b[it[1]]),pv=p?relNum(p[it[1]]):0,vr=p&&pv?(v-pv)/Math.abs(pv):null;
+      t+='<tr class="'+cls+'"><td>'+lbl+'</td><td'+(v<0?' class="neg"':'')+'>'+relN(v,2)+'</td>'+(p?'<td'+(pv<0?' class="neg"':'')+'>'+relN(pv,2)+'</td><td>'+(vr===null?'—':(vr>=0?'+':'')+(vr*100).toFixed(1).replace('.',',')+'%')+'</td>':'')+'</tr>';
+      xr.push([title,lbl,v].concat(p?[pv,vr===null?'':{p:vr}]:[]));
+    });
+    return t+'</tbody></table>';
+  };
+  var h='<div class="rp-grid2">'+tbl('ATIVO',REL_BA)+tbl('PASSIVO E PATRIMÔNIO LÍQUIDO',REL_BP)+'</div>';
+  var dif=relNum(b.at)-relNum(b.pt);
+  h+='<div class="rp-note">Saldos acumulados em '+d.bmData+' extraídos do balancete; valores em '+d.unitLbl+'. '+(p?'Variação comparada a '+pl+'. ':'')+
+     (Math.abs(dif)<1?'Conferência: Ativo Total = Passivo + PL ✓':'<b style="color:#C0392B">Atenção: diferença de '+relR(dif)+' entre Ativo e Passivo + PL.</b>')+'</div>';
+  return {html:h,xl:{name:'Balanço',rows:xr,w:[30,36,18].concat(p?[18,11]:[])}};
+}
+
+/* ---------- 6. Índices ---------- */
+function relIdx(b){
+  var r={};
+  r.liqIm=b.pc?b.caixa/b.pc:0;r.liqSeca=b.pc?(b.ac-b.est)/b.pc:0;r.liqCorr=b.pc?b.ac/b.pc:0;
+  r.liqGeral=(b.pc+Math.abs(b.pnc))?b.ac/(b.pc+Math.abs(b.pnc)):0;
+  r.endGeral=b.at?(b.pc+Math.abs(b.pnc))/b.at:0;r.pcPl=b.pl?b.pc/b.pl:0;
+  r.alav=b.pl?(b.empCP+b.empLP)/b.pl:0;r.cgl=b.ac-b.pc;
+  return r;
+}
+function relSecIdx(d){
+  var b=BALHIST[d.bm];
+  if(!b)return {html:'<p>Não há balancete importado para a data-base selecionada.</p>',xl:{name:'Índices',rows:[['Sem balancete para a data-base.']],w:[60]}};
+  var r=relIdx(b),p=BALHIST[d.bm-1],rp=p?relIdx(p):null;
+  var st=function(c){return c==='ok'?'Adequado':c==='warn'?'Atenção':'Crítico';};
+  var I=[
+    ['Liquidez Imediata','Caixa / Passivo Circulante',relR(b.caixa)+' / '+relR(b.pc),'liqIm','x',r.liqIm<0.3?'bad':r.liqIm<0.6?'warn':'ok','≥ 0,60 adequado · < 0,30 crítico'],
+    ['Liquidez Seca','(AC − Estoques) / PC',relR(b.ac-b.est)+' / '+relR(b.pc),'liqSeca','x',r.liqSeca<0.8?'bad':r.liqSeca<1?'warn':'ok','≥ 1,00 adequado · < 0,80 crítico'],
+    ['Liquidez Corrente','Ativo Circulante / PC',relR(b.ac)+' / '+relR(b.pc),'liqCorr','x',r.liqCorr<1?'bad':r.liqCorr<1.2?'warn':'ok','≥ 1,20 adequado · < 1,00 crítico'],
+    ['Liquidez Geral','AC / (PC + PNC)',relR(b.ac)+' / '+relR(b.pc+Math.abs(b.pnc)),'liqGeral','x',r.liqGeral<0.8?'bad':r.liqGeral<1?'warn':'ok','≥ 1,00 adequado · < 0,80 crítico'],
+    ['Endividamento Geral','(PC + PNC) / Ativo Total',relR(b.pc+Math.abs(b.pnc))+' / '+relR(b.at),'endGeral','p',r.endGeral>0.95?'bad':r.endGeral>0.8?'warn':'ok','≤ 80% adequado · > 95% crítico'],
+    ['PC / Patrimônio Líquido','Passivo Circulante / PL',relR(b.pc)+' / '+relR(b.pl),'pcPl','x',r.pcPl>3?'bad':r.pcPl>1.5?'warn':'ok','≤ 1,5× adequado · > 3× crítico'],
+    ['Alavancagem Financeira','Empréstimos (CP+LP) / PL',relR(b.empCP+b.empLP)+' / '+relR(b.pl),'alav','x',r.alav>2.5?'bad':r.alav>1.8?'warn':'ok','≤ 1,8× adequado · > 2,5× crítico'],
+    ['Capital de Giro Líquido','Ativo Circulante − PC',relR(b.ac)+' − '+relR(b.pc),'cgl','r',r.cgl<0?'bad':'ok','≥ 0 adequado']
+  ];
+  var fv=function(v,x){return x[4]==='p'?(v*100).toFixed(1).replace('.',',')+'%':x[4]==='r'?relR(v):relX(v)+(/pcPl|alav/.test(x[3])?'×':'');};
+  var h='<table class="rp-t"><thead><tr><th>Índice</th><th>Fórmula</th><th>Composição ('+M[d.bm]+')</th><th>'+M[d.bm]+'/26</th>'+(rp?'<th>'+M[d.bm-1]+'/26</th>':'')+'<th>Referência</th><th style="text-align:center">Situação</th></tr></thead><tbody>';
+  var xr=[['Índice','Fórmula',MF[d.bm]].concat(rp?[MF[d.bm-1]]:[],['Referência','Situação'])];
+  I.forEach(function(x){
+    var v=r[x[3]],pv=rp?rp[x[3]]:null;
+    h+='<tr class="rs"><td><b>'+x[0]+'</b></td><td style="text-align:left">'+x[1]+'</td><td style="text-align:left;color:#5B6B7C">'+x[2]+'</td><td><b>'+fv(v,x)+'</b></td>'+(rp?'<td>'+fv(pv,x)+'</td>':'')+'<td style="text-align:left">'+x[6]+'</td><td style="text-align:center"><span class="pill '+x[5]+'">'+st(x[5])+'</span></td></tr>';
+    var cell=function(z){return x[4]==='p'?{p:z}:x[4]==='r'?z:{x:z};};
+    xr.push([x[0],x[1],cell(v)].concat(rp?[cell(pv)]:[],[x[6],st(x[5])]));
+  });
+  h+='</tbody></table>';
+  var ebAcum=D.eb.slice(0,d.bm+1).reduce(function(a,v){return a+relNum(v);},0),lucAc=relNum(b.resLucros)+relNum(b.lucrosAcum);
+  var it=[
+    (r.liqCorr>=1?'▲':'▼')+' <b>Liquidez Corrente '+relX(r.liqCorr)+'</b> — '+relR(b.ac)+' de Ativo Circulante para '+relR(b.pc)+' de Passivo Circulante. '+(r.cgl>=0?'Capital de giro positivo de '+relR(r.cgl)+'.':'Capital de giro negativo de '+relR(Math.abs(r.cgl))+'.'),
+    (r.liqSeca>=1?'▲':'▼')+' <b>Liquidez Seca '+relX(r.liqSeca)+'</b> — '+(r.liqSeca>=1?'mesmo excluindo estoques, cobre com folga o passivo circulante.':'excluindo estoques, não cobre integralmente o passivo circulante.'),
+    (r.liqIm>=0.3?'▲':'▼')+' <b>Liquidez Imediata '+relX(r.liqIm)+'</b> — o caixa cobre '+(r.liqIm*100).toFixed(0)+'% das obrigações de curto prazo.'+(r.liqIm<0.3?' Atenção ao fluxo de caixa.':' Posição de caixa confortável.'),
+    (r.endGeral>0.8?'⚠':'▲')+' <b>Endividamento '+(r.endGeral*100).toFixed(1).replace('.',',')+'%</b> — estrutura '+(r.endGeral>0.6?'financiada majoritariamente por capital de terceiros':'equilibrada entre capital próprio e de terceiros')+'. EBITDA acumulado de '+relR(ebAcum)+' (Jan–'+M[d.bm]+') '+(ebAcum>0?'indica capacidade de geração de caixa para servir a dívida.':'indica geração de caixa limitada no período.'),
+    (b.pl>=0?'▲':'▼')+' <b>Patrimônio Líquido '+relR(b.pl)+'</b> — Capital Social '+relR(b.capSoc)+', Ajuste de Avaliação '+relR(b.ajusteAval)+', Lucros Acumulados '+relR(lucAc)+' e Resultado do Exercício '+relR(b.resExerc)+'.'
+  ];
+  h+='<div class="rp-sub">Interpretação</div><div class="rp-interp">'+it.join('<br>')+'</div>';
+  var pas=[['Fornecedores',b.forn],['Empréstimos',b.empCP+b.empLP],['Obrig. Tributárias',b.obrTrib],['Obrig. Trabalhistas',b.obrT],['Tributos Parcelados',b.outPNC],['Outras CP',b.outrosPC]].filter(function(x){return relNum(x[1])>0;});
+  var ptot=pas.reduce(function(a,x){return a+x[1];},0);
+  var dn=relChart('doughnut',pas.map(function(x){return x[0]+' '+relPc(x[1],ptot);}),[{data:pas.map(function(x){return x[1];}),backgroundColor:['#C0392B','#E74C3C','#E67E22','#3498DB','#7F8C8D','#C9A84C'],borderWidth:1,borderColor:'#fff'}],relDonutOpt(),490,220);
+  var ks=Object.keys(BALHIST).map(Number).filter(function(k){return k<=d.bm;}).sort(function(a,c){return a-c;});
+  var ev=ks.map(function(k){return relIdx(BALHIST[k]);});
+  var el=function(l,k,c){return {label:l,data:ev.map(function(x){return +x[k].toFixed(2);}),borderColor:c,backgroundColor:c,borderWidth:2,pointRadius:3,tension:.3,fill:false};};
+  var o=relOpt('x');o.scales.y.ticks.callback=function(v){return String(v).replace('.',',');};
+  var lc=relChart('line',ks.map(function(k){return M[k];}),[el('Corrente','liqCorr','#2980B9'),el('Seca','liqSeca','#27AE60'),el('Imediata','liqIm','#C9A84C'),el('Geral','liqGeral','#8E44AD')],o,490,220);
+  h+='<div class="rp-charts c2" style="margin-top:12px">'+relBox('Composição do passivo — '+M[d.bm]+'/26',dn)+relBox('Evolução dos índices de liquidez',lc)+'</div>';
+  xr.push([],['Interpretação']);it.forEach(function(x){xr.push([relTxt(x)]);});
+  return {html:h,xl:{name:'Índices',rows:xr,w:[26,28,14].concat(rp?[14]:[],[32,12])}};
+}
+
+/* ---------- 7. LALUR ---------- */
+function relSecLalur(d){
+  var bm=Math.min(d.bm,numMeses-1),calc=computeLALUR(bm),c=calc[bm];
+  if(!c)return {html:'<p>Sem dados para apuração do LALUR na data-base.</p>',xl:{name:'LALUR',rows:[['Sem dados.']],w:[60]}};
+  var pIr=relNum(D.ir[bm]),pCs=relNum(D.cs[bm]);
+  var R=[
+    ['Lucro antes do IRPJ e CSLL (acumulado)',c.lucroAcum,c.lucroAcum,'rst'],
+    ['( + ) Adições',c.adicAcum,c.adicAcum,'rs'],
+    ['( − ) Exclusão · Subvenção ICMS',c.subvAcum,c.subvAcum,'rs'],
+    ['( − ) Exclusão · Ajustes de Exercícios Anteriores',lalurAjusteExAnt,lalurAjusteExAnt,'rs'],
+    ['= Base antes da compensação',c.baseAntes,c.baseAntes,'rst'],
+    ['( − ) Compensação prejuízo fiscal / base negativa (30%)',c.prejComp,c.prejComp,'rs'],
+    ['= Base de cálculo',c.baseIR,c.baseIR,'rst'],
+    ['IRPJ 15% / CSLL 9%',c.ir15,c.csApurado,'rs'],
+    ['Adicional IRPJ 10% (excedente R$ 20 mil/mês)',c.adicIR,null,'rs'],
+    ['= Total apurado acumulado',c.irApurado,c.csApurado,'rst'],
+    ['( − ) Apurado em meses anteriores',c.irApurado-c.irMes,c.csApurado-c.csMes,'rs'],
+    ['= A recolher / (recuperar) no mês',c.irMes,c.csMes,'rt'],
+    ['Provisão contabilizada no balancete',pIr,pCs,'rs'],
+    ['Diferença (apuração − provisão)',c.irMes-pIr,c.csMes-pCs,'rst'],
+    ['Prejuízo fiscal / base negativa a transportar',c.prejTransp,c.prejTransp,'rs']
+  ];
+  var xr=[['Apuração acumulada Jan–'+M[bm]+' 2026','IRPJ','CSLL']];
+  var h='<div class="rp-grid2 w64"><div><table class="rp-t"><thead><tr><th>Apuração acumulada Jan–'+M[bm]+'/26</th><th>IRPJ</th><th>CSLL</th></tr></thead><tbody>'+R.map(function(x){
+    xr.push([x[0],x[1],x[2]===null?'':x[2]]);
+    return '<tr class="'+x[3]+'"><td>'+x[0]+'</td><td'+(x[1]<0?' class="neg"':'')+'>'+relN(x[1],2)+'</td><td'+(x[2]<0?' class="neg"':'')+'>'+(x[2]===null?'—':relN(x[2],2))+'</td></tr>';
+  }).join('')+'</tbody></table></div>';
+  var tm=c.irMes+c.csMes,tp=pIr+pCs,df=tm-tp;
+  h+='<div><div class="rp-kpis c1"><div class="rp-k"><div class="l">Total a recolher no mês (IRPJ + CSLL)</div><div class="v">'+relR(tm)+'</div><div class="p">'+MF[bm]+' de 2026</div></div>'+
+     '<div class="rp-k"><div class="l">Provisão no balancete</div><div class="v">'+relR(tp)+'</div><div class="p">contas de provisão IRPJ e CSLL</div></div>'+
+     '<div class="rp-k'+(Math.abs(df)>=1?' neg':'')+'"><div class="l">Diferença</div><div class="v">'+relR(df)+'</div><div class="p">'+(Math.abs(df)<1?'Apuração confere com a provisão ✓':'Revisar provisão contabilizada')+'</div></div></div></div></div>';
+  var xm=[[],['Apuração mês a mês'],['Mês','Lucro acumulado','Base IR acumulada','IRPJ do mês','CSLL do mês','Total do mês','Provisão contabilizada','Diferença']];
+  h+='<div class="rp-sub">Apuração mês a mês</div><table class="rp-t"><thead><tr><th>Mês</th><th>Lucro acumulado</th><th>Base IR acumulada</th><th>IRPJ do mês</th><th>CSLL do mês</th><th>Total do mês</th><th>Provisão contabilizada</th><th>Diferença</th></tr></thead><tbody>';
+  calc.forEach(function(x,i){
+    if(!x)return;
+    var pv=relNum(D.ir[i])+relNum(D.cs[i]),t=x.irMes+x.csMes;
+    h+='<tr class="rs"><td>'+MF[i]+'</td><td>'+relN(x.lucroAcum,2)+'</td><td>'+relN(x.baseIR,2)+'</td><td>'+relN(x.irMes,2)+'</td><td>'+relN(x.csMes,2)+'</td><td class="tot">'+relN(t,2)+'</td><td>'+relN(pv,2)+'</td><td'+(Math.abs(t-pv)>=1?' class="neg"':'')+'>'+relN(t-pv,2)+'</td></tr>';
+    xm.push([MF[i],x.lucroAcum,x.baseIR,x.irMes,x.csMes,t,pv,t-pv]);
+  });
+  h+='</tbody></table><div class="rp-note">Lucro Real anual por balanço de suspensão/redução: apuração acumulada de janeiro até o mês. Exclusão de ajustes de exercícios anteriores e saldo de prejuízo fiscal conforme parâmetros manuais da aba LALUR.</div>';
+  return {html:h,xl:{name:'LALUR',rows:xr.concat(xm),w:[50,18,18,16,16,16,20,14]}};
+}
+
+/* ---------- montagem ---------- */
+function relHead(d){
+  return '<div class="rp-head">'+(d.emp.logoCli?'<img src="'+d.emp.logoCli+'" alt="">':'<span></span>')+
+    '<div class="rp-ht"><div class="rp-tt">Relatório Gerencial Consolidado</div><div class="rp-ts">'+relEsc(d.emp.nome)+' · '+relEsc(d.emp.sub)+'</div>'+
+    '<div class="rp-ts">Período: '+d.perLong+' · Balanço em '+d.bmData+'</div></div>'+
+    (d.emp.logoAud?'<img src="'+d.emp.logoAud+'" alt="">':'<span></span>')+'</div>';
+}
+function buildRelatorio(){
+  var d=relCtx();
+  var secs=[['Visão Geral — Resumo Executivo',relSecOV],['Análise Vertical',relSecAV],['Indicadores de Desempenho',relSecInd],['Demonstração do Resultado (DRE)',relSecDRE],
+            ['Balanço Patrimonial',relSecBal],['Índices de Liquidez e Endividamento',relSecIdx]];
+  if(relEl('relLalur').checked)secs.push(['LALUR — Apuração do IRPJ e da CSLL',relSecLalur]);
+  d.secNames=secs.map(function(x){return x[0].split(' — ')[0];});
+  var out=secs.map(function(x){return x[1](d);});
+  var N=secs.length;
+  out[N-1].html+='<div class="rp-sub">Notas</div><div class="rp-note" style="font-size:11px;line-height:1.6">'+
+    '• Informações extraídas dos balancetes mensais importados no painel contábil.<br>'+
+    '• DRE e indicadores apresentam o movimento de cada mês; o Balanço apresenta saldos acumulados na data-base.<br>'+
+    '• Percentuais de análise vertical calculados sobre a '+d.baseLbl+'. Valores entre parênteses são negativos.</div>'+
+    '<div class="rp-sign"><div>'+relEsc(d.emp.elab||'Responsável técnico')+'<br>Audicon Contadores</div></div>';
+  out.forEach(function(o){o.html=o.html.replace(/<tr class="(rt|rst|rs)"/g,'<tr class="rp-$1"');});
+  REL.last={d:d,secs:secs,out:out};
+  relEl('relDoc').innerHTML=out.map(function(o,i){
+    return '<div class="rp-sheet">'+relHead(d)+'<div class="rp-body"><div class="rp-sec"><span class="rp-num">'+(i+1)+'</span>'+secs[i][0]+'</div>'+o.html+'</div>'+
+      '<div class="rp-foot"><span>'+relEsc(d.emp.nome)+' · Relatório Gerencial Consolidado · '+d.per+'</span><span>Audicon Contadores'+(d.emp.elab?' · '+relEsc(d.emp.elab):'')+' · Emitido em '+d.emis+'</span><span>Seção '+(i+1)+' de '+N+'</span></div></div>';
+  }).join('');
+}
+function relFileBase(d){return d.emp.nome+' - Relatório Consolidado - '+d.per.replace(/[–\s]+/g,'-');}
+function printRelatorio(){
+  if(!REL.last)buildRelatorio();
+  var old=document.title;
+  document.title=relFileBase(REL.last.d);
+  document.body.classList.add('printing-rel');
+  setTimeout(function(){
+    window.print();
+    setTimeout(function(){document.body.classList.remove('printing-rel');document.title=old;},400);
+  },150);
+}
+function relSheet(title,d,rows,widths){
+  var head=[[d.emp.nome+' — Relatório Gerencial Consolidado'],[d.emp.sub],['Período: '+d.perLong+' · Balanço em '+d.bmData+' · Base das análises %: '+d.baseLbl],
+    ['Emitido em '+d.emis+' · Audicon Contadores'+(d.emp.elab?' · Elaborado por '+d.emp.elab:'')],[],[title],[]];
+  var all=head.concat(rows),ws={},maxC=0;
+  all.forEach(function(r,ri){(r||[]).forEach(function(v,cj){
+    if(v===null||v===undefined||v==='')return;
+    var c;
+    if(typeof v==='number')c={t:'n',v:v,z:'#,##0.00;(#,##0.00)'};
+    else if(typeof v==='object'&&'p' in v)c={t:'n',v:v.p,z:'0.0%'};
+    else if(typeof v==='object'&&'x' in v)c={t:'n',v:v.x,z:'0.00'};
+    else c={t:'s',v:String(v)};
+    ws[XLSX.utils.encode_cell({r:ri,c:cj})]=c;if(cj>maxC)maxC=cj;
+  });});
+  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:all.length-1,c:maxC}});
+  ws['!cols']=(widths||[]).map(function(w){return {wch:w};});
+  return ws;
+}
+function exportRelatorioExcel(){
+  if(!REL.last)buildRelatorio();
+  var L=REL.last,d=L.d;
+  try{
+    var wb=XLSX.utils.book_new();
+    L.out.forEach(function(o,i){XLSX.utils.book_append_sheet(wb,relSheet((i+1)+'. '+L.secs[i][0],d,o.xl.rows,o.xl.w),o.xl.name);});
+    XLSX.writeFile(wb,relFileBase(d)+'.xlsx');
+  }catch(err){alert('Falha ao gerar Excel: '+err.message);}
+}
+
 function setPage(n,el){
   document.querySelectorAll('.nav-item').forEach(function(e){e.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active');});
