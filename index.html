@@ -48,6 +48,12 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .finfo{font-size:12px;color:var(--amber);margin-left:auto;font-style:italic}
 .page{display:none;padding:22px 22px 40px}
 .page.active{display:block}
+.conc-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
+.conc-tab{opacity:.65}
+.conc-tab.active{opacity:1;border-color:var(--gold);color:var(--g2);background:rgba(201,168,76,.13)}
+.conc-open{margin-left:auto;text-decoration:none;font-size:13px}
+.conc-frame{display:block;width:100%;height:calc(100vh - 200px);min-height:560px;border:1px solid var(--bdr);border-radius:10px;background:#0b1220}
+@media(max-width:768px){.conc-frame{height:75vh}.conc-open{margin-left:0}}
 .phdr{margin-bottom:18px}
 .ptitle{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-weight:800;font-size:26px;color:var(--white);letter-spacing:-.02em}
 .psub{font-size:13.5px;color:var(--gray);margin-top:3px;font-weight:400}
@@ -284,10 +290,16 @@ body.rel-open{overflow:hidden}
     <div class="nav-item" onclick="setPage('ind',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M8 5v3.5L10.5 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Indicadores</div>
     <div class="nav-item" onclick="setPage('bal',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="2" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9" y="9" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>Balanço &amp; Índices</div>
     <div class="nav-item" onclick="setPage('lalur',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M3 2h8l2 2v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.4"/><path d="M5 6h6M5 9h6M5 12h3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>LALUR</div>
+    <div id="adminNav" style="display:none">
+      <hr class="sdiv">
+      <div class="ssec"><span>Admin</span></div>
+      <div class="nav-item" id="concNavItem" onclick="setPage('conc',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><rect x="1.5" y="1.5" width="13" height="13" rx="2.5" stroke="currentColor" stroke-width="1.2" opacity=".6"/></svg>Conciliação</div>
+    </div>
     <hr class="sdiv">
     <div class="ssec"><span>Exibição e Exportação</span></div>
     <div class="nav-item" id="fullBtn" onclick="toggleFullValues()"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M6.2 2L4.6 14M11.4 2L9.8 14M2.5 5.5h11.5M2 10.5h11.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span id="fullBtnLbl">Valores completos</span></div>
     <div class="nav-item" onclick="openRelatorio()"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M5.5 1.5h7a1 1 0 0 1 1 1V12" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><rect x="2.5" y="3.5" width="8.5" height="11" rx="1.2" stroke="currentColor" stroke-width="1.4"/><path d="M4.8 7h4M4.8 9.5h4M4.8 12h2.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Relatório consolidado</div>
+    <div class="nav-item" id="adminBtn" onclick="adminLoginToggle()" title="Área restrita: valida o token do GitHub com permissão de escrita neste repositório"><svg class="niv" viewBox="0 0 16 16" fill="none"><rect x="3" y="7" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M5.5 7V5a2.5 2.5 0 0 1 5 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg><span id="adminBtnLbl">Acesso admin</span></div>
     <hr class="sdiv">
     <div class="ssec" onclick="toggleSkpi()" style="cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
       <span>KPIs Anuais</span>
@@ -476,6 +488,18 @@ body.rel-open{overflow:hidden}
 </section>
 
 <!-- BALANÇO & ÍNDICES -->
+<!-- CONCILIAÇÃO (somente admin) -->
+<section id="page-conc" class="page">
+  <div style="margin:0 0 14px"><div class="ptitle">Conciliação</div><div class="psub">Área restrita ao administrador · os extratos são lidos neste navegador e os dados da conciliação ficam salvos só aqui (use Exportar/Importar JSON de cada painel para levar a outro computador)</div></div>
+  <div class="conc-tabs" id="concTabs">
+    <button class="fs conc-tab active" data-p="consorcios" onclick="concTab('consorcios')">Consórcios</button>
+    <button class="fs conc-tab" data-p="parcelamentos-federais" onclick="concTab('parcelamentos-federais')">Parcelamentos federais</button>
+    <button class="fs conc-tab" data-p="parcelamentos-estaduais" onclick="concTab('parcelamentos-estaduais')">Parcelamentos estaduais</button>
+    <a class="fs conc-open" id="concOpen" href="#" target="_blank" rel="noopener" title="Abrir o painel em uma aba separada do navegador">↗ Abrir em nova aba</a>
+  </div>
+  <div id="concFrames"></div>
+</section>
+
 <section id="page-bal" class="page">
   <div class="fbar">
     <span class="fl">Mês:</span>
@@ -2120,13 +2144,73 @@ async function exportDREXlsx(){
   if(btn)btn.disabled=false;if(lbl)lbl.textContent=old;
 }
 
+// ---------- Área do admin (Conciliação) ----------
+// Admin = quem tem token do GitHub com permissão de escrita neste repositório (o mesmo usado em "Publicar para todos").
+// A verificação é feita na API do GitHub; o conteúdo da conciliação nunca é publicado: fica no navegador do admin.
+var IS_ADMIN=false;
+var CONC_PAINEIS={'consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html'};
+async function adminCheckToken(token){
+  var r=await fetch('https://api.github.com/repos/'+GH_REPO+'?t='+Date.now(),{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'},cache:'no-store'});
+  if(r.status===401)return {ok:false,msg:'token inválido ou expirado'};
+  if(!r.ok)return {ok:false,msg:r.status===403||r.status===404?'token sem acesso a este repositório':'GitHub respondeu '+r.status};
+  var j=await r.json();
+  return (j.permissions&&(j.permissions.push||j.permissions.admin))?{ok:true}:{ok:false,msg:'o token não tem permissão de escrita neste repositório'};
+}
+function adminApply(on){
+  IS_ADMIN=!!on;
+  document.getElementById('adminNav').style.display=on?'':'none';
+  document.getElementById('adminBtnLbl').textContent=on?'Sair do admin':'Acesso admin';
+  if(!on){
+    document.getElementById('concFrames').innerHTML='';
+    if(document.getElementById('page-conc').classList.contains('active'))setPage('ov',document.querySelector('.nav-item'));
+  }
+}
+async function adminInit(){
+  var token='';try{token=localStorage.getItem('nhdGhToken')||'';}catch(e){}
+  if(!token||location.protocol.indexOf('http')!==0)return;
+  try{if(sessionStorage.getItem('nhdAdminOk')===token.slice(-8)){adminApply(true);return;}}catch(e){}
+  try{var r=await adminCheckToken(token);if(r.ok){try{sessionStorage.setItem('nhdAdminOk',token.slice(-8));}catch(e){}adminApply(true);}}catch(e){}
+}
+async function adminLoginToggle(){
+  if(IS_ADMIN){
+    if(!confirm('Sair da área do admin? O token do GitHub será esquecido neste navegador (os dados da conciliação continuam salvos aqui).'))return;
+    try{localStorage.removeItem('nhdGhToken');sessionStorage.removeItem('nhdAdminOk');}catch(e){}
+    adminApply(false);return;
+  }
+  var token=(prompt('Área do admin: cole seu token do GitHub (o mesmo usado em "Publicar para todos", com acesso de escrita ao repositório nhdfoods-dashboard).\nEle fica guardado só neste navegador.')||'').trim();
+  if(!token)return;
+  var lbl=document.getElementById('adminBtnLbl');lbl.textContent='Verificando...';
+  try{
+    var r=await adminCheckToken(token);
+    if(!r.ok){lbl.textContent='Acesso admin';alert('Acesso negado: '+r.msg+'.');return;}
+    try{localStorage.setItem('nhdGhToken',token);sessionStorage.setItem('nhdAdminOk',token.slice(-8));}catch(e){}
+    adminApply(true);setPage('conc',document.getElementById('concNavItem'));
+  }catch(e){lbl.textContent='Acesso admin';alert('Não foi possível validar no GitHub: '+e.message);}
+}
+function concTab(p){
+  if(!IS_ADMIN)return;
+  document.querySelectorAll('.conc-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===p);});
+  var box=document.getElementById('concFrames');
+  // os painéis abrem no tema escuro do dashboard (cada um ainda tem o botão de tema)
+  ['audicon-consorcios-tema','nuvemdatacom-parcelamentos-tema','audicon-parcelamentos-estaduais-tema'].forEach(function(k){try{if(!localStorage.getItem(k))localStorage.setItem(k,'dark');}catch(e){}});
+  var f=document.getElementById('concFrame-'+p);
+  if(!f){
+    f=document.createElement('iframe');f.id='concFrame-'+p;f.className='conc-frame';f.src=CONC_PAINEIS[p];f.title=p;
+    box.appendChild(f);
+  }
+  box.querySelectorAll('.conc-frame').forEach(function(x){x.style.display=x===f?'':'none';});
+  document.getElementById('concOpen').href=CONC_PAINEIS[p];
+}
+
 function setPage(n,el){
+  if(n==='conc'&&!IS_ADMIN){alert('Área restrita ao administrador.');return;}
   document.querySelectorAll('.nav-item').forEach(function(e){e.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active');});
   if(el)el.classList.add('active');
   document.getElementById('page-'+n).classList.add('active');
   if(n==='bal')buildBal();
   if(n==='lalur')buildLalur();
+  if(n==='conc'){var at=document.querySelector('.conc-tab.active');concTab(at?at.getAttribute('data-p'):'consorcios');}
 }
 
 function toggleSkpi(){
@@ -2150,6 +2234,7 @@ loadLalurParams();
 loadSavedBase();rebuildMonthSelectors();updateOV();buildDRE();buildAV();buildInd();
 refreshFullBtn();if(FULLVALS)rebuildAllViews();
 if(location.protocol.indexOf('http')===0)loadRemoteBase();
+adminInit();
 </script>
 </body>
 </html>
