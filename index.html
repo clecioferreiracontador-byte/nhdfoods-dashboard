@@ -495,6 +495,7 @@ body.rel-open{overflow:hidden}
     <button class="fs conc-tab active" data-p="consorcios" onclick="concTab('consorcios')">Consórcios</button>
     <button class="fs conc-tab" data-p="parcelamentos-federais" onclick="concTab('parcelamentos-federais')">Parcelamentos federais</button>
     <button class="fs conc-tab" data-p="parcelamentos-estaduais" onclick="concTab('parcelamentos-estaduais')">Parcelamentos estaduais</button>
+    <button class="fs conc-tab" data-p="faturamento" onclick="concTab('faturamento')">Conferência de faturamento</button>
     <a class="fs conc-open" id="concOpen" href="#" target="_blank" rel="noopener" title="Abrir o painel em uma aba separada do navegador">↗ Abrir em nova aba</a>
   </div>
   <div id="concFrames"></div>
@@ -2148,7 +2149,7 @@ async function exportDREXlsx(){
 // Admin = quem tem token do GitHub com permissão de escrita neste repositório (o mesmo usado em "Publicar para todos").
 // A verificação é feita na API do GitHub; o conteúdo da conciliação nunca é publicado: fica no navegador do admin.
 var IS_ADMIN=false;
-var CONC_PAINEIS={'consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html'};
+var CONC_PAINEIS={'consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html','faturamento':'conciliacao/faturamento.html'};
 async function adminCheckToken(token){
   var r=await fetch('https://api.github.com/repos/'+GH_REPO+'?t='+Date.now(),{headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json'},cache:'no-store'});
   if(r.status===401)return {ok:false,msg:'token inválido ou expirado'};
