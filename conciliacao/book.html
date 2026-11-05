@@ -165,6 +165,30 @@ td.wrap,th.wrap{white-space:normal;text-align:left}
 td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
 td input.obs{min-width:220px}
 td select{padding:3px 4px;font-size:.8rem;width:auto}
+/* Book compacto: usa a largura toda e cabe sem rolagem lateral */
+.wrap{max-width:none!important;padding:0 8px}
+#tab-conferencia .box{padding:12px 10px}
+table.bk{font-size:.72rem;table-layout:auto}
+table.bk th,table.bk td{padding:4px 4px}
+table.bk thead th{font-size:.68rem;white-space:normal;line-height:1.15;text-align:center}
+table.bk .dsc{width:112px;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+table.bk td input[type=text]{min-width:0;width:68px;padding:2px 4px;font-size:.72rem}
+table.bk td.obs{width:30%;min-width:175px}
+table.bk td.c-raz{width:22px;text-align:center}
+table.bk textarea.obs{width:100%;min-height:30px;font:inherit;font-size:.76rem;line-height:1.25;padding:3px 6px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);resize:vertical;background:#fff;color:var(--aud-text)}
+table.bk textarea.obs:focus{outline:none;border-color:var(--aud-secondary)}
+table.bk .auto{font-size:.66rem;line-height:1.2}
+table.bk .lupa{font-size:.9rem;padding:0 2px}
+/* status: a própria etiqueta abre as opções */
+select.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;padding:3px 18px 3px 8px;border-radius:999px;font:inherit;font-size:.68rem;font-weight:600;width:auto;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23122A4F' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+select.stsel.ok{background-color:var(--aud-success);color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")}
+select.stsel.bad{background-color:#FFE3E6;color:var(--aud-danger-text);box-shadow:inset 0 0 0 1px #f5b5bb}
+select.stsel.warn{background-color:var(--aud-warning);color:var(--aud-text)}
+select.stsel.info{background-color:var(--aud-info);color:var(--aud-primary)}
+select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500)}
+select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
+select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
 tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
 tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
 .kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
@@ -273,8 +297,8 @@ tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
         <label>Buscar<input type="text" id="fBusca" oninput="renderBook()" placeholder="conta, descrição, observação"></label>
         <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
       </div>
-      <div class="tscroll"><table>
-        <thead><tr><th>Conta</th><th class="wrap" style="min-width:200px">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th>Razão</th><th>Saldo do suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th><th></th></tr></thead>
+      <div class="tscroll"><table class="bk">
+        <thead><tr><th>Conta</th><th class="wrap">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th title="Razão do mês bate com o balancete">Raz.</th><th>Saldo suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th><th></th></tr></thead>
         <tbody id="bkBody"></tbody>
       </table></div>
     </div>
@@ -443,13 +467,13 @@ function linhaConta(conta){
   const agg = raz && raz.agg[mesAtual] ? raz.agg[mesAtual][conta] : null;
   let razOk = null;
   if (raz && raz.agg[mesAtual]){ const d = agg ? agg.d : 0, cr = agg ? agg.c : 0; razOk = Math.abs(d - c.d) < 0.01 && Math.abs(cr - c.c) < 0.01; }
-  let st;
-  if (r.st) st = r.st;
-  else if (!isNaN(suporte)) st = Math.abs(dif) < 0.01 ? 'ok' : 'div';
-  else if (Math.abs(c.sf) < 0.005 && Math.abs(c.d) < 0.005 && Math.abs(c.c) < 0.005) st = 'zero';
-  else if (difDoBook) st = Math.abs(dif) < 0.01 ? 'ok' : 'div';
-  else st = 'pend';
-  return { conta, c, r, b, suporte, fonte, dif, difDoBook, razOk, agg, st, obs: r.obs !== undefined ? r.obs : (b.obs || (b.status && b.status !== '0' ? b.status : '')) };
+  let stAuto;
+  if (!isNaN(suporte)) stAuto = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  else if (Math.abs(c.sf) < 0.005 && Math.abs(c.d) < 0.005 && Math.abs(c.c) < 0.005) stAuto = 'zero';
+  else if (difDoBook) stAuto = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  else stAuto = 'pend';
+  const st = r.st || stAuto;
+  return { conta, c, r, b, suporte, fonte, dif, difDoBook, razOk, agg, st, stAuto, obs: r.obs !== undefined ? r.obs : (b.obs || (b.status && b.status !== '0' ? b.status : '')) };
 }
 const ST = { ok: ['ok', 'Conciliada'], div: ['bad', 'Divergente'], pend: ['warn', 'Pendente'], just: ['info', 'Justificada'], zero: ['cinza', 'Sem saldo'] };
 
@@ -499,16 +523,22 @@ function renderBook(){
   let h = '', grpAtual = '', grp1 = '';
   vis.forEach(l => {
     const g1 = l.conta.slice(0, 3), g = l.conta.slice(0, 6);
-    if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td class="wrap">${esc(s ? s.desc : '')}</td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
-    if (g !== grpAtual){ grpAtual = g; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td class="wrap">${esc(s ? s.desc : '')}</td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g !== grpAtual){ grpAtual = g; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
     const k = mesAtual + '|' + l.conta, st = ST[l.st];
     const supTxt = l.r.sup !== undefined ? l.r.sup : '';
-    h += `<tr><td>${esc(l.conta)}</td><td class="wrap">${esc(l.c.desc)}</td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
-      <td title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
+    // etiqueta de status: mostra o status atual e, ao clicar, as opções de mudança
+    const manual = !!l.r.st;
+    const opcoes = (manual ? [[l.r.st, ST[l.r.st][1]]] : [['', ST[l.stAuto][1]]])
+      .concat(Object.keys(ST).filter(s => s !== 'zero' && s !== l.st).map(s => [s, ST[s][1]]))
+      .concat(manual ? [['', '↺ Automático (' + ST[l.stAuto][1] + ')']] : []);
+    const stSel = `<select class="stsel ${st[0]}${manual ? ' manual' : ''}" title="${manual ? 'Definido manualmente — clique para mudar' : 'Automático — clique para mudar'}" onchange="setRev('${k}','st',this.value)">${opcoes.map((o, i) => `<option value="${o[0]}" ${i === 0 ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
+    h += `<tr><td>${esc(l.conta)}</td><td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+      <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
       <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
-      <td><select onchange="setRev('${k}','st',this.value)"><option value="">auto: ${st[1]}</option>${Object.keys(ST).filter(s => s !== 'zero').map(s => `<option value="${s}" ${l.r.st === s ? 'selected' : ''}>${ST[s][1]}</option>`).join('')}</select><div><span class="pill ${st[0]}">${st[1]}</span></div></td>
-      <td><input type="text" class="obs" value="${esc(l.obs)}" onchange="setRev('${k}','obs',this.value)"></td>
+      <td>${stSel}</td>
+      <td class="obs"><textarea class="obs" rows="${Math.min(4, Math.max(1, Math.ceil(String(l.obs || '').length / 48)))}" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
       <td><button class="lupa" type="button" title="Ver lançamentos do razão" onclick="verLanc('${l.conta}')">🔍</button></td></tr>`;
   });
   $('bkBody').innerHTML = h || '<tr><td colspan="12" class="muted">Nenhuma conta com esses filtros.</td></tr>';
