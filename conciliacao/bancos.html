@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Conciliação Bancária Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:28px 0 24px;border-bottom:4px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.8125rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.4rem,1.1rem + 1.6vw,2.25rem);line-height:1.2}
+header.top p{margin:8px 0 0;font-size:.95rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+</style>
+<style>
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--aud-success);color:#fff}
+.pill.bad{background:#FFE3E6;color:var(--aud-danger-text);border:1px solid #f5b5bb}
+.pill.warn{background:var(--aud-warning);color:var(--aud-text)}
+.pill.info{background:var(--aud-info);color:var(--aud-primary)}
+.msg{padding:10px 14px;border-radius:var(--aud-radius);margin:8px 0;font-size:.9rem;background:#fff;border:1px solid #e1e4e8;border-left:5px solid var(--aud-primary)}
+.msg.err{border-left-color:var(--aud-danger);background:#FFF1F2;color:var(--aud-danger-text)}
+.msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
+.msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{background:var(--aud-gray-100);border:1px solid var(--aud-gold-soft);border-radius:999px;padding:3px 10px;font-size:.78rem;color:var(--aud-primary)}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
+.filters select,.filters input{width:auto}
+.tscroll{overflow:auto;max-height:620px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
+.tscroll thead th{position:sticky;top:0;z-index:1}
+td.wrap,th.wrap{white-space:normal;min-width:220px;text-align:left}
+td input[type=text]{min-width:110px;padding:4px 6px;font-size:.82rem}
+td input.obs{min-width:180px}
+tr.clickable{cursor:pointer}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));margin-bottom:14px}
+.kpi{border-radius:var(--aud-radius);padding:12px 14px;background:#fff;border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
+.kpi .t{font-size:.78rem;font-weight:600;color:var(--aud-gray-500)}
+.kpi .v{font-size:1.15rem;font-weight:700;color:var(--aud-primary)}
+.upl{border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:14px;background:#fff}
+.upl h3{margin:0 0 4px;font-size:1rem}
+.empty{padding:24px;text-align:center;color:var(--aud-gray-500)}
+.dbad{color:var(--aud-danger-text);font-weight:600}
+.dok{color:var(--aud-success);font-weight:600}
+</style>
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="vendor/sheetjs/xlsx.full.min.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Conciliação Bancária — Extratos x Razão</h1>
+  <p>NHD Foods · Movimentos dos extratos bancários confrontados lançamento a lançamento com o razão contábil (Protheus)</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Conciliação Bancária</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="divergencias">3 · Divergências</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="contas">4 · Contas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+
+<div class="box">
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="upl">
+      <h3>📒 Razão contábil</h3>
+      <div class="muted small">Protheus › Lançamentos Contábeis (.xlsx). Uma ou várias contas, em um ou vários arquivos.</div>
+      <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inRazao').click()">Carregar razão</button></div>
+      <input type="file" id="inRazao" accept=".xlsx,.xls" multiple onchange="carregar(this.files,'razao');this.value=''">
+      <div class="chips" id="chRazao"></div>
+    </div>
+    <div class="upl">
+      <h3>🏦 Extratos bancários</h3>
+      <div class="muted small">Excel (Itaú, BB, Safra), PDF Sicoob/Sisbr (Credicitrus, Credicopa, Sicoob) ou OFX de qualquer banco.</div>
+      <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inExt').click()">Carregar extratos</button></div>
+      <input type="file" id="inExt" accept=".xlsx,.xls,.pdf,.ofx" multiple onchange="carregar(this.files,'extrato');this.value=''">
+      <div class="chips" id="chExt"></div>
+    </div>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <label>Diferença de datas aceita:
+      <select id="tolDias" onchange="cfg.tol=+this.value;salvarCfg();processar()">
+        <option value="0">mesmo dia</option><option value="1">até 1 dia</option><option value="3">até 3 dias</option><option value="5">até 5 dias</option><option value="10">até 10 dias</option>
+      </select></label>
+    <button type="button" onclick="exportarExcel()">📊 Exportar Excel (divergências e sugestões)</button>
+    <button type="button" class="ghost" onclick="limparTudo()">Limpar arquivos</button>
+    <span class="muted small" id="stTopo"></span>
+  </div>
+  <div id="msgs"></div>
+</div>
+
+<section class="panel" id="tab-processo">
+  <div class="box"><h2>Objetivo</h2>
+    <p>Garantir todo mês que <b>cada movimento</b> dos extratos bancários está contabilizado na conta do banco, com a mesma data e o mesmo valor, e que o <b>saldo do razão</b> é igual ao <b>saldo do extrato</b> no último dia do mês. O que não bater vira uma divergência com <b>sugestão de lançamento</b>.</p>
+    <p class="muted small">Quando executar: todo mês, depois que o financeiro encerrar as baixas do período e antes do fechamento contábil. Os arquivos são lidos neste navegador e nada é enviado para a internet.</p></div>
+  <div class="box"><h2>Arquivos necessários (todo mês)</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Arquivo</th><th>De onde vem</th><th>O que deve conter</th></tr></thead><tbody>
+    <tr><td class="wrap"><b>Razão</b> (.xlsx)</td><td class="wrap">Protheus › Relatório Razão › exportar planilha (“Lançamentos Contábeis”)</td><td class="wrap">Contas de bancos (1.1.01.*) do mês, com a aba “Totalizadores da Conta” (traz o saldo anterior).</td></tr>
+    <tr><td class="wrap"><b>Extratos</b> (.xlsx de preferência)</td><td class="wrap">Internet banking de cada banco</td><td class="wrap">Período de 1º ao último dia do mês, com saldo anterior e saldo final. Itaú, BB e Safra em Excel; Sicoob/Credicitrus/Credicopa em PDF; outros bancos em OFX.</td></tr>
+    </tbody></table></div></div>
+  <div class="box"><h2>Passo a passo</h2><ol class="steps">
+    <li><b>Exportar</b> o razão das contas de bancos do mês e baixar os extratos de todas as contas.</li>
+    <li><b>Carregar</b> os arquivos acima (pode selecionar vários de uma vez).</li>
+    <li>Na etapa <b>4 · Contas</b>, conferir se cada extrato foi ligado à conta contábil certa (o painel liga sozinho pelo número da conta ou pelo saldo anterior; corrija se precisar).</li>
+    <li>Na etapa <b>2 · Conferência</b>, ler o resumo por conta: saldo do razão × saldo do extrato. A coluna <b>Não explicado</b> deve ser zero — toda diferença precisa estar nas divergências.</li>
+    <li>Na etapa <b>3 · Divergências</b>, tratar item a item: <i>Só no extrato</i> (falta contabilizar) e <i>Só no razão</i> (lançado sem movimento no banco, data ou valor errado). Ajustar a contrapartida sugerida, marcar <b>Conferido</b> e registrar a observação.</li>
+    <li><b>Exportar o Excel</b> com as divergências e os lançamentos sugeridos, lançar/ajustar no Protheus e processar de novo até zerar.</li>
+  </ol></div>
+  <div class="box"><h2>Regras da conferência</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
+    <tr><td>R1</td><td class="wrap">Valor no razão = débito − crédito (entrada no banco é positiva). Valor no extrato = créditos positivos, débitos negativos.</td></tr>
+    <tr><td>R2</td><td class="wrap">Casamento, nesta ordem: mesma data e valor → mesmo valor dentro da diferença de datas aceita → soma do dia igual (lote) → um lançamento igual à soma de até 4 movimentos próximos (e vice-versa).</td></tr>
+    <tr><td>R3</td><td class="wrap">Diferença de saldo final = diferença do saldo anterior + Só no razão − Só no extrato. O que sobrar é “Não explicado” e indica arquivo incompleto ou período diferente.</td></tr>
+    <tr><td>R4</td><td class="wrap">Sugestões: tarifas → 3.3.02.2002; IOF → 3.3.02.2003; juros/encargos → 3.3.02.2001; rendimentos → 3.3.02.1003; recebimentos → 1.1.02.1001 (clientes); pagamentos → 2.1.01.1001 (fornecedores); transferência entre contas da própria empresa → “a definir”. Só no razão → estorno do lançamento, se indevido. Sempre conferir antes de lançar.</td></tr>
+  </tbody></table></div></div>
+  <div class="box"><h2>Checklist do fechamento</h2>
+    <ul class="cl">
+      <li><label><input type="checkbox"> <span>Razão de todas as contas de bancos e extratos de todas as contas carregados</span></label></li>
+      <li><label><input type="checkbox"> <span>Todas as contas ligadas ao extrato certo (etapa 4)</span></label></li>
+      <li><label><input type="checkbox"> <span>“Não explicado” zerado em todas as contas</span></label></li>
+      <li><label><input type="checkbox"> <span>Divergências conferidas e justificadas</span></label></li>
+      <li><label><input type="checkbox"> <span>Lançamentos sugeridos revisados e lançados no Protheus</span></label></li>
+      <li><label><input type="checkbox"> <span>Reprocessado após os ajustes: saldos iguais (OK)</span></label></li>
+      <li><label><input type="checkbox"> <span>Excel exportado e arquivado com o fechamento</span></label></li>
+    </ul>
+    <button class="ghost" id="btnLimparChecklist" type="button">Limpar checklist (novo mês)</button>
+  </div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+  <div id="confVazio" class="box empty">Carregue o razão e os extratos para ver a conferência.</div>
+  <div id="confBox" style="display:none">
+    <div class="kpis" id="kpis"></div>
+    <div class="box"><h2>Resumo por conta</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Conta contábil</th><th>Extrato</th><th>Saldo anterior razão</th><th>Saldo anterior extrato</th><th>Saldo final razão</th><th>Saldo final extrato</th><th>Diferença</th><th>Só no extrato</th><th>Só no razão</th><th>Não explicado</th><th>Status</th></tr></thead>
+        <tbody id="resBody"></tbody><tfoot id="resFoot"></tfoot>
+      </table></div>
+      <p class="muted small" style="margin-top:8px">Clique em uma conta para ver as divergências dela. Diferença = saldo do razão − saldo do extrato. Não explicado = diferença − (diferença do saldo anterior + só no razão − só no extrato).</p>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="tab-divergencias">
+  <div class="box">
+    <h2>Divergências e lançamentos sugeridos</h2>
+    <div class="filters">
+      <label>Conta<select id="fConta" onchange="renderDiv()"></select></label>
+      <label>Tipo<select id="fTipo" onchange="renderDiv()"><option value="">Todas</option><option value="E">Só no extrato (falta contabilizar)</option><option value="R">Só no razão (verificar)</option><option value="C">Conciliados</option></select></label>
+      <label>Situação<select id="fSit" onchange="renderDiv()"><option value="">Todas</option><option value="0">Pendentes</option><option value="1">Conferidas</option></select></label>
+      <label>Buscar<input type="text" id="fBusca" oninput="renderDiv()" placeholder="histórico, valor..."></label>
+    </div>
+    <div id="divVazio" class="empty">Nenhuma divergência para mostrar.</div>
+    <div class="tscroll" id="divBox" style="display:none"><table>
+      <thead><tr><th>Conta</th><th>Tipo</th><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Débito</th><th>Crédito</th><th>Conferido</th><th class="wrap">Observação</th></tr></thead>
+      <tbody id="divBody"></tbody>
+    </table></div>
+    <p class="muted small" style="margin-top:8px">Débito/Crédito: lançamento sugerido (edite a conta se precisar). Para “Só no razão” a sugestão é o estorno do lançamento — use só se ele for indevido; se a data estiver errada, corrija a data no Protheus.</p>
+  </div>
+</section>
+
+<section class="panel" id="tab-contas">
+  <div class="box"><h2>Extratos × contas contábeis</h2>
+    <div id="mapVazio" class="empty">Carregue extratos para ligar às contas.</div>
+    <div class="tscroll" id="mapBox" style="display:none"><table>
+      <thead><tr><th>Extrato</th><th>Banco / agência / conta</th><th>Período</th><th>Saldo anterior</th><th>Saldo final</th><th>Movimentos</th><th>Conta contábil</th><th>Como foi ligado</th></tr></thead>
+      <tbody id="mapBody"></tbody></table></div>
+  </div>
+  <div class="box"><h2>Contas do razão carregadas</h2>
+    <div class="tscroll"><table>
+      <thead><tr><th>Conta</th><th class="wrap">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th>Lançamentos</th><th>Arquivo</th></tr></thead>
+      <tbody id="razBody"></tbody></table></div>
+  </div>
+</section>
+</main>
+
+<script>
+// ===================== estado =====================
+const LS_DADOS = 'aud-bancos-dados-v1', LS_REV = 'aud-bancos-revisao-v1', LS_MAP = 'aud-bancos-mapa-v1', LS_CFG = 'aud-bancos-cfg-v1';
+let razao = {};      // conta -> {conta, desc, saldoAnt, linhas:[{id,data,hist,cp,doc,deb,cred,valor}], arquivo}
+let extratos = [];   // [{id, arquivo, banco, ag, conta, periodo, saldoAnt, saldoFin, linhas:[{id,data,hist,valor}]}]
+let rev = {}, mapa = {}, cfg = { tol: 3 };
+let res = null;      // resultado do processamento
+const $ = id => document.getElementById(id);
+function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+function salvarCfg(){ lsSet(LS_CFG, cfg); }
+
+// ===================== utilitários =====================
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+function num(v){
+  if (v === null || v === undefined || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim(); let neg = false;
+  if (/^\(.*\)$/.test(s)){ neg = true; s = s.slice(1, -1); }
+  const dc = s.match(/([CD])\s*\*?$/i); s = s.replace(/R\$|\s|[CD]\*?$/gi, '');
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  let n = parseFloat(s); if (isNaN(n)) return NaN;
+  if (neg) n = -n; if (dc && dc[1].toUpperCase() === 'D') n = -Math.abs(n);
+  return n;
+}
+function saldoDC(s){ const n = num(String(s).replace(/[CD]\s*$/i, '')); return /D\s*$/i.test(String(s)) ? Math.abs(n) : (/C\s*$/i.test(String(s)) ? -Math.abs(n) : n); } // razão: D positivo (ativo)
+function isoData(v, anoPadrao){
+  if (v === null || v === undefined || v === '') return '';
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  const s = String(v).trim();
+  let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/); if (m){ const y = m[3].length === 2 ? '20' + m[3] : m[3]; return y + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0'); }
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[1] + '-' + m[2] + '-' + m[3];
+  m = s.match(/^(\d{4})(\d{2})(\d{2})/); if (m) return m[1] + '-' + m[2] + '-' + m[3];
+  m = s.match(/^(\d{1,2})\/(\d{1,2})$/); if (m && anoPadrao) return anoPadrao + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  return '';
+}
+const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const dias = (a, b) => Math.round((new Date(a) - new Date(b)) / 864e5);
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+function fmtConta(c){ const d = String(c).replace(/\D/g, ''); return d.length === 8 ? d[0] + '.' + d[1] + '.' + d.slice(2, 4) + '.' + d.slice(4) : String(c).trim(); }
+function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 7000); }
+let seq = 0; const uid = p => p + (++seq) + Math.random().toString(36).slice(2, 6);
+
+// ===================== leitura de arquivos =====================
+async function carregar(files, tipo){
+  for (const f of Array.from(files)){
+    try {
+      const ext = f.name.split('.').pop().toLowerCase();
+      if (tipo === 'razao'){
+        const n = lerRazao(XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true }), f.name);
+        msg(`Razão “${esc(f.name)}”: ${n} conta(s) lida(s).`, 'ok');
+      } else {
+        let e;
+        if (ext === 'pdf') e = await lerPdfSicoob(f);
+        else if (ext === 'ofx') e = lerOfx(await f.text(), f.name);
+        else e = lerExtratoXlsx(XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true }), f.name);
+        if (!e.linhas.length && isNaN(e.saldoFin)) throw new Error('não encontrei movimentos nem saldo no arquivo');
+        // mesmo banco/conta/período carregado de novo: substitui
+        extratos = extratos.filter(x => !(x.banco === e.banco && x.conta === e.conta && x.periodo === e.periodo) && x.arquivo !== e.arquivo);
+        extratos.push(e);
+        msg(`Extrato “${esc(f.name)}”: ${e.banco} ${e.conta || ''}, ${e.linhas.length} movimento(s).`, 'ok');
+      }
+    } catch(err){ msg(`Erro em “${esc(f.name)}”: ${esc(err.message || err)}`, 'err'); }
+  }
+  salvarDados(); processar();
+}
+
+// ---- razão Protheus (Lançamentos Contábeis) ----
+function lerRazao(wb, arquivo){
+  let contas = 0;
+  const totalizadores = {};
+  wb.SheetNames.forEach(sn => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+    rows.forEach(r => r.forEach(c => {
+      const m = typeof c === 'string' && c.match(/CONTA\s*-\s*([\d.]+)\s*-\s*(.+)$/i);
+      if (m){ const sa = r.map(x => typeof x === 'string' ? x.match(/SALDO ANTERIOR:\s*([\d.,]+\s*[CD]?)/i) : null).find(Boolean);
+        totalizadores[fmtConta(m[1])] = { desc: m[2].trim(), saldoAnt: sa ? saldoDC(sa[1]) : NaN }; }
+    }));
+  });
+  wb.SheetNames.forEach(sn => {
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+    const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'CONTA') && r.some(c => norm(c) === 'DEBITO') && r.some(c => norm(c) === 'CREDITO'));
+    if (hi < 0) return;
+    const H = rows[hi].map(norm), col = n => H.findIndex(h => h === n || h.indexOf(n) === 0);
+    const cC = col('CONTA'), cD = col('DATA'), cL = col('LOTE'), cH = col('HISTORICO'), cP = col('C/PARTIDA'), cDb = col('DEBITO'), cCr = col('CREDITO'), cS = col('SALDO ATUAL');
+    for (let i = hi + 1; i < rows.length; i++){
+      const r = rows[i]; if (!r || r[cC] === null || r[cC] === undefined) continue;
+      const conta = fmtConta(r[cC]); if (!/^\d(\.\d+)+$/.test(conta)) continue;
+      const data = isoData(r[cD]); if (!data) continue;
+      const deb = num(r[cDb]) || 0, cred = num(r[cCr]) || 0;
+      const C = razao[conta] = razao[conta] && razao[conta].arquivo === arquivo ? razao[conta] : (razao[conta] && razao[conta].__lido ? razao[conta] : { conta, desc: '', saldoAnt: NaN, linhas: [], arquivo, __lido: true });
+      if (!C.linhas.length) C.__primeiroSaldo = cS >= 0 ? saldoDC(r[cS]) : NaN;
+      C.linhas.push({ id: uid('r'), data, hist: String(r[cH] ?? '').trim(), doc: String(r[cL] ?? ''), cp: cP >= 0 ? String(r[cP] ?? '').trim() : '', deb, cred, valor: r2(deb - cred) });
+      C.__ultimoSaldo = cS >= 0 ? saldoDC(r[cS]) : NaN;
+    }
+  });
+  Object.keys(totalizadores).forEach(k => {
+    const C = razao[k] = razao[k] || { conta: k, desc: '', saldoAnt: NaN, linhas: [], arquivo };
+    C.desc = totalizadores[k].desc; if (!isNaN(totalizadores[k].saldoAnt)) C.saldoAnt = totalizadores[k].saldoAnt;
+  });
+  Object.values(razao).forEach(C => {
+    // sem totalizador: saldo anterior = saldo após o 1º lançamento − valor do 1º lançamento
+    if (isNaN(C.saldoAnt) && C.linhas.length && !isNaN(C.__primeiroSaldo)) C.saldoAnt = r2(C.__primeiroSaldo - C.linhas[0].valor);
+    if (isNaN(C.saldoAnt)) C.saldoAnt = 0;
+    delete C.__lido; delete C.__primeiroSaldo; delete C.__ultimoSaldo;
+    contas++;
+  });
+  return Object.keys(totalizadores).length || contas;
+}
+
+// ---- extratos em Excel (Itaú, BB, Safra e genéricos) ----
+function lerExtratoXlsx(wb, arquivo){
+  const ws = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+  const texto = rows.slice(0, 12).map(r => r.filter(x => x !== null).join(' ')).join(' | ');
+  const e = { id: uid('e'), arquivo, banco: 'Banco', ag: '', conta: '', periodo: '', saldoAnt: NaN, saldoFin: NaN, linhas: [] };
+  if (/Safra/i.test(texto)) e.banco = 'Safra'; else if (/Ita[uú]|Lan[cç]amentos Futuros/i.test(texto) || wb.SheetNames.some(s => /Lan.amentos Futuros/i.test(s))) e.banco = 'Itaú';
+  else if (/Extrato Conta Corrente/i.test(texto) && /Agencia/i.test(texto)) e.banco = 'BB';
+  let m = texto.match(/Ag[eê]ncia:?\s*\|?\s*([\d-]+)/i) || texto.match(/AG\.\s*([\d-]+)/i); if (m) e.ag = m[1];
+  m = texto.match(/Conta(?: corrente)?:?\s*\|?\s*([\d.\-]+)/i); if (m) e.conta = m[1];
+  m = texto.match(/(\d{2}\/\d{2}\/\d{4})\s*(?:at[eé]|a)\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) e.periodo = isoData(m[1]) + '|' + isoData(m[2]);
+  const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'DATA') && r.some(c => /^VALOR/.test(norm(c))));
+  if (hi < 0) throw new Error('cabeçalho do extrato (Data / Valor) não encontrado');
+  const H = rows[hi].map(norm);
+  const cD = H.indexOf('DATA'), cV = H.findIndex(h => /^VALOR/.test(h)), cS = H.findIndex(h => /^SALDO/.test(h));
+  const cInf = H.findIndex(h => h === 'INF.' || h === 'INF' || h === 'D/C' || h === 'C/D');
+  const cTipo = H.findIndex(h => /TIPO DO LANC/.test(h));
+  const cHist = [H.indexOf('LANCAMENTO'), H.indexOf('HISTORICO'), H.findIndex(h => /RAZAO SOCIAL|COMPLEMENTO|DETALHAMENTO/.test(h))].filter(i => i >= 0);
+  const ehSaldo = h => /SALDO|S A L D O/.test(norm(h));
+  for (let i = hi + 1; i < rows.length; i++){
+    const r = rows[i]; if (!r) continue;
+    const data = isoData(r[cD]); if (!data) continue;
+    const hist = cHist.map(c => String(r[c] ?? '').trim()).filter(Boolean).join(' · ');
+    let v = num(r[cV]); const s = cS >= 0 ? num(r[cS]) : NaN;
+    if (cInf >= 0 && !isNaN(v)) v = /D/i.test(String(r[cInf])) ? -Math.abs(v) : Math.abs(v);
+    else if (cTipo >= 0 && !isNaN(v) && /D[EÉ]BITO/i.test(String(r[cTipo]))) v = -Math.abs(v);
+    if (ehSaldo(hist.split(' · ')[0])){
+      const val = !isNaN(s) ? s : v;
+      if (/ANTERIOR/.test(norm(hist))){ if (isNaN(e.saldoAnt)) e.saldoAnt = val; }
+      else if (!/BLOQ/.test(norm(hist)) && !isNaN(val)) e.saldoFin = val;     // saldo do dia / total: o último vale como final
+      continue;
+    }
+    if (isNaN(v) || Math.abs(v) < 0.005) continue;
+    e.linhas.push({ id: uid('x'), data, hist, valor: r2(v) });
+  }
+  completarSaldos(e);
+  return e;
+}
+function completarSaldos(e){
+  e.linhas.sort((a, b) => a.data.localeCompare(b.data));
+  const mov = r2(e.linhas.reduce((a, l) => a + l.valor, 0));
+  if (isNaN(e.saldoAnt) && !isNaN(e.saldoFin)) e.saldoAnt = r2(e.saldoFin - mov);
+  if (isNaN(e.saldoFin) && !isNaN(e.saldoAnt)) e.saldoFin = r2(e.saldoAnt + mov);
+  e.fechaSaldo = !isNaN(e.saldoAnt) && !isNaN(e.saldoFin) && Math.abs(r2(e.saldoAnt + mov - e.saldoFin)) < 0.01;
+  if (!e.periodo && e.linhas.length) e.periodo = e.linhas[0].data + '|' + e.linhas[e.linhas.length - 1].data;
+}
+
+// ---- PDF Sicoob / Sisbr (Credicitrus, Credicopa, Sicoob) ----
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+async function lerPdfSicoob(file){
+  const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+  const itens = [];
+  for (let p = 1; p <= pdf.numPages; p++){
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    tc.items.forEach(it => { const s = it.str.trim(); if (s) itens.push({ p, y: it.transform[5], x: it.transform[4], s }); });
+  }
+  itens.sort((a, b) => a.p - b.p || b.y - a.y || a.x - b.x);
+  const tudo = itens.map(i => i.s).join(' ');
+  if (!/SISBR|SICOOB/i.test(tudo) || !/HIST[OÓ]RICO DE MOVIMENTA/i.test(tudo)) throw new Error('PDF não é extrato Sicoob/Sisbr (para outros bancos use Excel ou OFX)');
+  const e = { id: uid('e'), arquivo: file.name, banco: 'Sicoob', ag: '', conta: '', periodo: '', saldoAnt: NaN, saldoFin: NaN, linhas: [] };
+  let m = tudo.match(/Cooperativa:\s*([\d-]+)\s*\/\s*([^\n]+?)\s+Conta:/i); if (m){ e.ag = m[1]; e.banco = m[2].replace(/^SICOOB\s*/i, 'Sicoob ').trim(); }
+  m = tudo.match(/Conta:\s*([\d.\-]+)/i); if (m) e.conta = m[1];
+  m = tudo.match(/(\d{2}\/\d{2}\/\d{4})\s*-\s*(\d{2}\/\d{2}\/\d{4})/); if (m) e.periodo = isoData(m[1]) + '|' + isoData(m[2]);
+  const anoIni = e.periodo ? +e.periodo.slice(0, 4) : new Date().getFullYear(), mesIni = e.periodo ? +e.periodo.slice(5, 7) : 1;
+  // blocos: cada movimento começa com a data (dd/mm) na coluna da esquerda
+  let bloco = null, dentro = false; const blocos = [];
+  itens.forEach(i => {
+    if (/HIST[OÓ]RICO DE MOVIMENTA/i.test(i.s)){ dentro = true; return; }
+    if (/^RESUMO$/i.test(i.s)){ dentro = false; if (bloco){ blocos.push(bloco); bloco = null; } }
+    if (/^Saldo em conta:?$/i.test(i.s)) { const v = itens.find(j => j.p === i.p && Math.abs(j.y - i.y) < 3 && /[\d.]+,\d{2}[CD]/.test(j.s)); if (v) e.saldoFinResumo = num(v.s); }
+    if (!dentro) return;
+    if (/^\d{2}\/\d{2}$/.test(i.s) && i.x < 60){ if (bloco) blocos.push(bloco); bloco = { dm: i.s, textos: [], valor: NaN }; return; }
+    if (!bloco) return;
+    if (/^[\d.]+,\d{2}[CD*]$/.test(i.s)) bloco.valor = /\*$/.test(i.s) ? NaN : num(i.s);
+    else if (!/^(R\$|Data|Documento|Hist[oó]rico|Valor)$/i.test(i.s)) bloco.textos.push(i.s);
+  });
+  if (bloco) blocos.push(bloco);
+  blocos.forEach(b => {
+    const [d, mm] = b.dm.split('/').map(Number);
+    const ano = mm < mesIni - 6 ? anoIni + 1 : (mm > mesIni + 6 ? anoIni - 1 : anoIni);
+    const data = ano + '-' + String(mm).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const hist = b.textos.join(' · '), H = norm(hist);
+    if (/SALDO BLOQUEADO/.test(H)) return;
+    if (/SALDO ANTERIOR/.test(H)){ e.saldoAnt = b.valor; return; }
+    if (/SALDO DO DIA/.test(H)){ return; }
+    if (isNaN(b.valor)) return;
+    e.linhas.push({ id: uid('x'), data, hist: hist.replace(/^Pix · /, ''), valor: r2(b.valor) });
+  });
+  if (!isNaN(e.saldoFinResumo)) e.saldoFin = e.saldoFinResumo; delete e.saldoFinResumo;
+  completarSaldos(e);
+  return e;
+}
+
+// ---- OFX (qualquer banco) ----
+function lerOfx(txt, arquivo){
+  const tag = (s, t) => { const m = s.match(new RegExp('<' + t + '>([^<\\r\\n]*)', 'i')); return m ? m[1].trim() : ''; };
+  const e = { id: uid('e'), arquivo, banco: tag(txt, 'ORG') || ('Banco ' + tag(txt, 'BANKID')), ag: tag(txt, 'BRANCHID'), conta: tag(txt, 'ACCTID'), periodo: '', saldoAnt: NaN, saldoFin: num(tag(txt, 'BALAMT')), linhas: [] };
+  const ini = isoData(tag(txt, 'DTSTART')), fim = isoData(tag(txt, 'DTEND')); if (ini && fim) e.periodo = ini + '|' + fim;
+  (txt.match(/<STMTTRN>[\s\S]*?(<\/STMTTRN>|(?=<STMTTRN>)|(?=<\/BANKTRANLIST>))/gi) || []).forEach(b => {
+    const v = parseFloat(tag(b, 'TRNAMT').replace(',', '.')); const d = isoData(tag(b, 'DTPOSTED'));
+    if (!isNaN(v) && d) e.linhas.push({ id: uid('x'), data: d, hist: [tag(b, 'MEMO'), tag(b, 'NAME')].filter(Boolean).join(' · '), valor: r2(v) });
+  });
+  completarSaldos(e);
+  return e;
+}
+
+// ===================== ligação extrato × conta =====================
+function chaveExt(e){ return (e.banco + '|' + e.ag + '|' + e.conta).toUpperCase(); }
+function ligar(e){
+  const k = chaveExt(e);
+  if (mapa[k] && razao[mapa[k]]) return { conta: mapa[k], como: 'manual' };
+  const contas = Object.values(razao);
+  const dig = String(e.conta).replace(/\D/g, '').replace(/^0+/, '');
+  if (dig.length >= 4){
+    const semDv = dig.slice(0, -1);
+    const c = contas.filter(C => { const d = C.desc.replace(/\D/g, ''); return d && (d.indexOf(dig) >= 0 || (semDv.length >= 4 && d.indexOf(semDv) >= 0)); });
+    if (c.length === 1) return { conta: c[0].conta, como: 'número da conta na descrição' };
+  }
+  if (!isNaN(e.saldoAnt)){
+    const c = contas.filter(C => Math.abs(C.saldoAnt - e.saldoAnt) < 0.01 && Math.abs(e.saldoAnt) > 0.009);
+    if (c.length === 1) return { conta: c[0].conta, como: 'saldo anterior igual' };
+  }
+  const nb = norm(e.banco).split(' ').filter(w => w.length > 2 && w !== 'BANCO' && w !== 'SICOOB');
+  const c = contas.filter(C => nb.some(w => norm(C.desc).indexOf(w) >= 0));
+  if (c.length === 1) return { conta: c[0].conta, como: 'nome do banco' };
+  return { conta: '', como: 'não ligado' };
+}
+function setMapa(eid, conta){ const e = extratos.find(x => x.id === eid); if (!e) return; mapa[chaveExt(e)] = conta; lsSet(LS_MAP, mapa); processar(); }
+
+// ===================== conciliação =====================
+function conciliarConta(R, E, tol){
+  const r = R.map(l => Object.assign({}, l, { par: null })), x = E.map(l => Object.assign({}, l, { par: null }));
+  const casados = [];
+  const casar = (rs, xs, regra) => { const g = uid('g'); rs.forEach(a => a.par = g); xs.forEach(b => b.par = g); casados.push({ g, regra, r: rs, x: xs }); };
+  const cent = v => Math.round(v * 100);
+  // 1) mesma data e valor  2) mesmo valor dentro da tolerância (mais próximo)
+  [0, tol].forEach((t, passo) => {
+    r.filter(a => !a.par).forEach(a => {
+      const cand = x.filter(b => !b.par && cent(b.valor) === cent(a.valor) && Math.abs(dias(b.data, a.data)) <= t).sort((b1, b2) => Math.abs(dias(b1.data, a.data)) - Math.abs(dias(b2.data, a.data)));
+      if (cand.length) casar([a], [cand[0]], passo === 0 ? 'data e valor' : 'valor (data ' + (dias(cand[0].data, a.data) > 0 ? '+' : '') + dias(cand[0].data, a.data) + 'd)');
+    });
+  });
+  // 3) soma do dia igual (lote)
+  [...new Set(r.filter(a => !a.par).map(a => a.data))].forEach(d => {
+    const rs = r.filter(a => !a.par && a.data === d), xs = x.filter(b => !b.par && b.data === d);
+    if (rs.length && xs.length && cent(rs.reduce((s, a) => s + a.valor, 0)) === cent(xs.reduce((s, b) => s + b.valor, 0))) casar(rs, xs, 'soma do dia');
+  });
+  // 4) um lançamento = soma de até 4 movimentos próximos (e vice-versa)
+  const soma = (alvo, lista) => {
+    const L = lista.slice(0, 14), n = L.length, alvoC = cent(alvo.valor);
+    const rec = (i, k, acc, sel) => { if (k > 0 && acc === alvoC) return sel.slice(); if (k === 4 || i >= n) return null;
+      for (let j = i; j < n; j++){ sel.push(L[j]); const s = rec(j + 1, k + 1, acc + cent(L[j].valor), sel); if (s) return s; sel.pop(); } return null; };
+    return rec(0, 0, 0, []);
+  };
+  r.filter(a => !a.par).forEach(a => { const s = soma(a, x.filter(b => !b.par && Math.abs(dias(b.data, a.data)) <= Math.max(tol, 1) && Math.sign(b.valor) === Math.sign(a.valor))); if (s && s.length > 1) casar([a], s, 'soma de ' + s.length + ' movimentos'); });
+  x.filter(b => !b.par).forEach(b => { const s = soma(b, r.filter(a => !a.par && Math.abs(dias(a.data, b.data)) <= Math.max(tol, 1) && Math.sign(a.valor) === Math.sign(b.valor))); if (s && s.length > 1) casar(s, [b], 'soma de ' + s.length + ' lançamentos'); });
+  return { casados, soR: r.filter(a => !a.par), soE: x.filter(b => !b.par) };
+}
+
+const REGRAS = [
+  [/IOF/, '3.3.02.2003', 'IOF'],
+  [/TAR|TARIFA|CESTA|MANUT|PACOTE SERV/, '3.3.02.2002', 'Tarifas bancárias'],
+  [/JUROS|ENCARGO|MORA|CHEQUE ESPECIAL/, '3.3.02.2001', 'Juros e encargos', -1],
+  [/REND|RENTAB|REMUNERACAO/, '3.3.02.1003', 'Rendimentos de aplicações', 1],
+  [/RESGATE|APLICAC|APLIC\b|INVEST/, '', 'Aplicação financeira (a definir)'],
+  [/MESMA TIT|21\.?541\.?988|NHD FOODS|TRANSF(ERENCIA)? (ENTRE|RECEBIDA|ENVIADA).*(0321|NHD)|LIB VINC|VINC PARA/, '', 'Transferência entre contas (a definir)'],
+  [/FGTS|GRF|DEB-RES/, '2.1.10.1003', 'FGTS a recolher', -1],
+  [/DARF|RFB|REC FED|DCTF/, '2.1.15.1011', 'Tributos federais (conferir guia)', -1],
+  [/DAE|ICMS|GNRE|SEFAZ/, '2.1.15.2001', 'ICMS a recolher (conferir guia)', -1],
+  [/SALARIO|FOLHA|SISPAG SAL|FERIAS|RESCIS/, '2.1.10.1001', 'Salários a pagar', -1],
+];
+function sugestao(conta, l, tipo){
+  if (tipo === 'R') { // estorno do lançamento do razão
+    const cp = l.cp || 'A DEFINIR';
+    return l.valor > 0 ? { deb: cp, cred: conta, hist: 'ESTORNO ' + l.hist } : { deb: conta, cred: cp, hist: 'ESTORNO ' + l.hist };
+  }
+  const H = norm(l.hist); let cp = l.valor > 0 ? '1.1.02.1001' : '2.1.01.1001', nome = l.valor > 0 ? 'Clientes' : 'Fornecedores';
+  for (const [re, c, n, sinal] of REGRAS){ if (re.test(H) && (!sinal || Math.sign(l.valor) === sinal)){ cp = c || 'A DEFINIR'; nome = n; break; } }
+  return l.valor > 0 ? { deb: conta, cred: cp, hist: l.hist, nome } : { deb: cp, cred: conta, hist: l.hist, nome };
+}
+
+function processar(){
+  const tol = cfg.tol;
+  const contas = {};
+  extratos.forEach(e => { const lg = ligar(e); e.__lig = lg; if (lg.conta){ (contas[lg.conta] = contas[lg.conta] || { ext: [] }).ext.push(e); } });
+  Object.keys(razao).forEach(k => { contas[k] = contas[k] || { ext: [] }; });
+  const linhas = [];
+  Object.keys(contas).sort().forEach(k => {
+    const C = razao[k], ex = contas[k].ext;
+    const R = C ? C.linhas.filter(l => Math.abs(l.valor) > 0.004) : [];
+    const E = ex.flatMap(e => e.linhas);
+    const c = conciliarConta(R, E, tol);
+    const rAnt = C ? C.saldoAnt : NaN, rFin = C ? r2(C.saldoAnt + R.reduce((a, l) => a + l.valor, 0)) : NaN;
+    const eAnt = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoAnt) ? 0 : e.saldoAnt), 0)) : NaN;
+    const eFin = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoFin) ? 0 : e.saldoFin), 0)) : NaN;
+    // tR / tE = soma dos itens só no razão / só no extrato (soR / soE são as listas de itens)
+    const tR = r2(c.soR.reduce((a, l) => a + l.valor, 0)), tE = r2(c.soE.reduce((a, l) => a + l.valor, 0));
+    const dif = r2(rFin - eFin), difAnt = r2(rAnt - eAnt);
+    const naoExp = r2(dif - (difAnt + tR - tE));
+    let status = 'ok';
+    if (!C) status = 'semrazao'; else if (!ex.length) status = 'semext';
+    else if (Math.abs(naoExp) >= 0.01) status = 'naoexp'; else if (Math.abs(dif) >= 0.01 || c.soR.length || c.soE.length) status = 'div';
+    linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status }, c));
+  });
+  // extratos ainda sem conta contábil: aparecem no resumo para não passarem despercebidos
+  extratos.filter(e => !e.__lig.conta).forEach(e => linhas.push({ conta: 'sem conta', desc: 'Ligue na etapa 4 ou carregue o razão desta conta', ex: [e],
+    rAnt: NaN, rFin: NaN, eAnt: e.saldoAnt, eFin: e.saldoFin, dif: NaN, difAnt: NaN, tR: 0, tE: 0, naoExp: NaN, status: 'semrazao', casados: [], soR: [], soE: [] }));
+  res = { linhas };
+  render();
+}
+
+// ===================== telas =====================
+const STATUS = { ok: ['ok', 'Conciliada'], div: ['warn', 'Com divergências'], naoexp: ['bad', 'Não explicado'], semext: ['info', 'Sem extrato'], semrazao: ['info', 'Sem razão'] };
+function render(){
+  $('chRazao').innerHTML = Object.values(razao).map(C => `<span class="chip">${esc(C.conta)} · ${C.linhas.length} lanç.</span>`).join('');
+  $('chExt').innerHTML = extratos.map(e => `<span class="chip">${esc(e.banco)} ${esc(e.conta)} · ${e.linhas.length} mov.</span>`).join('');
+  $('tolDias').value = String(cfg.tol);
+  const tem = res && res.linhas.length;
+  $('confVazio').style.display = tem ? 'none' : ''; $('confBox').style.display = tem ? '' : 'none';
+  $('stTopo').textContent = tem ? res.linhas.filter(l => l.status === 'ok').length + ' de ' + res.linhas.length + ' conta(s) conciliada(s)' : '';
+  renderMapa();
+  if (!tem){ renderDiv(); return; }
+  const T = { rFin: 0, eFin: 0, dif: 0, soE: 0, soR: 0, ne: 0, nE: 0, nR: 0, cas: 0 };
+  $('resBody').innerHTML = res.linhas.map(l => {
+    T.rFin += l.rFin || 0; T.eFin += l.eFin || 0; T.dif += l.dif || 0; T.soE += l.tE; T.soR += l.tR; T.ne += isNaN(l.naoExp) ? 0 : l.naoExp;
+    T.nE += l.soE.length; T.nR += l.soR.length; T.cas += l.casados.length;
+    const st = STATUS[l.status];
+    return `<tr class="clickable" onclick="verConta('${l.conta}')"><td>${esc(l.conta)}<div class="muted small">${esc(l.desc)}</div></td>
+      <td class="wrap" style="min-width:160px">${l.ex.map(e => esc(e.banco + ' ' + e.conta)).join('<br>') || '—'}</td>
+      <td>${fmt(l.rAnt)}</td><td>${fmt(l.eAnt)}</td><td>${fmt(l.rFin)}</td><td>${fmt(l.eFin)}</td>
+      <td class="${Math.abs(l.dif) >= 0.01 ? 'dbad' : 'dok'}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}</td>
+      <td>${fmt(l.tE)} <span class="muted small">(${l.soE.length})</span></td><td>${fmt(l.tR)} <span class="muted small">(${l.soR.length})</span></td>
+      <td class="${Math.abs(l.naoExp) >= 0.01 ? 'dbad' : 'dok'}">${isNaN(l.naoExp) ? '—' : (Math.abs(l.naoExp) < 0.01 ? '0,00' : fmt(l.naoExp))}</td>
+      <td><span class="pill ${st[0]}">${st[1]}</span></td></tr>`;
+  }).join('');
+  $('resFoot').innerHTML = `<tr><td>TOTAL (${res.linhas.length})</td><td></td><td></td><td></td><td>${fmt(T.rFin)}</td><td>${fmt(T.eFin)}</td><td>${fmt(r2(T.dif))}</td><td>${fmt(T.soE)}</td><td>${fmt(T.soR)}</td><td>${fmt(r2(T.ne))}</td><td></td></tr>`;
+  const pend = Object.keys(rev).length ? res.linhas.flatMap(l => l.soE.concat(l.soR)).filter(i => !(rev[chaveItem(i)] || {}).ok).length : T.nE + T.nR;
+  $('kpis').innerHTML = [
+    ['Contas conciliadas', res.linhas.filter(l => l.status === 'ok').length + ' de ' + res.linhas.length],
+    ['Movimentos casados', T.cas],
+    ['Só no extrato (falta contabilizar)', T.nE + ' · R$ ' + fmt(T.soE)],
+    ['Só no razão (verificar)', T.nR + ' · R$ ' + fmt(T.soR)],
+    ['Divergências pendentes', pend],
+  ].map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  const sel = $('fConta'), atual = sel.value;
+  sel.innerHTML = '<option value="">Todas</option>' + res.linhas.map(l => `<option value="${l.conta}">${esc(l.conta + ' ' + l.desc)}</option>`).join('');
+  sel.value = atual;
+  renderDiv();
+}
+function verConta(c){ $('fConta').value = c; $('fTipo').value = ''; renderDiv(); window.abrirEtapa && abrirEtapa('divergencias'); }
+const chaveItem = i => (i.data + '|' + Math.round(i.valor * 100) + '|' + norm(i.hist).slice(0, 40));
+function setRev(k, campo, v){ rev[k] = rev[k] || {}; rev[k][campo] = v; lsSet(LS_REV, rev); }
+
+function itensDivergencia(){
+  if (!res) return [];
+  const out = [];
+  res.linhas.forEach(l => {
+    l.soE.forEach(i => out.push({ conta: l.conta, tipo: 'E', i, s: sugestao(l.conta, i, 'E') }));
+    l.soR.forEach(i => out.push({ conta: l.conta, tipo: 'R', i, s: sugestao(l.conta, i, 'R') }));
+    l.casados.forEach(c => c.x.forEach(i => out.push({ conta: l.conta, tipo: 'C', i, regra: c.regra, raz: c.r })));
+  });
+  return out;
+}
+function renderDiv(){
+  const fc = $('fConta').value, ft = $('fTipo').value, fs = $('fSit').value, fb = norm($('fBusca').value);
+  let it = itensDivergencia().filter(d => (!fc || d.conta === fc) && (ft ? d.tipo === ft : d.tipo !== 'C'));
+  it = it.filter(d => { const r = rev[chaveItem(d.i)] || {}; return (fs === '' || (fs === '1') === !!r.ok) && (!fb || norm(d.i.hist + ' ' + fmt(d.i.valor) + ' ' + d.i.valor).indexOf(fb) >= 0); });
+  $('divVazio').style.display = it.length ? 'none' : ''; $('divBox').style.display = it.length ? '' : 'none';
+  $('divBody').innerHTML = it.slice(0, 1500).map(d => {
+    const k = chaveItem(d.i), r = rev[k] || {};
+    if (d.tipo === 'C') return `<tr><td>${esc(d.conta)}</td><td><span class="pill ok">Conciliado</span><div class="muted small">${esc(d.regra)}</div></td><td>${br(d.i.data)}</td><td class="wrap">${esc(d.i.hist)}<div class="muted small">Razão: ${d.raz.map(x => br(x.data) + ' ' + esc(x.hist)).join(' · ')}</div></td><td>${fmt(d.i.valor)}</td><td></td><td></td><td></td><td></td></tr>`;
+    const deb = r.deb ?? d.s.deb, cred = r.cred ?? d.s.cred;
+    return `<tr><td>${esc(d.conta)}</td>
+      <td>${d.tipo === 'E' ? '<span class="pill bad">Só no extrato</span>' : '<span class="pill warn">Só no razão</span>'}${d.s.nome ? `<div class="muted small">${esc(d.s.nome)}</div>` : ''}</td>
+      <td>${br(d.i.data)}</td><td class="wrap">${esc(d.i.hist)}${d.tipo === 'R' && d.i.cp ? `<div class="muted small">C/partida: ${esc(d.i.cp)} · doc ${esc(d.i.doc)}</div>` : ''}</td>
+      <td class="${d.i.valor < 0 ? 'dbad' : ''}">${fmt(d.i.valor)}</td>
+      <td><input type="text" value="${esc(deb)}" onchange="setRev('${k}','deb',this.value)"></td>
+      <td><input type="text" value="${esc(cred)}" onchange="setRev('${k}','cred',this.value)"></td>
+      <td style="text-align:center"><input type="checkbox" ${r.ok ? 'checked' : ''} onchange="setRev('${k}','ok',this.checked);render()"></td>
+      <td><input type="text" class="obs" value="${esc(r.obs || '')}" placeholder="justificativa / providência" onchange="setRev('${k}','obs',this.value)"></td></tr>`;
+  }).join('') + (it.length > 1500 ? `<tr><td colspan="9" class="muted">Mostrando 1.500 de ${it.length}. Use os filtros ou exporte para Excel.</td></tr>` : '');
+}
+function renderMapa(){
+  $('mapVazio').style.display = extratos.length ? 'none' : ''; $('mapBox').style.display = extratos.length ? '' : 'none';
+  const opts = Object.values(razao).sort((a, b) => a.conta.localeCompare(b.conta));
+  $('mapBody').innerHTML = extratos.map(e => {
+    const lg = e.__lig || ligar(e);
+    return `<tr><td class="wrap" style="min-width:160px">${esc(e.arquivo)}</td><td>${esc(e.banco)}<div class="muted small">ag ${esc(e.ag || '—')} · conta ${esc(e.conta || '—')}</div></td>
+      <td>${e.periodo ? br(e.periodo.split('|')[0]) + ' a ' + br(e.periodo.split('|')[1]) : '—'}</td><td>${fmt(e.saldoAnt)}</td><td>${fmt(e.saldoFin)}${e.fechaSaldo ? '' : ' <span class="pill warn" title="saldo anterior + movimentos ≠ saldo final">confira</span>'}</td><td>${e.linhas.length}</td>
+      <td><select onchange="setMapa('${e.id}', this.value)"><option value="">— escolher —</option>${opts.map(C => `<option value="${C.conta}" ${C.conta === lg.conta ? 'selected' : ''}>${esc(C.conta + ' ' + C.desc)}</option>`).join('')}</select></td>
+      <td>${lg.conta ? `<span class="pill ${lg.como === 'manual' ? 'info' : 'ok'}">${esc(lg.como)}</span>` : '<span class="pill bad">não ligado</span>'}</td></tr>`;
+  }).join('');
+  $('razBody').innerHTML = Object.values(razao).sort((a, b) => a.conta.localeCompare(b.conta)).map(C => {
+    const d = C.linhas.reduce((a, l) => a + l.deb, 0), c = C.linhas.reduce((a, l) => a + l.cred, 0);
+    return `<tr><td>${esc(C.conta)}</td><td class="wrap">${esc(C.desc)}</td><td>${fmt(C.saldoAnt)}</td><td>${fmt(d)}</td><td>${fmt(c)}</td><td>${fmt(r2(C.saldoAnt + d - c))}</td><td>${C.linhas.length}</td><td class="wrap">${esc(C.arquivo)}</td></tr>`;
+  }).join('') || '<tr><td colspan="8" class="muted">Nenhum razão carregado.</td></tr>';
+}
+
+// ===================== exportação =====================
+function exportarExcel(){
+  if (!res || !res.linhas.length){ alert('Carregue e processe os arquivos antes de exportar.'); return; }
+  const wb = XLSX.utils.book_new();
+  const resumo = [['Conta', 'Descrição', 'Extrato(s)', 'Saldo anterior razão', 'Saldo anterior extrato', 'Saldo final razão', 'Saldo final extrato', 'Diferença', 'Só no extrato', 'Só no razão', 'Não explicado', 'Status']]
+    .concat(res.linhas.map(l => [l.conta, l.desc, l.ex.map(e => e.banco + ' ' + e.conta).join(' / '), l.rAnt, l.eAnt, l.rFin, l.eFin, l.dif, l.tE, l.tR, l.naoExp, STATUS[l.status][1]]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumo), 'Resumo');
+  const its = itensDivergencia();
+  const div = [['Conta banco', 'Tipo', 'Data', 'Histórico', 'Valor', 'Débito sugerido', 'Crédito sugerido', 'Natureza sugerida', 'Conferido', 'Observação']]
+    .concat(its.filter(d => d.tipo !== 'C').map(d => { const r = rev[chaveItem(d.i)] || {};
+      return [d.conta, d.tipo === 'E' ? 'Só no extrato' : 'Só no razão', br(d.i.data), d.i.hist, d.i.valor, r.deb ?? d.s.deb, r.cred ?? d.s.cred, d.s.nome || 'Estorno (se indevido)', r.ok ? 'Sim' : 'Não', r.obs || '']; }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(div), 'Divergências');
+  const lanc = [['Data', 'Conta débito', 'Conta crédito', 'Valor', 'Histórico', 'Origem']]
+    .concat(its.filter(d => d.tipo !== 'C').map(d => { const r = rev[chaveItem(d.i)] || {};
+      return [br(d.i.data), r.deb ?? d.s.deb, r.cred ?? d.s.cred, Math.abs(d.i.valor), (d.tipo === 'R' ? 'ESTORNO ' : '') + d.i.hist, d.tipo === 'E' ? 'Só no extrato' : 'Só no razão']; }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lanc), 'Lançamentos sugeridos');
+  const cas = [['Conta', 'Regra', 'Data extrato', 'Histórico extrato', 'Valor extrato', 'Data razão', 'Histórico razão', 'Valor razão']];
+  res.linhas.forEach(l => l.casados.forEach(c => { const n = Math.max(c.r.length, c.x.length); for (let i = 0; i < n; i++){ const a = c.x[i], b = c.r[i];
+    cas.push([l.conta, c.regra, a ? br(a.data) : '', a ? a.hist : '', a ? a.valor : '', b ? br(b.data) : '', b ? b.hist : '', b ? b.valor : '']); } }));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cas), 'Conciliados');
+  const per = (extratos[0] && extratos[0].periodo || '').slice(0, 7) || new Date().toISOString().slice(0, 7);
+  XLSX.writeFile(wb, 'conciliacao-bancaria-' + per + '.xlsx');
+}
+
+// ===================== persistência =====================
+function salvarDados(){
+  const ok = lsSet(LS_DADOS, { razao, extratos: extratos.map(e => { const c = Object.assign({}, e); delete c.__lig; return c; }) });
+  if (!ok) msg('Os arquivos são grandes demais para ficarem salvos neste navegador: a conferência funciona agora, mas será preciso carregá-los de novo na próxima vez.', 'warn');
+}
+function limparTudo(){
+  if (!confirm('Remover o razão e os extratos carregados? (as marcações de conferido e observações são mantidas)')) return;
+  razao = {}; extratos = []; res = null; try { localStorage.removeItem(LS_DADOS); } catch(e){} processar();
+}
+(function init(){
+  const d = lsGet(LS_DADOS, null); if (d){ razao = d.razao || {}; extratos = d.extratos || []; }
+  rev = lsGet(LS_REV, {}); mapa = lsGet(LS_MAP, {}); cfg = Object.assign(cfg, lsGet(LS_CFG, {}));
+  if (!window.XLSX) msg('A biblioteca de planilhas não carregou (pasta vendor/sheetjs).', 'err');
+  processar();
+})();
+</script>
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+</body>
+</html>
