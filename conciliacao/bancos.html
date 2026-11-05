@@ -248,6 +248,7 @@ tr.clickable{cursor:pointer}
     <tr><td>R2</td><td class="wrap">Casamento, nesta ordem: mesma data e valor → mesmo valor dentro da diferença de datas aceita → soma do dia igual (lote) → um lançamento igual à soma de até 4 movimentos próximos (e vice-versa).</td></tr>
     <tr><td>R3</td><td class="wrap">Diferença de saldo final = diferença do saldo anterior + Só no razão − Só no extrato. O que sobrar é “Não explicado” e indica arquivo incompleto ou período diferente.</td></tr>
     <tr><td>R4</td><td class="wrap">Sugestões: tarifas → 3.3.02.2002; IOF → 3.3.02.2003; juros/encargos → 3.3.02.2001; rendimentos → 3.3.02.1003; recebimentos → 1.1.02.1001 (clientes); pagamentos → 2.1.01.1001 (fornecedores); transferência entre contas da própria empresa → “a definir”. Só no razão → estorno do lançamento, se indevido. Sempre conferir antes de lançar.</td></tr>
+    <tr><td>R5</td><td class="wrap">Conferência <b>só pelo saldo final</b> (etapa 4, por conta): a conta fica Conciliada quando o saldo final do razão é igual ao do extrato, sem listar divergência item a item. É o padrão para o <b>Itaú</b> (e obrigatório para o PDF do Itaú, do qual só os saldos são lidos); pode ser trocado para “Lançamento a lançamento”.</td></tr>
   </tbody></table></div></div>
   <div class="box"><h2>Checklist do fechamento</h2>
     <ul class="cl">
@@ -300,7 +301,7 @@ tr.clickable{cursor:pointer}
   <div class="box"><h2>Extratos × contas contábeis</h2>
     <div id="mapVazio" class="empty">Carregue extratos para ligar às contas.</div>
     <div class="tscroll" id="mapBox" style="display:none"><table>
-      <thead><tr><th>Extrato</th><th>Banco / agência / conta</th><th>Período</th><th>Saldo anterior</th><th>Saldo final</th><th>Movimentos</th><th>Conta contábil</th><th>Como foi ligado</th></tr></thead>
+      <thead><tr><th>Extrato</th><th>Banco / agência / conta</th><th>Período</th><th>Saldo anterior</th><th>Saldo final</th><th>Movimentos</th><th>Conta contábil</th><th>Como foi ligado</th><th>Conferência</th></tr></thead>
       <tbody id="mapBody"></tbody></table></div>
   </div>
   <div class="box"><h2>Contas do razão carregadas</h2>
@@ -475,6 +476,20 @@ function completarSaldos(e){
 
 // ---- PDF Sicoob / Sisbr (Credicitrus, Credicopa, Sicoob) ----
 if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+// PDF do Itaú: as colunas vêm misturadas, então só os saldos são lidos (conferência só por saldo final)
+function lerPdfItau(itens, tudo, file){
+  const e = { id: uid('e'), arquivo: file.name, banco: 'Itaú', ag: '', conta: '', periodo: '', saldoAnt: NaN, saldoFin: NaN, linhas: [], soSaldo: true, fechaSaldo: true };
+  let m = tudo.match(/Ag[eê]ncia\s*(\d+)\s*Conta\s*([\d.\-]+)/i); if (m){ e.ag = m[1]; e.conta = m[2]; }
+  m = tudo.match(/(\d{2}\/\d{2}\/\d{4})\s*at[eé]\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) e.periodo = isoData(m[1]) + '|' + isoData(m[2]);
+  const ehValor = s => /^-?[\d.]+,\d{2}$/.test(s);
+  const ia = itens.findIndex(i => /^SALDO ANTERIOR$/i.test(i.s));
+  if (ia >= 0){ const lin = itens.filter(j => j.p === itens[ia].p && Math.abs(j.y - itens[ia].y) < 3 && ehValor(j.s)).sort((a, b) => a.x - b.x); if (lin.length) e.saldoAnt = num(lin[lin.length - 1].s); }
+  const iq = itens.findIndex(i => /^Saldo da conta corrente$/i.test(i.s));
+  const fimLanc = iq >= 0 ? iq : itens.length;
+  for (let k = fimLanc - 1; k > ia; k--){ if (ehValor(itens[k].s)){ e.saldoFin = num(itens[k].s); break; } }
+  if (isNaN(e.saldoFin)) throw new Error('não encontrei o saldo final no PDF do Itaú');
+  return e;
+}
 async function lerPdfSicoob(file){
   const pdf = await pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
   const itens = [];
@@ -484,7 +499,8 @@ async function lerPdfSicoob(file){
   }
   itens.sort((a, b) => a.p - b.p || b.y - a.y || a.x - b.x);
   const tudo = itens.map(i => i.s).join(' ');
-  if (!/SISBR|SICOOB/i.test(tudo) || !/HIST[OÓ]RICO DE MOVIMENTA/i.test(tudo)) throw new Error('PDF não é extrato Sicoob/Sisbr (para outros bancos use Excel ou OFX)');
+  if (/Lan[cç]amentos do per[ií]odo/i.test(tudo) && /SALDO ANTERIOR/i.test(tudo) && /Ag[eê]ncia\s*\d+\s*Conta/i.test(tudo)) return lerPdfItau(itens, tudo, file);
+  if (!/SISBR|SICOOB/i.test(tudo) || !/HIST[OÓ]RICO DE MOVIMENTA/i.test(tudo)) throw new Error('PDF não reconhecido (aceitos: Sicoob/Sisbr e Itaú; para outros bancos use Excel ou OFX)');
   const e = { id: uid('e'), arquivo: file.name, banco: 'Sicoob', ag: '', conta: '', periodo: '', saldoAnt: NaN, saldoFin: NaN, linhas: [] };
   let m = tudo.match(/Cooperativa:\s*([\d-]+)\s*\/\s*([^\n]+?)\s+Conta:/i); if (m){ e.ag = m[1]; e.banco = m[2].replace(/^SICOOB\s*/i, 'Sicoob ').trim(); }
   m = tudo.match(/Conta:\s*([\d.\-]+)/i); if (m) e.conta = m[1];
@@ -555,6 +571,13 @@ function ligar(e){
   if (pont.length && (pont.length === 1 || pont[0].p > pont[1].p)) return { conta: pont[0].C.conta, como: 'nome do banco/arquivo' };
   return { conta: '', como: 'não ligado' };
 }
+// modo de conferência: 'itens' (lançamento a lançamento) ou 'saldo' (só saldo final). Itaú e PDFs só com saldo: padrão 'saldo'.
+function modoConta(k, ex){
+  if (ex.some(e => e.soSaldo)) return 'saldo';
+  if (cfg.modo && cfg.modo[k]) return cfg.modo[k];
+  return ex.some(e => /ita[uú]/i.test(e.banco)) ? 'saldo' : 'itens';
+}
+function setModo(conta, v){ cfg.modo = cfg.modo || {}; cfg.modo[conta] = v; salvarCfg(); processar(); }
 function setMapa(eid, conta){ const e = extratos.find(x => x.id === eid); if (!e) return; mapa[chaveExt(e)] = conta; lsSet(LS_MAP, mapa); processar(); }
 
 // ===================== conciliação =====================
@@ -652,18 +675,20 @@ function processar(){
     const C = razao[k], ex = contas[k].ext;
     const R = C ? C.linhas.filter(l => Math.abs(l.valor) > 0.004) : [];
     const E = ex.flatMap(e => e.linhas);
-    const c = conciliarConta(R, E, tol);
+    const modo = ex.length ? modoConta(k, ex) : 'itens';
+    const c = modo === 'saldo' ? { casados: [], soR: [], soE: [] } : conciliarConta(R, E, tol);
     const rAnt = C ? C.saldoAnt : NaN, rFin = C ? r2(C.saldoAnt + R.reduce((a, l) => a + l.valor, 0)) : NaN;
     const eAnt = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoAnt) ? 0 : e.saldoAnt), 0)) : NaN;
     const eFin = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoFin) ? 0 : e.saldoFin), 0)) : NaN;
     // tR / tE = soma dos itens só no razão / só no extrato (soR / soE são as listas de itens)
     const tR = r2(c.soR.reduce((a, l) => a + l.valor, 0)), tE = r2(c.soE.reduce((a, l) => a + l.valor, 0));
     const dif = r2(rFin - eFin), difAnt = r2(rAnt - eAnt);
-    const naoExp = r2(dif - (difAnt + tR - tE));
+    const naoExp = modo === 'saldo' ? NaN : r2(dif - (difAnt + tR - tE));
     let status = 'ok';
     if (!C) status = 'semrazao'; else if (!ex.length) status = 'semext';
+    else if (modo === 'saldo') status = Math.abs(dif) < 0.01 ? 'ok' : 'saldodif';
     else if (Math.abs(naoExp) >= 0.01) status = 'naoexp'; else if (Math.abs(dif) >= 0.01 || c.soR.length || c.soE.length || c.casados.some(g => /^lançado em outra data/.test(g.regra))) status = 'div';
-    linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status }, c));
+    linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status, modo }, c));
   });
   // extratos ainda sem conta contábil: aparecem no resumo para não passarem despercebidos
   extratos.filter(e => !e.__lig.conta).forEach(e => linhas.push({ conta: 'sem conta', desc: 'Ligue na etapa 4 ou carregue o razão desta conta', ex: [e],
@@ -685,7 +710,7 @@ function enviarSuportes(linhas){
 }
 
 // ===================== telas =====================
-const STATUS = { ok: ['ok', 'Conciliada'], div: ['warn', 'Com divergências'], naoexp: ['bad', 'Não explicado'], semext: ['info', 'Sem extrato'], semrazao: ['info', 'Sem razão'] };
+const STATUS = { saldodif: ['bad', 'Saldo diferente'], ok: ['ok', 'Conciliada'], div: ['warn', 'Com divergências'], naoexp: ['bad', 'Não explicado'], semext: ['info', 'Sem extrato'], semrazao: ['info', 'Sem razão'] };
 function render(){
   $('chRazao').innerHTML = Object.values(razao).map(C => `<span class="chip">${esc(C.conta)} · ${C.linhas.length} lanç.</span>`).join('');
   $('chExt').innerHTML = extratos.map(e => `<span class="chip">${esc(e.banco)} ${esc(e.conta)} · ${e.linhas.length} mov.</span>`).join('');
@@ -775,7 +800,8 @@ function renderMapa(){
     return `<tr><td class="wrap" style="min-width:160px">${esc(e.arquivo)}</td><td>${esc(e.banco)}<div class="muted small">ag ${esc(e.ag || '—')} · conta ${esc(e.conta || '—')}</div></td>
       <td>${e.periodo ? br(e.periodo.split('|')[0]) + ' a ' + br(e.periodo.split('|')[1]) : '—'}</td><td>${fmt(e.saldoAnt)}</td><td>${fmt(e.saldoFin)}${e.fechaSaldo ? '' : ' <span class="pill warn" title="saldo anterior + movimentos ≠ saldo final">confira</span>'}</td><td>${e.linhas.length}</td>
       <td><select onchange="setMapa('${e.id}', this.value)"><option value="">— escolher —</option>${opts.map(C => `<option value="${C.conta}" ${C.conta === lg.conta ? 'selected' : ''}>${esc(C.conta + ' ' + C.desc)}</option>`).join('')}</select></td>
-      <td>${lg.conta ? `<span class="pill ${lg.como === 'manual' ? 'info' : 'ok'}">${esc(lg.como)}</span>` : '<span class="pill bad">não ligado</span>'}</td></tr>`;
+      <td>${lg.conta ? `<span class="pill ${lg.como === 'manual' ? 'info' : 'ok'}">${esc(lg.como)}</span>` : '<span class="pill bad">não ligado</span>'}</td>
+      <td>${!lg.conta ? '—' : e.soSaldo ? '<span class="pill info" title="PDF do Itaú: só os saldos são lidos">Só saldo final</span>' : `<select onchange="setModo('${lg.conta}', this.value)"><option value="itens" ${modoConta(lg.conta, [e]) === 'itens' ? 'selected' : ''}>Lançamento a lançamento</option><option value="saldo" ${modoConta(lg.conta, [e]) === 'saldo' ? 'selected' : ''}>Só saldo final</option></select>`}</td></tr>`;
   }).join('');
   $('razBody').innerHTML = Object.values(razao).sort((a, b) => a.conta.localeCompare(b.conta)).map(C => {
     const d = C.linhas.reduce((a, l) => a + l.deb, 0), c = C.linhas.reduce((a, l) => a + l.cred, 0);
