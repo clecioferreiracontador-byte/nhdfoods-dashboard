@@ -52,7 +52,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .conc-tab{opacity:.65}
 .conc-tab.active{opacity:1;border-color:var(--gold);color:var(--g2);background:rgba(201,168,76,.13)}
 .conc-open{margin-left:auto;text-decoration:none;font-size:13px}
-.conc-frame{display:block;width:100%;height:calc(100vh - 200px);min-height:560px;border:1px solid var(--bdr);border-radius:10px;background:#0b1220}
+.conc-frame{display:block;width:100%;height:calc(100vh - 200px);min-height:560px;border:1px solid var(--bdr);border-radius:10px;background:#F1F1F1}
 @media(max-width:768px){.conc-frame{height:75vh}.conc-open{margin-left:0}}
 .phdr{margin-bottom:18px}
 .ptitle{font-family:Calibri,"Segoe UI",Arial,sans-serif;font-weight:800;font-size:26px;color:var(--white);letter-spacing:-.02em}
@@ -2192,8 +2192,6 @@ function concTab(p){
   if(!IS_ADMIN)return;
   document.querySelectorAll('.conc-tab').forEach(function(b){b.classList.toggle('active',b.getAttribute('data-p')===p);});
   var box=document.getElementById('concFrames');
-  // os painéis abrem no tema escuro do dashboard (cada um ainda tem o botão de tema)
-  ['audicon-consorcios-tema','nuvemdatacom-parcelamentos-tema','audicon-parcelamentos-estaduais-tema'].forEach(function(k){try{if(!localStorage.getItem(k))localStorage.setItem(k,'dark');}catch(e){}});
   var f=document.getElementById('concFrame-'+p);
   if(!f){
     f=document.createElement('iframe');f.id='concFrame-'+p;f.className='conc-frame';f.src=CONC_PAINEIS[p];f.title=p;

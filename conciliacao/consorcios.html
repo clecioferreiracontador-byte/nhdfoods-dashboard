@@ -4,115 +4,167 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Consórcios Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --page-bg:#eef2f7; --panel:#ffffff; --panel-2:#f8fafc; --border:#e2e8f0;
-    --text:#0f172a; --muted:#64748b; --accent:#1d4ed8; --accent-2:#0ea5e9;
-    --good:#0f9d58; --warn:#b45309; --bad:#b91c1c; --bad-border:#fecaca;
-    --btn-bg:#ffffff; --textarea-bg:#fafcff; --textarea-border:#94a3b8;
-    --results-bg:#f0f7ff; --results-border:#bfdbfe;
-    --item-bg:#ffffff; --item-border:#dbeafe;
-    --badge-bg:#e2e8f0;
-    --radius:10px;
-  }
-  :root[data-theme="dark"]{
-    --page-bg:#0b1220; --panel:#141b2d; --panel-2:#101728; --border:#293349;
-    --text:#e5e9f2; --muted:#94a3b8; --accent:#5b8def; --accent-2:#38bdf8;
-    --good:#34d399; --warn:#f0b661; --bad:#f87171; --bad-border:#7f1d1d;
-    --btn-bg:#1a2338; --textarea-bg:#0f1626; --textarea-border:#3a4661;
-    --results-bg:#101c33; --results-border:#28406b;
-    --item-bg:#152036; --item-border:#28406b;
-    --badge-bg:#243049;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; font-family:Segoe UI, Arial, sans-serif; background:var(--page-bg); color:var(--text);
-    padding:24px; line-height:1.4;
-  }
-  h1{font-size:20px; margin:0 0 4px;}
-  .sub{color:var(--muted); font-size:13px; margin-bottom:20px; max-width:1100px;}
-  .toolbar{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:18px;}
-  button{
-    cursor:pointer; border:1px solid var(--border); background:var(--btn-bg); color:var(--text);
-    padding:8px 14px; border-radius:8px; font-size:13px; font-weight:600;
-  }
-  button.primary{background:var(--accent); border-color:var(--accent); color:#fff;}
-  button.ghost{background:transparent;}
-  button.danger{color:var(--bad); border-color:var(--bad-border);}
-  button:hover{filter:brightness(0.97);}
-  input[type=file]{display:none;}
-
-  .summary{
-    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-    padding:16px 18px; margin-bottom:22px; overflow-x:auto;
-  }
-  .summary h2{font-size:15px; margin:0 0 10px;}
-  table{border-collapse:collapse; width:100%; font-size:12.5px;}
-  th, td{padding:6px 10px; text-align:right; border-bottom:1px solid var(--border); white-space:nowrap;}
-  th:first-child, td:first-child{text-align:left;}
-  thead th{color:var(--muted); font-weight:600; font-size:11.5px; text-transform:uppercase; letter-spacing:.02em;}
-  tfoot td{font-weight:700; border-top:2px solid var(--text); border-bottom:none;}
-  td.left, th.left{text-align:left;}
-
-  .card{
-    background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
-    margin-bottom:16px; overflow:hidden;
-  }
-  .card-head{
-    display:flex; justify-content:space-between; align-items:center; gap:10px;
-    background:var(--panel-2); padding:10px 16px; border-bottom:1px solid var(--border); cursor:pointer;
-  }
-  .card-head .title{font-weight:700; font-size:14px;}
-  .card-head .title .tag{font-weight:500; color:var(--muted); font-size:12px; margin-left:8px;}
-  .card-body{padding:16px; display:none;}
-  .card.open .card-body{display:block;}
-  .card-head .chev{transition:transform .15s;}
-  .card.open .card-head .chev{transform:rotate(90deg);}
-
-  .paste-actions{display:flex; gap:8px; margin-top:6px; align-items:center; flex-wrap:wrap;}
-  .parse-msg{font-size:12px; color:var(--good);}
-  .parse-msg.err{color:var(--bad);}
-
-  fieldset{border:1px solid var(--border); border-radius:8px; margin:0 0 14px; padding:12px 14px;}
-  legend{font-size:12px; font-weight:700; color:var(--accent); padding:0 6px;}
-  .grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(200px,1fr)); gap:10px 14px;}
-  label{display:block; font-size:11.5px; color:var(--muted); margin-bottom:3px;}
-  input[type=text], input[type=date], input[type=number], select{
-    width:100%; padding:7px 9px; border:1px solid var(--border); border-radius:6px; font-size:13px;
-    background:var(--panel); color:var(--text);
-  }
-  input[readonly]{background:var(--panel-2); opacity:.92;}
-
-  .results{background:var(--results-bg); border:1px solid var(--results-border); border-radius:8px; padding:14px 16px;}
-  .results h3{font-size:12.5px; margin:0 0 10px; color:var(--accent);}
-  .rgrid{display:grid; grid-template-columns:repeat(auto-fill, minmax(190px,1fr)); gap:10px 16px;}
-  .rgrid .item{background:var(--item-bg); border:1px solid var(--item-border); border-radius:8px; padding:8px 10px;}
-  .rgrid .item .lbl{font-size:11px; color:var(--muted);}
-  .rgrid .item .val{font-size:15px; font-weight:700; margin-top:2px; color:var(--text);}
-  .rgrid .item.hi .val{color:var(--accent);}
-  .note{font-size:11px; color:var(--warn); margin-top:10px;}
-  .note.exact{color:var(--good);}
-  .badge{display:inline-block; font-size:10.5px; padding:1px 7px; border-radius:20px; background:var(--badge-bg); color:var(--muted); margin-left:6px;}
-  .badge.ok{background:rgba(15,157,88,.14); color:var(--good);}
-  .badge.warn{background:rgba(180,83,9,.14); color:var(--warn);}
-  .dif-ok{color:var(--good); font-weight:700;}
-  .dif-bad{color:var(--bad); font-weight:700;}
-  .conc-inputs{display:grid; grid-template-columns:repeat(auto-fill, minmax(210px,1fr)); gap:10px 14px; margin-bottom:12px;}
-
-  footer{margin-top:24px; font-size:11.5px; color:var(--muted);}
-  .pdf-msg{font-size:12px; margin-left:4px;}
-  .theme-toggle{margin-left:auto; display:flex; align-items:center; gap:6px;}
-  @media print{ .toolbar, .card-head button, .paste-actions{display:none !important;} body{padding:0;} }
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:28px 0 24px;border-bottom:4px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.8125rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.4rem,1.1rem + 1.6vw,2.25rem);line-height:1.2}
+header.top p{margin:8px 0 0;font-size:.95rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
 </style>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
 <script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-
-<h1>Painel de Consórcios Audicon</h1>
-<div class="sub">Envie o PDF do extrato de cada cota (Itaú "Demonstrativo de Parcelas Pagas" ou Sicoob "Extrato do Consorciado") e a ferramenta extrai pagamentos, saldo devedor, parcelas e contemplação, calcula a posição em cada fechamento e concilia com o saldo contábil. PDFs com senha: se o nome do arquivo tiver "Senha 12345", ela é usada automaticamente; senão o painel pergunta. Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</div>
-
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Conciliação de Consórcios — Extratos x Razão</h1>
+  <p>NHD Foods · Cotas de consórcio (Itaú e Sicoob) confrontadas com o saldo contábil de consórcios</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Conciliação de Consórcios</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="detalhe">3 · Cotas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+<div class="box">
 <div class="toolbar">
   <button class="primary" onclick="document.getElementById('globalPdfInput').click()">📄 Carregar PDF(s) de consórcio</button>
   <button onclick="addCard()">+ Nova cota em branco</button>
@@ -127,11 +179,17 @@
   </label>
   <input type="file" id="importFile" accept="application/json" onchange="importJSON(event)">
   <input type="file" id="globalPdfInput" accept="application/pdf" multiple onchange="handleGlobalPdfUpload(event)">
-  <span class="theme-toggle">
-    <button class="ghost" id="themeToggleBtn" onclick="toggleTheme()">🌙 Modo noturno</button>
-  </span>
+</div>
+<p class="muted small" style="margin:10px 0 0">Envie o PDF do extrato de cada cota (Itaú "Demonstrativo de Parcelas Pagas" ou Sicoob "Extrato do Consorciado") e a ferramenta extrai pagamentos, saldo devedor, parcelas e contemplação, calcula a posição em cada fechamento e concilia com o saldo contábil. PDFs com senha: se o nome do arquivo tiver "Senha 12345", ela é usada automaticamente; senão o painel pergunta. Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</p>
 </div>
 
+<section class="panel" id="tab-processo">
+<div class="box"><h2>Objetivo</h2><p>Garantir todo mês que o saldo da conta de <b>consórcios</b> (total pago nas cotas) e, quando houver, o <b>passivo</b> das cotas contempladas sejam iguais à posição dos extratos das administradoras, identificando e justificando qualquer diferença antes do fechamento contábil.</p><p class="muted small">Quando executar: todo mês, no fechamento contábil. Os documentos são lidos neste navegador e nada é enviado para a internet.</p></div><div class="box"><h2>Arquivos necessários (todo mês)</h2><table><thead><tr><th>Arquivo</th><th>De onde vem</th><th>O que deve conter</th></tr></thead><tbody><tr><td><b>Demonstrativo de Parcelas Pagas</b> (PDF) — uma por cota</td><td>Itaú (app/internet banking ou gerente)</td><td>Grupo, cota, total pago, valor a pagar e últimos pagamentos com fundo comum, taxa de administração e fundo de reserva. PDF com senha: se o nome do arquivo tiver “Senha 12345”, ela é usada automaticamente.</td></tr><tr><td><b>Extrato do Consorciado</b> (PDF) — uma por cota</td><td>Sicoob (Sisbr / app)</td><td>Todos os movimentos (parcelas, lances, rendimentos), saldo devedor, parcelas pagas/a pagar e contemplação.</td></tr><tr><td><b>Balancete / razão do mês</b></td><td>Contabilidade</td><td>Saldo anterior, débitos, créditos e saldo final da conta de consórcios (ativo) e das contas de passivo de consórcio (CP e LP).</td></tr></tbody></table></div><div class="box"><h2>Passo a passo</h2><ol class="steps"><li><b>Baixar</b> o extrato atualizado de cada cota, emitido depois do último dia do mês.</li><li>Na etapa <b>2 · Conferência</b>, clicar em <b>Carregar PDF(s)</b> e selecionar todos os extratos. Cota já cadastrada é atualizada; extrato do Sicoob não traz grupo/cota — preencha no cartão da cota (etapa 3) na primeira vez.</li><li>Escolher a <b>data-base</b> = último dia do mês que está sendo fechado.</li><li>Conferir o <b>resumo consolidado</b>: total pago, saldo devedor, curto/longo prazo e situação (contemplada ou não) de cada cota.</li><li>Na <b>conciliação com a contabilidade</b>, digitar os saldos do balancete. A diferença do saldo final deve ficar <b>OK</b>.</li><li><b>Débitos do mês × pagamentos do mês</b>: diferença indica parcela não contabilizada, lançada em outra conta ou em outro mês. Créditos do mês precisam de justificativa (baixa, estorno, rendimento).</li><li><b>Cotas contempladas</b>: conferir o crédito disponível; ao usar o crédito, baixar o ativo contra o imobilizado e registrar o saldo devedor no passivo (CP/LP).</li><li>Gerar o <b>relatório (PDF)</b>, <b>exportar os dados (JSON)</b> e arquivar junto ao fechamento. Marcar o checklist abaixo.</li></ol></div><div class="box"><h2>Regras da conferência</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody><tr><td>R1</td><td><b>Total pago (ativo)</b> = parcelas + lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos creditados pela administradora ficam à parte.</td></tr><tr><td>R2</td><td><b>Saldo devedor</b> = valor a pagar do extrato. Para datas anteriores ao extrato = saldo do extrato + pagamentos feitos depois da data-base (sem reajuste do bem no período).</td></tr><tr><td>R3</td><td><b>Curto prazo</b> = próximas até 12 parcelas × parcela vigente; <b>longo prazo</b> = saldo devedor − curto prazo. Depois de lance, a parcela é recalculada (saldo ÷ parcelas restantes).</td></tr><tr><td>R4</td><td><b>Passivo esperado</b>: por padrão só das cotas contempladas (opção na conciliação: todas / só contempladas / nenhuma).</td></tr><tr><td>R5</td><td>O extrato do Itaú mostra só os últimos ~10 pagamentos. Para datas mais antigas, carregue extratos anteriores da cota (os históricos são somados).</td></tr></tbody></table><p class="muted small" style="margin-top:10px">Total pago (ativo) = soma das parcelas e lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos devolvidos pela administradora aparecem à parte.
+  Saldo devedor = valor a pagar informado no extrato; em fechamentos anteriores ao extrato = saldo do extrato + pagamentos feitos depois da data-base (sem reajuste do bem no período).
+  Curto prazo = próximas até 12 parcelas × valor da parcela vigente; longo prazo = saldo devedor − curto prazo.</p></div><div class="box"><h2>Checklist do fechamento</h2><ul class="cl"><li><label><input type="checkbox"> <span>Extratos de todas as cotas carregados (emitidos após o fim do mês)</span></label></li><li><label><input type="checkbox"> <span>Data-base = último dia do mês</span></label></li><li><label><input type="checkbox"> <span>Saldo do ativo de consórcios conciliado (diferença OK)</span></label></li><li><label><input type="checkbox"> <span>Débitos do mês = pagamentos do mês</span></label></li><li><label><input type="checkbox"> <span>Créditos do mês justificados</span></label></li><li><label><input type="checkbox"> <span>Cotas contempladas tratadas (imobilizado / passivo CP e LP)</span></label></li><li><label><input type="checkbox"> <span>Relatório PDF gerado e arquivado</span></label></li><li><label><input type="checkbox"> <span>Dados exportados (JSON) e arquivados</span></label></li></ul><button class="ghost" id="btnLimparChecklist" type="button">Limpar checklist (novo mês)</button></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
 <div class="summary">
   <h2>Resumo consolidado <span id="baseChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
   <div id="baseInfo" style="font-size:12px; margin:0 0 10px; color:var(--muted);"></div>
@@ -187,14 +245,12 @@
   </table>
   </div>
 </div>
+</section>
 
+<section class="panel" id="tab-detalhe">
 <div id="cards"></div>
-
-<footer>
-  Total pago (ativo) = soma das parcelas e lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos devolvidos pela administradora aparecem à parte.
-  Saldo devedor = valor a pagar informado no extrato; em fechamentos anteriores ao extrato = saldo do extrato + pagamentos feitos depois da data-base (sem reajuste do bem no período).
-  Curto prazo = próximas até 12 parcelas × valor da parcela vigente; longo prazo = saldo devedor − curto prazo.
-</footer>
+</section>
+</main>
 
 <script>
 const STORAGE_KEY = 'audicon-consorcios-v1';
@@ -221,7 +277,7 @@ function toggleTheme(){ applyTheme(document.documentElement.getAttribute('data-t
 (function initTheme(){
   let saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch(e){}
   const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  applyTheme(saved || (prefersDark ? 'dark' : 'light'));
+  applyTheme('light');
 })();
 
 function uid(){ return 'c' + Math.random().toString(36).slice(2, 9); }
@@ -941,7 +997,7 @@ function gerarRelatorioPDF(){
   if (!dados.length){ alert('Nenhuma cota carregada.'); return; }
   const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
   const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 36;
-  const AZUL = [29, 78, 216], CINZA = [90, 100, 115];
+  const AZUL = [18, 42, 79], CINZA = [90, 100, 115];
   const dBase = competencia ? isoToLocal(competencia) : null;
   let y = M;
   doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20, 30, 50);
@@ -1021,6 +1077,35 @@ function gerarRelatorioPDF(){
 load();
 if (!cards.length) cards = [blankCard()];
 render();
+</script>
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
 </script>
 </body>
 </html>
