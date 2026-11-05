@@ -631,7 +631,19 @@ function processar(){
   extratos.filter(e => !e.__lig.conta).forEach(e => linhas.push({ conta: 'sem conta', desc: 'Ligue na etapa 4 ou carregue o razão desta conta', ex: [e],
     rAnt: NaN, rFin: NaN, eAnt: e.saldoAnt, eFin: e.saldoFin, dif: NaN, difAnt: NaN, tR: 0, tE: 0, naoExp: NaN, status: 'semrazao', casados: [], soR: [], soE: [] }));
   res = { linhas };
+  enviarSuportes(linhas);
   render();
+}
+
+// saldo final do extrato vira o "saldo do suporte" da conta no Book de conciliação
+function enviarSuportes(linhas){
+  const sup = lsGet('aud-hub-suportes', {});
+  Object.keys(sup).forEach(k => { if (sup[k].fonte === 'Conciliação bancária') delete sup[k]; });
+  linhas.filter(l => l.ex.length && /^\d(\.\d+)+$/.test(l.conta) && !isNaN(l.eFin)).forEach(l => {
+    const fimPer = l.ex.map(e => (e.periodo || '').split('|')[1] || '').sort().pop();
+    if (fimPer) sup[l.conta] = { fonte: 'Conciliação bancária', saldo: l.eFin, data: fimPer, detalhe: l.ex.map(e => e.banco + ' ' + e.conta).join(' / ') + ' · ' + STATUS[l.status][1] };
+  });
+  lsSet('aud-hub-suportes', sup);
 }
 
 // ===================== telas =====================

@@ -615,6 +615,23 @@ function ativoEsperadoEm(iso){ const old = competencia; competencia = iso; const
 
 function difCell(d){ return isNaN(d) ? '—' : (Math.abs(d) < 0.5 ? '<span class="dif-ok">OK</span>' : `<span class="dif-bad">${fmtBRL(d)}</span>`); }
 
+// total pago (ativo) e saldo a pagar (passivo CP/LP) viram o "saldo do suporte" das contas no Book de conciliação.
+// Só envia quando todas as cotas têm extrato cobrindo a data-base.
+function enviarSuportesBook(vs, e){
+  let sup = {}; try { sup = JSON.parse(localStorage.getItem('aud-hub-suportes') || '{}'); } catch(x){}
+  Object.keys(sup).forEach(k => { if (sup[k].fonte === 'Consórcios') delete sup[k]; });
+  const completo = vs.some(v => v.c.dataExtrato) && !vs.some(v => v.depoisDoExtrato || v.semDados);
+  const cod = s => (String(s || '').match(/^\s*(\d(?:\.\d+)+)/) || [])[1];
+  if (completo){
+    const det = vs.length + ' cota(s)';
+    if (cod(concCfg.contaAtivo)) sup[cod(concCfg.contaAtivo)] = { fonte: 'Consórcios', saldo: r2(e.ativo), data: competencia, detalhe: det + ' · total pago' };
+    if (concCfg.passivo !== 'nenhuma'){
+      if (cod(concCfg.contaCP)) sup[cod(concCfg.contaCP)] = { fonte: 'Consórcios', saldo: -r2(e.cp), data: competencia, detalhe: det + ' · saldo a pagar CP (' + concCfg.passivo + ')' };
+      if (cod(concCfg.contaLP)) sup[cod(concCfg.contaLP)] = { fonte: 'Consórcios', saldo: -r2(e.lp), data: competencia, detalhe: det + ' · saldo a pagar LP (' + concCfg.passivo + ')' };
+    }
+  }
+  try { localStorage.setItem('aud-hub-suportes', JSON.stringify(sup)); } catch(x){}
+}
 function renderConciliacao(vs, rs){
   const el = document.getElementById('concBody');
   if (!competencia){
@@ -627,6 +644,7 @@ function renderConciliacao(vs, rs){
   const d = conc[competencia] || (CONC_SEMENTE[competencia] ? Object.assign({}, CONC_SEMENTE[competencia]) : {});
   const e = esperadoConc(vs, rs);
   const antIso = anteriorDe(competencia), eAnt = ativoEsperadoEm(antIso);
+  enviarSuportesBook(vs, e);
   const inp = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(d[k] ?? '')}" placeholder="0,00" onchange="updateConc('${k}', this.value)"></div>`;
   const cfg = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(concCfg[k])}" onchange="updateCfg('${k}', this.value)"></div>`;
   const sAnt = toNum(d.saldoAnterior), deb = toNum(d.debitos), cred = toNum(d.creditos), sFin = toNum(d.saldoFinal);

@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book de Conciliação Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:28px 0 24px;border-bottom:4px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.8125rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.4rem,1.1rem + 1.6vw,2.25rem);line-height:1.2}
+header.top p{margin:8px 0 0;font-size:.95rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+</style>
+<style>
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--aud-success);color:#fff}
+.pill.bad{background:#FFE3E6;color:var(--aud-danger-text);border:1px solid #f5b5bb}
+.pill.warn{background:var(--aud-warning);color:var(--aud-text)}
+.pill.info{background:var(--aud-info);color:var(--aud-primary)}
+.pill.cinza{background:var(--aud-gray-100);color:var(--aud-gray-500)}
+.msg{padding:10px 14px;border-radius:var(--aud-radius);margin:8px 0;font-size:.9rem;background:#fff;border:1px solid #e1e4e8;border-left:5px solid var(--aud-primary)}
+.msg.err{border-left-color:var(--aud-danger);background:#FFF1F2;color:var(--aud-danger-text)}
+.msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
+.msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
+.filters select,.filters input[type=text]{width:auto}
+.filters label.ck{flex-direction:row;align-items:center;gap:6px}
+.tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
+.tscroll thead th{position:sticky;top:0;z-index:2}
+td.wrap,th.wrap{white-space:normal;text-align:left}
+td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
+td input.obs{min-width:220px}
+td select{padding:3px 4px;font-size:.8rem;width:auto}
+tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
+tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
+.kpi{border-radius:var(--aud-radius);padding:12px 14px;background:#fff;border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
+.kpi .t{font-size:.78rem;font-weight:600;color:var(--aud-gray-500)}
+.kpi .v{font-size:1.15rem;font-weight:700;color:var(--aud-primary)}
+.upl{border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:14px;background:#fff}
+.upl h3{margin:0 0 4px;font-size:1rem}
+.empty{padding:24px;text-align:center;color:var(--aud-gray-500)}
+.dbad{color:var(--aud-danger-text);font-weight:600}
+.dok{color:var(--aud-success);font-weight:600}
+.lupa{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:2px 4px}
+.lupa:hover{background:var(--aud-gray-100);color:inherit}
+.auto{font-size:.72rem;color:var(--aud-gray-500)}
+</style>
+<script src="vendor/sheetjs/xlsx.full.min.js"></script>
+<script src="hub-db.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Book de Conciliação — Ativo, Passivo e PL</h1>
+  <p>NHD Foods · Todas as contas patrimoniais com saldo, suporte, diferença e status, ligadas aos lançamentos do razão</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Book de Conciliação</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Book</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="lanc">3 · Lançamentos</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="fontes">4 · Bases carregadas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+
+<div class="box">
+  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+    <div class="upl">
+      <h3>📘 Balancete / Book do mês</h3>
+      <div class="muted small">O Book (.xlsx, aba “Book”) traz saldos, observações e diferenças já apuradas; ou o balancete do Protheus (Conta | Descrição | Saldo anterior | Débito | Crédito | Saldo atual).</div>
+      <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inBal').click()">Importar Book / balancete</button></div>
+      <input type="file" id="inBal" accept=".xlsx,.xls" onchange="importarBalancete(this.files[0]);this.value=''">
+    </div>
+    <div class="upl">
+      <h3>📒 Razão completo</h3>
+      <div class="muted small">Protheus › Lançamentos Contábeis (.xlsx), todas as contas, um ou vários meses. Fica guardado só neste navegador e alimenta o Book e a DRE do Hub.</div>
+      <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inRaz').click()">Importar razão</button></div>
+      <input type="file" id="inRaz" accept=".xlsx,.xls" multiple onchange="importarRazao(this.files);this.value=''">
+    </div>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <label>Mês do Book:<select id="selMes" onchange="mesAtual=this.value;salvarPref();carregarMes()"></select></label>
+    <button type="button" onclick="exportarBook()">📊 Exportar Book (Excel)</button>
+    <span class="muted small" id="stTopo"></span>
+  </div>
+  <div id="msgs"></div>
+</div>
+
+<section class="panel" id="tab-processo">
+  <div class="box"><h2>Objetivo</h2>
+    <p>Ter, todo mês, <b>todas as contas de ativo, passivo e patrimônio líquido</b> com o saldo contábil comprovado por um suporte (extrato, relatório, controle), a <b>diferença</b> apurada, o <b>status</b> e a observação do que falta — e poder abrir os <b>lançamentos do razão</b> de qualquer conta (e de qualquer linha da DRE) com um clique.</p>
+    <p class="muted small">O balancete, o razão e as observações ficam salvos neste navegador; nada é enviado para a internet.</p></div>
+  <div class="box"><h2>Arquivos necessários (todo mês)</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Arquivo</th><th>De onde vem</th><th>Para que serve</th></tr></thead><tbody>
+    <tr><td class="wrap"><b>Book do mês</b> (.xlsx) ou <b>balancete</b></td><td class="wrap">Book NHD (aba Book) ou Protheus › Balancete</td><td class="wrap">Saldos de todas as contas no mês; do Book também vêm as observações e as diferenças já apuradas.</td></tr>
+    <tr><td class="wrap"><b>Razão completo</b> (.xlsx)</td><td class="wrap">Protheus › Razão › exportar planilha (“Lançamentos Contábeis”), todas as contas</td><td class="wrap">Lançamentos que formam cada saldo: abre ao clicar na conta (aqui) e na linha da DRE (no Hub).</td></tr>
+    <tr><td class="wrap"><b>Suportes</b></td><td class="wrap">Demais painéis da Conciliação</td><td class="wrap">Conciliação bancária e Consórcios enviam o saldo comprovado automaticamente; para as outras contas, digite o saldo do relatório de suporte.</td></tr>
+    </tbody></table></div></div>
+  <div class="box"><h2>Passo a passo</h2><ol class="steps">
+    <li><b>Importar</b> o Book (ou balancete) do mês e o razão completo do mês.</li>
+    <li>Processar a <b>Conciliação bancária</b> e os <b>Consórcios</b> na data-base do mês: os saldos comprovados aparecem sozinhos no Book.</li>
+    <li>Na etapa <b>2 · Book</b>, para cada conta com saldo: digitar o <b>saldo do suporte</b> (relatório de fornecedores, clientes, folha, apuração de tributos, controle patrimonial…), conferir a <b>diferença</b> e registrar a <b>observação</b>.</li>
+    <li>Conferir a coluna <b>Razão</b>: ✔ indica que os débitos e créditos do razão batem com o balancete; ✗ indica razão incompleto ou de outro período.</li>
+    <li>Usar 🔍 para abrir os lançamentos de qualquer conta e achar a origem das diferenças.</li>
+    <li><b>Exportar o Book</b> em Excel e arquivar com o fechamento.</li>
+  </ol></div>
+  <div class="box"><h2>Regras</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
+    <tr><td>R1</td><td class="wrap">Saldos com sinal do balancete: devedor positivo, credor negativo (passivo e PL normalmente negativos). No suporte de contas de passivo/PL, um valor digitado positivo é tratado como credor.</td></tr>
+    <tr><td>R2</td><td class="wrap">Diferença = saldo contábil − saldo do suporte. Status automático: <b>Conciliada</b> (diferença até R$ 0,01), <b>Divergente</b>, <b>Pendente</b> (com saldo e sem suporte) ou <b>Sem saldo</b>. O status pode ser trocado manualmente (ex.: Justificada).</td></tr>
+    <tr><td>R3</td><td class="wrap">Suporte automático só vale se for da mesma data-base do Book (último dia do mês).</td></tr>
+  </tbody></table></div></div>
+  <div class="box"><h2>Checklist do fechamento</h2>
+    <ul class="cl">
+      <li><label><input type="checkbox"> <span>Book/balancete e razão do mês importados</span></label></li>
+      <li><label><input type="checkbox"> <span>Razão bate com o balancete em todas as contas (✔)</span></label></li>
+      <li><label><input type="checkbox"> <span>Conciliação bancária e consórcios processados na data-base</span></label></li>
+      <li><label><input type="checkbox"> <span>Suporte informado em todas as contas com saldo</span></label></li>
+      <li><label><input type="checkbox"> <span>Divergências com observação e responsável</span></label></li>
+      <li><label><input type="checkbox"> <span>Book exportado e arquivado</span></label></li>
+    </ul>
+    <button class="ghost" id="btnLimparChecklist" type="button">Limpar checklist (novo mês)</button>
+  </div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+  <div id="bkVazio" class="box empty">Importe o Book ou o balancete do mês para montar o Book de conciliação.</div>
+  <div id="bkBox" style="display:none">
+    <div class="kpis" id="kpis"></div>
+    <div class="box">
+      <h2 id="bkTit">Book</h2>
+      <div class="filters">
+        <label>Grupo<select id="fGrupo" onchange="renderBook()"><option value="">Ativo, passivo e PL</option><option value="1">Ativo</option><option value="2.1">Passivo circulante</option><option value="2.2">Passivo não circulante</option><option value="2.3">Patrimônio líquido</option></select></label>
+        <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option></select></label>
+        <label>Buscar<input type="text" id="fBusca" oninput="renderBook()" placeholder="conta, descrição, observação"></label>
+        <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
+      </div>
+      <div class="tscroll"><table>
+        <thead><tr><th>Conta</th><th class="wrap" style="min-width:200px">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th>Razão</th><th>Saldo do suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th><th></th></tr></thead>
+        <tbody id="bkBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="tab-lanc">
+  <div class="box">
+    <h2>Lançamentos do razão</h2>
+    <div class="filters">
+      <label>Conta<select id="lConta" onchange="renderLanc()"></select></label>
+      <label>Mês<select id="lMes" onchange="renderLanc()"></select></label>
+      <label>Buscar<input type="text" id="lBusca" oninput="renderLancFiltro()" placeholder="histórico, documento, valor"></label>
+      <button type="button" onclick="exportarLanc()">📊 Exportar Excel</button>
+    </div>
+    <div id="lInfo" class="muted small" style="margin-bottom:8px"></div>
+    <div id="lVazio" class="empty">Importe o razão completo para consultar os lançamentos.</div>
+    <div class="tscroll" id="lBox" style="display:none"><table>
+      <thead><tr><th>Data</th><th>Conta</th><th class="wrap" style="min-width:260px">Histórico</th><th>C/partida</th><th>Lote/doc</th><th>Fil.</th><th>Débito</th><th>Crédito</th><th>Saldo</th></tr></thead>
+      <tbody id="lBody"></tbody><tfoot id="lFoot"></tfoot>
+    </table></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-fontes">
+  <div class="box"><h2>Balancetes / Books importados</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Mês</th><th>Origem</th><th>Contas</th><th></th></tr></thead><tbody id="fBal"></tbody></table></div></div>
+  <div class="box"><h2>Razão importado</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Arquivo</th><th>Meses</th><th>Contas</th><th>Lançamentos</th><th>Importado em</th></tr></thead><tbody id="fRaz"></tbody></table></div>
+    <div class="paste-actions" style="margin-top:10px"><button type="button" class="danger" onclick="limparRazao()">Apagar o razão deste navegador</button></div></div>
+  <div class="box"><h2>Suportes automáticos recebidos</h2><div class="tscroll" style="max-height:none"><table>
+    <thead><tr><th>Conta</th><th>Fonte</th><th>Data-base</th><th>Saldo comprovado</th><th class="wrap">Detalhe</th></tr></thead><tbody id="fSup"></tbody></table></div></div>
+</section>
+</main>
+
+<script>
+const LS_REV = 'aud-book-revisao-v1', LS_PREF = 'aud-book-pref-v1', LS_SUP = 'aud-hub-suportes';
+const $ = id => document.getElementById(id);
+let mesAtual = '', bal = null, raz = null, rev = {}, lancCache = [];
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const mesLbl = m => m ? MES[+m.slice(5, 7) - 1] + '/' + m.slice(0, 4) : '';
+const fimMes = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 0); return y + '-' + String(mm).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} }
+function salvarPref(){ lsSet(LS_PREF, { mes: mesAtual }); }
+function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 8000); }
+function num(v){
+  if (v === null || v === undefined || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim(); const dc = s.match(/([CD])\s*$/i);
+  s = s.replace(/[CD]\s*$/i, '').replace(/\s|R\$/g, '');
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  let n = parseFloat(s); if (isNaN(n)) return NaN;
+  if (dc) n = dc[1].toUpperCase() === 'C' ? -Math.abs(n) : Math.abs(n);
+  return n;
+}
+function isoData(v){
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  const m = String(v ?? '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0') : '';
+}
+function fmtConta(c){ const d = String(c ?? '').replace(/\D/g, ''); if (d.length === 8 && /^\d+$/.test(String(c).trim())) return d[0] + '.' + d[1] + '.' + d.slice(2, 4) + '.' + d.slice(4); return String(c ?? '').trim(); }
+const ehAnalitica = c => /^\d\.\d\.\d{2}\.\d{4}$/.test(c);
+const ehPatrimonial = c => /^[12]\./.test(c) || c === '1' || c === '2';
+
+// ===================== importação =====================
+async function importarBalancete(f){
+  if (!f) return;
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    let res = null;
+    if (wb.SheetNames.some(s => norm(s) === 'BOOK')) res = lerBook(wb);
+    if (!res) res = lerBalanceteProtheus(wb);
+    if (!res || !Object.keys(res.contas).length) throw new Error('não reconheci as contas (esperado aba “Book” ou colunas Conta | Descrição | Saldo anterior | Débito | Crédito | Saldo atual)');
+    if (!res.mes){ const m = prompt('Qual o mês deste balancete? (aaaa-mm)', mesAtual || new Date().toISOString().slice(0, 7)); if (!m || !/^\d{4}-\d{2}$/.test(m)) return; res.mes = m; }
+    res.origem = f.name;
+    await HubDB.setMeta('balancete:' + res.mes, res);
+    mesAtual = res.mes; salvarPref();
+    msg(`“${esc(f.name)}”: ${Object.keys(res.contas).length} contas de ${mesLbl(res.mes)}${res.book ? ', com as observações do Book' : ''}.`, 'ok');
+    await atualizarListas(); await carregarMes();
+  } catch(e){ msg('Erro ao importar “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+}
+function lerBook(wb){
+  const sn = wb.SheetNames.find(s => norm(s) === 'BOOK');
+  const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+  let mes = '';
+  rows.slice(0, 4).forEach(r => r.forEach((c, i) => { if (/DATA BASE/.test(norm(c))){ const d = isoData(r[i + 1]); if (d) mes = d.slice(0, 7); } }));
+  const hi = rows.findIndex(r => r && /ANALITICA/.test(norm(r[0])) && /DESCRI/.test(norm(r[2])));
+  if (hi < 0) return null;
+  const H = rows[hi].map(norm); const ci = n => H.findIndex(h => h.indexOf(n) === 0);
+  const cSA = ci('SD ANTERIOR'), cD = ci('DEBITO'), cC = ci('CREDITO'), cSF = ci('SD FINAL'), cSt = ci('STATUS'), cObs = ci('OBSERVA'), cRef = ci('REFERENCIA');
+  const contas = {}, book = {};
+  for (let i = hi + 1; i < rows.length; i++){
+    const r = rows[i]; if (!r || r[0] === null) continue;
+    const conta = String(r[0]).trim(); if (!/^\d(\.\d+)*$/.test(conta)) continue;
+    contas[conta] = { desc: String(r[2] ?? '').trim(), sa: num(r[cSA]) || 0, d: num(r[cD]) || 0, c: num(r[cC]) || 0, sf: num(r[cSF]) || 0 };
+    const st = r[cSt], obs = cObs >= 0 ? r[cObs] : null, ref = cRef >= 0 ? r[cRef] : null;
+    if (ehAnalitica(conta) && (obs || ref || (st !== null && st !== '' && st !== 0 && st !== '0'))){
+      book[conta] = { obs: obs ? String(obs).trim() : '', ref: ref ? String(ref).trim() : '', status: typeof st === 'string' ? st.trim() : '', dif: typeof st === 'number' ? r2(st) : null };
+    }
+  }
+  return { mes, contas, book };
+}
+function lerBalanceteProtheus(wb){
+  for (const sn of wb.SheetNames){
+    const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+    const hi = rows.findIndex(r => r && norm(r[0]) === 'CONTA' && /DESCRI/.test(norm(r[1])));
+    if (hi < 0) continue;
+    const contas = {};
+    for (let i = hi + 1; i < rows.length; i++){
+      const r = rows[i]; if (!r || r[0] === null) continue;
+      const conta = fmtConta(r[0]); if (!/^\d(\.\d+)*$/.test(conta)) continue;
+      contas[conta] = { desc: String(r[1] ?? '').trim(), sa: num(r[2]) || 0, d: num(r[3]) || 0, c: num(r[4]) || 0, sf: num(r[5]) || 0 };
+    }
+    let mes = ''; const m = sn.match(/(\d{2})[._/-](\d{4})/); if (m) mes = m[2] + '-' + m[1];
+    return { mes, contas, book: null };
+  }
+  return null;
+}
+async function importarRazao(files){
+  for (const f of Array.from(files)){
+    try {
+      const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+      const linhas = [], desc = {}, saTot = {};
+      wb.SheetNames.forEach(sn => {
+        const rows = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null });
+        rows.forEach(r => r.forEach(c => { const m = typeof c === 'string' && c.match(/CONTA\s*-\s*([\d.]+)\s*-\s*(.+)$/i);
+          if (m){ const conta = fmtConta(m[1]); desc[conta] = m[2].trim(); const sa = r.map(x => typeof x === 'string' ? x.match(/SALDO ANTERIOR:\s*([\d.,]+\s*[CD]?)/i) : null).find(Boolean); if (sa) saTot[conta] = num(sa[1]); } }));
+        const hi = rows.findIndex(r => r && r.some(c => norm(c) === 'CONTA') && r.some(c => norm(c) === 'DEBITO') && r.some(c => norm(c) === 'CREDITO'));
+        if (hi < 0) return;
+        const H = rows[hi].map(norm), col = n => H.findIndex(h => h === n || h.indexOf(n) === 0);
+        const cC = col('CONTA'), cD = col('DATA'), cL = col('LOTE'), cH = col('HISTORICO'), cP = col('C/PARTIDA'), cF = col('FILIAL'), cDb = col('DEBITO'), cCr = col('CREDITO');
+        for (let i = hi + 1; i < rows.length; i++){
+          const r = rows[i]; if (!r || r[cC] === null) continue;
+          const conta = fmtConta(r[cC]); if (!/^\d(\.\d+)+$/.test(conta)) continue;
+          const data = isoData(r[cD]); if (!data) continue;
+          const deb = num(r[cDb]) || 0, cred = num(r[cCr]) || 0;
+          linhas.push({ conta, mes: data.slice(0, 7), data, hist: String(r[cH] ?? '').trim(), doc: cL >= 0 ? String(r[cL] ?? '') : '', cp: cP >= 0 ? String(r[cP] ?? '').trim() : '', fil: cF >= 0 ? String(r[cF] ?? '') : '', deb: r2(deb), cred: r2(cred) });
+        }
+      });
+      if (!linhas.length) throw new Error('não encontrei lançamentos (esperado o relatório “Lançamentos Contábeis” do Protheus)');
+      const primeiro = linhas.map(l => l.mes).sort()[0];
+      const r = await HubDB.gravarRazao(linhas, { [primeiro]: saTot }, desc, f.name);
+      msg(`Razão “${esc(f.name)}”: ${r.linhas.toLocaleString('pt-BR')} lançamentos de ${r.contas} conta(s) em ${r.meses.map(mesLbl).join(', ')}.`, 'ok');
+    } catch(e){ msg('Erro ao importar o razão “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+  }
+  await atualizarListas(); await carregarMes();
+}
+
+// ===================== dados do mês =====================
+function suportes(){ return lsGet(LS_SUP, {}); }
+function linhaConta(conta){
+  const c = bal.contas[conta];
+  const k = mesAtual + '|' + conta, r = rev[k] || {}, b = (bal.book || {})[conta] || {};
+  const sup = suportes()[conta];
+  let suporte = NaN, fonte = '';
+  if (r.sup !== undefined && r.sup !== '') { suporte = num(r.sup); if (/^2/.test(conta) && suporte > 0 && !/^\s*\+/.test(r.sup)) suporte = -suporte; fonte = 'manual'; }
+  else if (sup && sup.data === fimMes(mesAtual) && !isNaN(sup.saldo)) { suporte = sup.saldo; fonte = sup.fonte; }
+  const dif = isNaN(suporte) ? (b.dif !== null && b.dif !== undefined ? b.dif : NaN) : r2(c.sf - suporte);
+  const difDoBook = isNaN(suporte) && b.dif !== null && b.dif !== undefined;
+  const agg = raz && raz.agg[mesAtual] ? raz.agg[mesAtual][conta] : null;
+  let razOk = null;
+  if (raz && raz.agg[mesAtual]){ const d = agg ? agg.d : 0, cr = agg ? agg.c : 0; razOk = Math.abs(d - c.d) < 0.01 && Math.abs(cr - c.c) < 0.01; }
+  let st;
+  if (r.st) st = r.st;
+  else if (!isNaN(suporte)) st = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  else if (Math.abs(c.sf) < 0.005 && Math.abs(c.d) < 0.005 && Math.abs(c.c) < 0.005) st = 'zero';
+  else if (difDoBook) st = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  else st = 'pend';
+  return { conta, c, r, b, suporte, fonte, dif, difDoBook, razOk, agg, st, obs: r.obs !== undefined ? r.obs : (b.obs || (b.status && b.status !== '0' ? b.status : '')) };
+}
+const ST = { ok: ['ok', 'Conciliada'], div: ['bad', 'Divergente'], pend: ['warn', 'Pendente'], just: ['info', 'Justificada'], zero: ['cinza', 'Sem saldo'] };
+
+async function atualizarListas(){
+  const ks = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort();
+  raz = await HubDB.getMeta('razao');
+  const meses = [...new Set(ks.concat(raz ? Object.keys(raz.agg) : []))].sort();
+  if (!mesAtual || meses.indexOf(mesAtual) < 0) mesAtual = ks.length ? ks[ks.length - 1] : (meses[meses.length - 1] || '');
+  $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}${ks.indexOf(m) < 0 ? ' (só razão)' : ''}</option>`).join('') || '<option value="">—</option>';
+  $('lMes').innerHTML = (raz ? Object.keys(raz.agg).sort() : []).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
+  $('fBal').innerHTML = await Promise.all(ks.map(async m => { const b = await HubDB.getMeta('balancete:' + m); return `<tr><td>${mesLbl(m)}</td><td class="wrap">${esc(b.origem || '')}</td><td>${Object.keys(b.contas).length}</td><td><button class="danger" type="button" onclick="apagarBal('${m}')">Remover</button></td></tr>`; })).then(a => a.join('')) || '<tr><td colspan="4" class="muted">Nenhum.</td></tr>';
+  $('fRaz').innerHTML = raz ? raz.arquivos.map(a => `<tr><td class="wrap">${esc(a.nome)}</td><td>${a.meses.map(mesLbl).join(', ')}</td><td>${a.contas}</td><td>${a.linhas.toLocaleString('pt-BR')}</td><td>${new Date(a.em).toLocaleString('pt-BR')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">Nenhum razão importado.</td></tr>';
+  const sup = suportes();
+  $('fSup').innerHTML = Object.keys(sup).sort().map(k => `<tr><td>${esc(k)}</td><td>${esc(sup[k].fonte)}</td><td>${br(sup[k].data)}</td><td>${fmt(sup[k].saldo)}</td><td class="wrap">${esc(sup[k].detalhe || '')}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nenhum suporte recebido ainda. Processe a Conciliação bancária e os Consórcios.</td></tr>';
+}
+async function apagarBal(m){ if (!confirm('Remover o balancete de ' + mesLbl(m) + '?')) return; await HubDB.delMeta('balancete:' + m); if (mesAtual === m) mesAtual = ''; await atualizarListas(); await carregarMes(); }
+async function limparRazao(){ if (!confirm('Apagar todo o razão guardado neste navegador? (o Book e as observações continuam)')) return; await HubDB.limparRazao(); await atualizarListas(); await carregarMes(); renderLanc(); }
+
+async function carregarMes(){
+  bal = mesAtual ? await HubDB.getMeta('balancete:' + mesAtual) : null;
+  raz = await HubDB.getMeta('razao');
+  $('bkVazio').style.display = bal ? 'none' : ''; $('bkBox').style.display = bal ? '' : 'none';
+  if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual;
+  // contas para a consulta de lançamentos: do balancete e do razão
+  const contas = new Set(Object.keys(bal ? bal.contas : {}).filter(ehAnalitica));
+  if (raz) Object.values(raz.agg).forEach(a => Object.keys(a).forEach(c => contas.add(c)));
+  const descs = Object.assign({}, raz ? raz.desc : {}, bal ? Object.fromEntries(Object.entries(bal.contas).map(([k, v]) => [k, v.desc])) : {});
+  const atual = $('lConta').value;
+  $('lConta').innerHTML = '<option value="">— escolha a conta —</option>' + [...contas].sort().map(c => `<option value="${c}">${esc(c + ' ' + (descs[c] || ''))}</option>`).join('');
+  if (atual) $('lConta').value = atual;
+  renderBook();
+}
+
+// ===================== Book =====================
+function renderBook(){
+  if (!bal) return;
+  const fg = $('fGrupo').value, fs = $('fStatus').value, fb = norm($('fBusca').value), so = $('fSaldo').checked;
+  const codigos = Object.keys(bal.contas).filter(ehPatrimonial).sort((a, b) => a.localeCompare(b, 'pt', { numeric: true }));
+  const anal = codigos.filter(ehAnalitica).map(linhaConta);
+  const K = { tot: 0, ok: 0, div: 0, pend: 0, just: 0 };
+  anal.forEach(l => { if (l.st === 'zero') return; K.tot++; K[l.st]++; });
+  $('kpis').innerHTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
+    .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  $('bkTit').textContent = 'Book — ' + mesLbl(mesAtual) + (raz && raz.agg[mesAtual] ? '' : ' (sem razão deste mês: coluna Razão em branco)');
+  const vis = anal.filter(l => (!fg || l.conta.indexOf(fg) === 0) && (!fs || l.st === fs) && (!so || l.st !== 'zero')
+    && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
+  let h = '', grpAtual = '', grp1 = '';
+  vis.forEach(l => {
+    const g1 = l.conta.slice(0, 3), g = l.conta.slice(0, 6);
+    if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td class="wrap">${esc(s ? s.desc : '')}</td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g !== grpAtual){ grpAtual = g; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td class="wrap">${esc(s ? s.desc : '')}</td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    const k = mesAtual + '|' + l.conta, st = ST[l.st];
+    const supTxt = l.r.sup !== undefined ? l.r.sup : '';
+    h += `<tr><td>${esc(l.conta)}</td><td class="wrap">${esc(l.c.desc)}</td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+      <td title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
+      <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
+      <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
+      <td><select onchange="setRev('${k}','st',this.value)"><option value="">auto: ${st[1]}</option>${Object.keys(ST).filter(s => s !== 'zero').map(s => `<option value="${s}" ${l.r.st === s ? 'selected' : ''}>${ST[s][1]}</option>`).join('')}</select><div><span class="pill ${st[0]}">${st[1]}</span></div></td>
+      <td><input type="text" class="obs" value="${esc(l.obs)}" onchange="setRev('${k}','obs',this.value)"></td>
+      <td><button class="lupa" type="button" title="Ver lançamentos do razão" onclick="verLanc('${l.conta}')">🔍</button></td></tr>`;
+  });
+  $('bkBody').innerHTML = h || '<tr><td colspan="12" class="muted">Nenhuma conta com esses filtros.</td></tr>';
+  $('stTopo').textContent = bal ? 'Book de ' + mesLbl(mesAtual) + ' · origem: ' + (bal.origem || '') : '';
+}
+function setRev(k, campo, v){ rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
+
+// ===================== lançamentos =====================
+function verLanc(conta){ $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc(); }
+async function renderLanc(){
+  const conta = $('lConta').value, mes = $('lMes').value;
+  const tem = raz && Object.keys(raz.agg).length;
+  $('lVazio').style.display = tem && conta ? 'none' : ''; $('lBox').style.display = tem && conta ? '' : 'none';
+  $('lVazio').textContent = !tem ? 'Importe o razão completo para consultar os lançamentos.' : 'Escolha a conta.';
+  if (!tem || !conta) { $('lInfo').textContent = ''; return; }
+  lancCache = await HubDB.lancamentos([mes], l => l.conta === conta);
+  renderLancFiltro();
+}
+function renderLancFiltro(){
+  const conta = $('lConta').value, mes = $('lMes').value, fb = norm($('lBusca').value);
+  const saAnt = raz && raz.saldoAnt[mes] && raz.saldoAnt[mes][conta] !== undefined ? raz.saldoAnt[mes][conta] : (bal && mes === mesAtual && bal.contas[conta] ? bal.contas[conta].sa : NaN);
+  let saldo = isNaN(saAnt) ? 0 : saAnt, D = 0, C = 0;
+  const linhas = lancCache.map(l => { saldo = r2(saldo + l.deb - l.cred); D += l.deb; C += l.cred; return Object.assign({ saldo }, l); });
+  const vis = linhas.filter(l => !fb || norm(l.hist + ' ' + l.doc + ' ' + l.cp + ' ' + fmt(l.deb) + ' ' + fmt(l.cred)).indexOf(fb) >= 0);
+  $('lInfo').innerHTML = `${lancCache.length} lançamento(s) em ${mesLbl(mes)} · saldo anterior ${isNaN(saAnt) ? '—' : fmt(saAnt)} · saldo final ${fmt(saldo)}` +
+    (bal && mes === mesAtual && bal.contas[conta] ? (Math.abs(saldo - bal.contas[conta].sf) < 0.01 && !isNaN(saAnt) ? ' · <span class="dok">confere com o balancete</span>' : ` · <span class="dbad">balancete: ${fmt(bal.contas[conta].sf)}</span>`) : '');
+  $('lBody').innerHTML = vis.slice(0, 3000).map(l => `<tr><td>${br(l.data)}</td><td>${esc(l.conta)}</td><td class="wrap">${esc(l.hist)}</td><td>${esc(l.cp)}</td><td>${esc(l.doc)}</td><td>${esc(l.fil)}</td><td>${l.deb ? fmt(l.deb) : ''}</td><td>${l.cred ? fmt(l.cred) : ''}</td><td>${fmt(l.saldo)}</td></tr>`).join('');
+  $('lFoot').innerHTML = `<tr><td>TOTAL</td><td></td><td></td><td></td><td></td><td></td><td>${fmt(D)}</td><td>${fmt(C)}</td><td>${fmt(saldo)}</td></tr>`;
+}
+function exportarLanc(){
+  if (!lancCache.length){ alert('Escolha uma conta com lançamentos.'); return; }
+  const aoa = [['Data', 'Conta', 'Histórico', 'C/partida', 'Lote/doc', 'Filial', 'Débito', 'Crédito']].concat(lancCache.map(l => [br(l.data), l.conta, l.hist, l.cp, l.doc, l.fil, l.deb, l.cred]));
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Lançamentos');
+  XLSX.writeFile(wb, 'razao-' + $('lConta').value + '-' + $('lMes').value + '.xlsx');
+}
+
+// ===================== exportação do Book =====================
+function exportarBook(){
+  if (!bal){ alert('Importe o Book ou o balancete primeiro.'); return; }
+  const cods = Object.keys(bal.contas).filter(ehPatrimonial).sort((a, b) => a.localeCompare(b, 'pt', { numeric: true }));
+  const aoa = [['Conta', 'Descrição', 'Saldo anterior', 'Débitos', 'Créditos', 'Saldo final', 'Razão confere', 'Saldo do suporte', 'Fonte do suporte', 'Diferença', 'Status', 'Observação']];
+  cods.forEach(c => {
+    if (!ehAnalitica(c)){ const s = bal.contas[c]; aoa.push([c, s.desc, s.sa, s.d, s.c, s.sf]); return; }
+    const l = linhaConta(c);
+    aoa.push([c, l.c.desc, l.c.sa, l.c.d, l.c.c, l.c.sf, l.razOk === null ? '' : (l.razOk ? 'Sim' : 'Não'), isNaN(l.suporte) ? '' : l.suporte, l.fonte || (l.difDoBook ? 'Book' : ''), isNaN(l.dif) ? '' : l.dif, ST[l.st][1], l.obs]);
+  });
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), 'Book ' + mesAtual);
+  XLSX.writeFile(wb, 'book-conciliacao-' + mesAtual + '.xlsx');
+}
+
+// ===================== início =====================
+(async function init(){
+  rev = lsGet(LS_REV, {}); mesAtual = (lsGet(LS_PREF, {}) || {}).mes || '';
+  if (!window.XLSX) msg('A biblioteca de planilhas não carregou (pasta vendor/sheetjs).', 'err');
+  if (!window.indexedDB) { msg('Este navegador não permite guardar o razão (IndexedDB indisponível).', 'err'); return; }
+  try { await atualizarListas(); await carregarMes(); } catch(e){ msg('Erro ao abrir a base local: ' + esc(e.message), 'err'); }
+  // suportes enviados por outros painéis (outra aba/janela) atualizam o Book
+  window.addEventListener('storage', e => { if (e.key === LS_SUP){ renderBook(); atualizarListas(); } });
+  window.addEventListener('focus', () => { if (bal) renderBook(); });
+})();
+</script>
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+</body>
+</html>
