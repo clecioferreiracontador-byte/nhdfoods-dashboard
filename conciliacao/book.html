@@ -205,7 +205,7 @@ tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
 .auto{font-size:.72rem;color:var(--aud-gray-500)}
 </style>
 <script src="vendor/sheetjs/xlsx.full.min.js"></script>
-<script src="hub-db.js"></script>
+<script src="hub-db.js?v=2"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -425,6 +425,8 @@ function lerBalanceteProtheus(wb){
 }
 async function importarRazao(files){
   for (const f of Array.from(files)){
+    const aviso = document.createElement('div'); aviso.className = 'msg'; aviso.innerHTML = '⏳ Importando o razão “' + esc(f.name) + '”… um mês inteiro (150 mil+ lançamentos) leva cerca de 1 minuto. Não feche esta tela.'; $('msgs').appendChild(aviso);
+    await new Promise(r => setTimeout(r, 50));
     try {
       const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
       const linhas = [], desc = {}, saTot = {};
@@ -449,6 +451,7 @@ async function importarRazao(files){
       const r = await HubDB.gravarRazao(linhas, { [primeiro]: saTot }, desc, f.name);
       msg(`Razão “${esc(f.name)}”: ${r.linhas.toLocaleString('pt-BR')} lançamentos de ${r.contas} conta(s) em ${r.meses.map(mesLbl).join(', ')}.`, 'ok');
     } catch(e){ msg('Erro ao importar o razão “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+    aviso.remove();
   }
   await atualizarListas(); await carregarMes();
 }
@@ -554,7 +557,7 @@ async function renderLanc(){
   $('lVazio').style.display = tem && conta ? 'none' : ''; $('lBox').style.display = tem && conta ? '' : 'none';
   $('lVazio').textContent = !tem ? 'Importe o razão completo para consultar os lançamentos.' : 'Escolha a conta.';
   if (!tem || !conta) { $('lInfo').textContent = ''; return; }
-  lancCache = await HubDB.lancamentos([mes], l => l.conta === conta);
+  lancCache = await HubDB.lancamentosConta(conta, [mes]);
   renderLancFiltro();
 }
 function renderLancFiltro(){

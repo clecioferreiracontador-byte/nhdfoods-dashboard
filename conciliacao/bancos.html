@@ -200,7 +200,7 @@ tr.clickable{cursor:pointer}
   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
     <div class="upl">
       <h3>📒 Razão contábil</h3>
-      <div class="muted small">Protheus › Lançamentos Contábeis (.xlsx). Uma ou várias contas, em um ou vários arquivos.</div>
+      <div class="muted small">Protheus › Lançamentos Contábeis (.xlsx). Pode ser o razão completo: só as contas de caixa, bancos e aplicações (1.1.01) são usadas aqui.</div>
       <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inRazao').click()">Carregar razão</button></div>
       <input type="file" id="inRazao" accept=".xlsx,.xls" multiple onchange="carregar(this.files,'razao');this.value=''">
       <div class="chips" id="chRazao"></div>
@@ -282,10 +282,11 @@ tr.clickable{cursor:pointer}
     <h2>Divergências e lançamentos sugeridos</h2>
     <div class="filters">
       <label>Conta<select id="fConta" onchange="renderDiv()"></select></label>
-      <label>Tipo<select id="fTipo" onchange="renderDiv()"><option value="">Todas</option><option value="E">Só no extrato (falta contabilizar)</option><option value="R">Só no razão (verificar)</option><option value="C">Conciliados</option></select></label>
+      <label>Tipo<select id="fTipo" onchange="renderDiv()"><option value="">Todas</option><option value="E">Só no extrato (falta contabilizar)</option><option value="R">Só no razão (verificar)</option><option value="D">Lançado em outra data</option><option value="C">Conciliados</option></select></label>
       <label>Situação<select id="fSit" onchange="renderDiv()"><option value="">Todas</option><option value="0">Pendentes</option><option value="1">Conferidas</option></select></label>
       <label>Buscar<input type="text" id="fBusca" oninput="renderDiv()" placeholder="histórico, valor..."></label>
     </div>
+    <div id="divDias"></div>
     <div id="divVazio" class="empty">Nenhuma divergência para mostrar.</div>
     <div class="tscroll" id="divBox" style="display:none"><table>
       <thead><tr><th>Conta</th><th>Tipo</th><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Débito</th><th>Crédito</th><th>Conferido</th><th class="wrap">Observação</th></tr></thead>
@@ -381,6 +382,8 @@ async function carregar(files, tipo){
 }
 
 // ---- razão Protheus (Lançamentos Contábeis) ----
+// Só interessam caixa, bancos e aplicações (1.1.01.*): o razão completo pode trazer todas as contas.
+const ehContaBanco = c => c.indexOf('1.1.01') === 0;
 function lerRazao(wb, arquivo){
   let contas = 0;
   const totalizadores = {};
@@ -389,7 +392,7 @@ function lerRazao(wb, arquivo){
     rows.forEach(r => r.forEach(c => {
       const m = typeof c === 'string' && c.match(/CONTA\s*-\s*([\d.]+)\s*-\s*(.+)$/i);
       if (m){ const sa = r.map(x => typeof x === 'string' ? x.match(/SALDO ANTERIOR:\s*([\d.,]+\s*[CD]?)/i) : null).find(Boolean);
-        totalizadores[fmtConta(m[1])] = { desc: m[2].trim(), saldoAnt: sa ? saldoDC(sa[1]) : NaN }; }
+        if (ehContaBanco(fmtConta(m[1]))) totalizadores[fmtConta(m[1])] = { desc: m[2].trim(), saldoAnt: sa ? saldoDC(sa[1]) : NaN }; }
     }));
   });
   wb.SheetNames.forEach(sn => {
@@ -400,7 +403,7 @@ function lerRazao(wb, arquivo){
     const cC = col('CONTA'), cD = col('DATA'), cL = col('LOTE'), cH = col('HISTORICO'), cP = col('C/PARTIDA'), cDb = col('DEBITO'), cCr = col('CREDITO'), cS = col('SALDO ATUAL');
     for (let i = hi + 1; i < rows.length; i++){
       const r = rows[i]; if (!r || r[cC] === null || r[cC] === undefined) continue;
-      const conta = fmtConta(r[cC]); if (!/^\d(\.\d+)+$/.test(conta)) continue;
+      const conta = fmtConta(r[cC]); if (!/^\d(\.\d+)+$/.test(conta) || !ehContaBanco(conta)) continue;
       const data = isoData(r[cD]); if (!data) continue;
       const deb = num(r[cDb]) || 0, cred = num(r[cCr]) || 0;
       const C = razao[conta] = razao[conta] && razao[conta].arquivo === arquivo ? razao[conta] : (razao[conta] && razao[conta].__lido ? razao[conta] : { conta, desc: '', saldoAnt: NaN, linhas: [], arquivo, __lido: true });
@@ -545,9 +548,11 @@ function ligar(e){
     const c = contas.filter(C => Math.abs(C.saldoAnt - e.saldoAnt) < 0.01 && Math.abs(e.saldoAnt) > 0.009);
     if (c.length === 1) return { conta: c[0].conta, como: 'saldo anterior igual' };
   }
-  const nb = norm(e.banco).split(' ').filter(w => w.length > 2 && w !== 'BANCO' && w !== 'SICOOB');
-  const c = contas.filter(C => nb.some(w => norm(C.desc).indexOf(w) >= 0));
-  if (c.length === 1) return { conta: c[0].conta, como: 'nome do banco' };
+  // nome do banco + palavras do nome do arquivo (ex.: “CTA GARANTIDA”): fica com a conta de maior pontuação, se for única
+  const IGN = ['BANCO', 'SICOOB', 'CTA', 'CONTA', 'CORRENTE', 'EXTRATO', 'XLSX', 'PDF', 'OFX', 'DESKTOP'];
+  const pal = [...new Set(norm(e.banco + ' ' + e.arquivo.replace(/\.[a-z]+$/i, '')).split(/[^A-Z]+/).filter(w => w.length > 3 && !IGN.includes(w) && !/^(JANEIRO|FEVEREIRO|MARCO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)$/.test(w)))];
+  const pont = contas.map(C => ({ C, p: pal.filter(w => norm(C.desc).split(/[^A-Z]+/).includes(w)).length })).filter(x => x.p > 0).sort((a, b) => b.p - a.p);
+  if (pont.length && (pont.length === 1 || pont[0].p > pont[1].p)) return { conta: pont[0].C.conta, como: 'nome do banco/arquivo' };
   return { conta: '', como: 'não ligado' };
 }
 function setMapa(eid, conta){ const e = extratos.find(x => x.id === eid); if (!e) return; mapa[chaveExt(e)] = conta; lsSet(LS_MAP, mapa); processar(); }
@@ -579,7 +584,39 @@ function conciliarConta(R, E, tol){
   };
   r.filter(a => !a.par).forEach(a => { const s = soma(a, x.filter(b => !b.par && Math.abs(dias(b.data, a.data)) <= Math.max(tol, 1) && Math.sign(b.valor) === Math.sign(a.valor))); if (s && s.length > 1) casar([a], s, 'soma de ' + s.length + ' movimentos'); });
   x.filter(b => !b.par).forEach(b => { const s = soma(b, r.filter(a => !a.par && Math.abs(dias(a.data, b.data)) <= Math.max(tol, 1) && Math.sign(a.valor) === Math.sign(b.valor))); if (s && s.length > 1) casar(s, [b], 'soma de ' + s.length + ' lançamentos'); });
-  return { casados, soR: r.filter(a => !a.par), soE: x.filter(b => !b.par) };
+  const residuos = [];
+  const somaV = l => l.reduce((s, i) => s + i.valor, 0);
+  const brC = d => d.slice(8, 10) + '/' + d.slice(5, 7);
+  // 5) soma do dia com diferença de centavos (arredondamento entre títulos e o valor pago): casa o grupo e deixa só os centavos
+  [...new Set(r.filter(a => !a.par).map(a => a.data))].forEach(d => {
+    const rs = r.filter(a => !a.par && a.data === d), xs = x.filter(b => !b.par && b.data === d);
+    if (!rs.length || !xs.length) return;
+    const dif = r2(somaV(rs) - somaV(xs));
+    if (Math.abs(dif) >= 0.01 && Math.abs(dif) <= 0.05){
+      casar(rs, xs, 'soma do dia com diferença de R$ ' + fmt(dif));
+      residuos.push({ id: uid('c'), data: d, hist: 'Diferença de centavos na soma do dia ' + brC(d) + ' (razão × banco)', doc: '', cp: '', deb: dif > 0 ? dif : 0, cred: dif < 0 ? -dif : 0, valor: dif, centavos: true });
+    }
+  });
+  // 6) lançado em outra data: a sobra de um dia é o oposto exato da sobra de outro dia
+  const delta = () => { const m = {}; r.filter(a => !a.par).forEach(a => m[a.data] = (m[a.data] || 0) + a.valor); x.filter(b => !b.par).forEach(b => m[b.data] = (m[b.data] || 0) - b.valor);
+    Object.keys(m).forEach(k => { m[k] = r2(m[k]); if (Math.abs(m[k]) < 0.01) delete m[k]; }); return m; };
+  let D = delta(), mudou = true;
+  while (mudou){
+    mudou = false;
+    const ds = Object.keys(D).sort((a, b) => Math.abs(D[b]) - Math.abs(D[a]));
+    for (const a of ds){ const b = ds.find(o => o !== a && Math.abs(D[a] + D[o]) < 0.01);
+      if (b){ const dd = [a, b].sort();
+        casar(r.filter(i => !i.par && dd.includes(i.data)), x.filter(i => !i.par && dd.includes(i.data)), 'lançado em outra data: ' + brC(dd[0]) + ' ↔ ' + brC(dd[1]) + ' (R$ ' + fmt(Math.abs(D[a])) + ')');
+        D = delta(); mudou = true; break; } }
+  }
+  // 7) lançamento e estorno dentro do mesmo lado (valores opostos, até 31 dias): se anulam e não são divergência
+  const estornos = (lista, lado) => lista.filter(a => !a.par).forEach(a => {
+    if (a.par) return;
+    const b = lista.find(o => !o.par && o !== a && cent(o.valor) === -cent(a.valor) && Math.abs(dias(o.data, a.data)) <= 31);
+    if (b) casar(lado === 'r' ? [a, b] : [], lado === 'x' ? [a, b] : [], lado === 'r' ? 'lançamento e estorno no razão' : 'movimento e estorno no banco');
+  });
+  estornos(r, 'r'); estornos(x, 'x');
+  return { casados, soR: r.filter(a => !a.par).concat(residuos), soE: x.filter(b => !b.par) };
 }
 
 const REGRAS = [
@@ -595,6 +632,7 @@ const REGRAS = [
   [/SALARIO|FOLHA|SISPAG SAL|FERIAS|RESCIS/, '2.1.10.1001', 'Salários a pagar', -1],
 ];
 function sugestao(conta, l, tipo){
+  if (l.centavos) return l.valor < 0 ? { deb: conta, cred: '3.3.02.1001', hist: l.hist, nome: 'Arredondamento (desconto obtido)' } : { deb: '3.3.02.2001', cred: conta, hist: l.hist, nome: 'Arredondamento (despesa)' };
   if (tipo === 'R') { // estorno do lançamento do razão
     const cp = l.cp || 'A DEFINIR';
     return l.valor > 0 ? { deb: cp, cred: conta, hist: 'ESTORNO ' + l.hist } : { deb: conta, cred: cp, hist: 'ESTORNO ' + l.hist };
@@ -624,7 +662,7 @@ function processar(){
     const naoExp = r2(dif - (difAnt + tR - tE));
     let status = 'ok';
     if (!C) status = 'semrazao'; else if (!ex.length) status = 'semext';
-    else if (Math.abs(naoExp) >= 0.01) status = 'naoexp'; else if (Math.abs(dif) >= 0.01 || c.soR.length || c.soE.length) status = 'div';
+    else if (Math.abs(naoExp) >= 0.01) status = 'naoexp'; else if (Math.abs(dif) >= 0.01 || c.soR.length || c.soE.length || c.casados.some(g => /^lançado em outra data/.test(g.regra))) status = 'div';
     linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status }, c));
   });
   // extratos ainda sem conta contábil: aparecem no resumo para não passarem despercebidos
@@ -695,6 +733,8 @@ function itensDivergencia(){
     l.soE.forEach(i => out.push({ conta: l.conta, tipo: 'E', i, s: sugestao(l.conta, i, 'E') }));
     l.soR.forEach(i => out.push({ conta: l.conta, tipo: 'R', i, s: sugestao(l.conta, i, 'R') }));
     l.casados.forEach(c => c.x.forEach(i => out.push({ conta: l.conta, tipo: 'C', i, regra: c.regra, raz: c.r })));
+    l.casados.filter(c => /^lançado em outra data/.test(c.regra)).forEach(c => { const ds = [...new Set(c.r.map(a => a.data).concat(c.x.map(b => b.data)))].sort();
+      out.push({ conta: l.conta, tipo: 'D', i: { data: ds[0], hist: c.regra + ' · ' + c.r.length + ' lançamento(s) no razão × ' + c.x.length + ' movimento(s) no banco', valor: r2(c.r.filter(a => a.data === ds[0]).reduce((s, a) => s + a.valor, 0) - c.x.filter(b => b.data === ds[0]).reduce((s, b) => s + b.valor, 0)) }, s: { deb: '', cred: '', nome: 'Corrigir a data no Protheus (não gera lançamento)' }, regra: c.regra, raz: c.r, ext: c.x }); });
   });
   return out;
 }
@@ -702,9 +742,11 @@ function renderDiv(){
   const fc = $('fConta').value, ft = $('fTipo').value, fs = $('fSit').value, fb = norm($('fBusca').value);
   let it = itensDivergencia().filter(d => (!fc || d.conta === fc) && (ft ? d.tipo === ft : d.tipo !== 'C'));
   it = it.filter(d => { const r = rev[chaveItem(d.i)] || {}; return (fs === '' || (fs === '1') === !!r.ok) && (!fb || norm(d.i.hist + ' ' + fmt(d.i.valor) + ' ' + d.i.valor).indexOf(fb) >= 0); });
+  renderDias(fc);
   $('divVazio').style.display = it.length ? 'none' : ''; $('divBox').style.display = it.length ? '' : 'none';
   $('divBody').innerHTML = it.slice(0, 1500).map(d => {
     const k = chaveItem(d.i), r = rev[k] || {};
+    if (d.tipo === 'D') return `<tr><td>${esc(d.conta)}</td><td><span class="pill info">Data diferente</span><div class="muted small">${esc(d.s.nome)}</div></td><td>${br(d.i.data)}</td><td class="wrap">${esc(d.i.hist)}<div class="muted small">Razão: ${d.raz.slice(0, 4).map(x => br(x.data) + ' ' + esc(x.hist.slice(0, 40)) + ' ' + fmt(x.valor)).join(' · ')}${d.raz.length > 4 ? ' …' : ''}<br>Banco: ${d.ext.slice(0, 4).map(x => br(x.data) + ' ' + esc(x.hist.slice(0, 40)) + ' ' + fmt(x.valor)).join(' · ')}</div></td><td>${fmt(d.i.valor)}</td><td></td><td></td><td style="text-align:center"><input type="checkbox" ${(rev[chaveItem(d.i)] || {}).ok ? 'checked' : ''} onchange="setRev('${chaveItem(d.i)}','ok',this.checked);render()"></td><td><input type="text" class="obs" value="${esc((rev[chaveItem(d.i)] || {}).obs || '')}" onchange="setRev('${chaveItem(d.i)}','obs',this.value)"></td></tr>`;
     if (d.tipo === 'C') return `<tr><td>${esc(d.conta)}</td><td><span class="pill ok">Conciliado</span><div class="muted small">${esc(d.regra)}</div></td><td>${br(d.i.data)}</td><td class="wrap">${esc(d.i.hist)}<div class="muted small">Razão: ${d.raz.map(x => br(x.data) + ' ' + esc(x.hist)).join(' · ')}</div></td><td>${fmt(d.i.valor)}</td><td></td><td></td><td></td><td></td></tr>`;
     const deb = r.deb ?? d.s.deb, cred = r.cred ?? d.s.cred;
     return `<tr><td>${esc(d.conta)}</td>
@@ -716,6 +758,14 @@ function renderDiv(){
       <td style="text-align:center"><input type="checkbox" ${r.ok ? 'checked' : ''} onchange="setRev('${k}','ok',this.checked);render()"></td>
       <td><input type="text" class="obs" value="${esc(r.obs || '')}" placeholder="justificativa / providência" onchange="setRev('${k}','obs',this.value)"></td></tr>`;
   }).join('') + (it.length > 1500 ? `<tr><td colspan="9" class="muted">Mostrando 1.500 de ${it.length}. Use os filtros ou exporte para Excel.</td></tr>` : '');
+}
+// diferença razão × banco por dia, só dos itens que sobraram (ajuda a achar datas trocadas)
+function renderDias(fc){
+  const el = $('divDias'); const l = res && res.linhas.find(x => x.conta === fc);
+  if (!l || (!l.soR.length && !l.soE.length)){ el.innerHTML = ''; return; }
+  const m = {}; l.soR.forEach(i => { const d = m[i.data] = m[i.data] || [0, 0, 0, 0]; d[0] += i.valor; d[1]++; }); l.soE.forEach(i => { const d = m[i.data] = m[i.data] || [0, 0, 0, 0]; d[2] += i.valor; d[3]++; });
+  el.innerHTML = '<h3 style="margin:0 0 6px;font-size:.95rem">Sobras por dia — ' + esc(fc) + '</h3><div class="tscroll" style="max-height:220px;margin-bottom:12px"><table><thead><tr><th>Data</th><th>Razão (só no razão)</th><th>Banco (só no extrato)</th><th>Diferença do dia</th></tr></thead><tbody>' +
+    Object.keys(m).sort().map(d => { const x = m[d], df = r2(x[0] - x[2]); return `<tr><td>${br(d)}</td><td>${fmt(x[0])} <span class="muted small">(${x[1]})</span></td><td>${fmt(x[2])} <span class="muted small">(${x[3]})</span></td><td class="${Math.abs(df) < 0.01 ? 'dok' : 'dbad'}">${fmt(df)}</td></tr>`; }).join('') + '</tbody></table></div>';
 }
 function renderMapa(){
   $('mapVazio').style.display = extratos.length ? 'none' : ''; $('mapBox').style.display = extratos.length ? '' : 'none';
@@ -743,10 +793,10 @@ function exportarExcel(){
   const its = itensDivergencia();
   const div = [['Conta banco', 'Tipo', 'Data', 'Histórico', 'Valor', 'Débito sugerido', 'Crédito sugerido', 'Natureza sugerida', 'Conferido', 'Observação']]
     .concat(its.filter(d => d.tipo !== 'C').map(d => { const r = rev[chaveItem(d.i)] || {};
-      return [d.conta, d.tipo === 'E' ? 'Só no extrato' : 'Só no razão', br(d.i.data), d.i.hist, d.i.valor, r.deb ?? d.s.deb, r.cred ?? d.s.cred, d.s.nome || 'Estorno (se indevido)', r.ok ? 'Sim' : 'Não', r.obs || '']; }));
+      return [d.conta, d.tipo === 'E' ? 'Só no extrato' : d.tipo === 'D' ? 'Lançado em outra data' : 'Só no razão', br(d.i.data), d.i.hist, d.i.valor, d.tipo === 'D' ? '' : (r.deb ?? d.s.deb), d.tipo === 'D' ? '' : (r.cred ?? d.s.cred), d.s.nome || 'Estorno (se indevido)', r.ok ? 'Sim' : 'Não', r.obs || '']; }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(div), 'Divergências');
   const lanc = [['Data', 'Conta débito', 'Conta crédito', 'Valor', 'Histórico', 'Origem']]
-    .concat(its.filter(d => d.tipo !== 'C').map(d => { const r = rev[chaveItem(d.i)] || {};
+    .concat(its.filter(d => d.tipo === 'E' || d.tipo === 'R').map(d => { const r = rev[chaveItem(d.i)] || {};
       return [br(d.i.data), r.deb ?? d.s.deb, r.cred ?? d.s.cred, Math.abs(d.i.valor), (d.tipo === 'R' ? 'ESTORNO ' : '') + d.i.hist, d.tipo === 'E' ? 'Só no extrato' : 'Só no razão']; }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lanc), 'Lançamentos sugeridos');
   const cas = [['Conta', 'Regra', 'Data extrato', 'Histórico extrato', 'Valor extrato', 'Data razão', 'Histórico razão', 'Valor razão']];

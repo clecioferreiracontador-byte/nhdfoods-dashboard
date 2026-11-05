@@ -52,6 +52,11 @@
     for (const m of meses){ const arr = await req(ix.getAll(IDBKeyRange.only(m))); arr.forEach(l => { if (!filtro || filtro(l)) out.push(l); }); }
     return out.sort((a, b) => a.data.localeCompare(b.data) || a.conta.localeCompare(b.conta) || (a.id - b.id));
   }
+  // lançamentos de uma conta (usa o índice por conta: bem mais rápido que ler o mês inteiro)
+  async function lancamentosConta(conta, meses){
+    const d = await db(); const arr = await req(d.transaction('lanc').objectStore('lanc').index('conta').getAll(IDBKeyRange.only(conta)));
+    return arr.filter(l => !meses || meses.includes(l.mes)).sort((a, b) => a.data.localeCompare(b.data) || (a.id - b.id));
+  }
   async function limparRazao(){ const d = await db(); const t = d.transaction('lanc', 'readwrite'); t.objectStore('lanc').clear(); await fim(t); await delMeta('razao'); }
-  window.HubDB = { getMeta, setMeta, delMeta, metaKeys, gravarRazao, lancamentos, limparRazao };
+  window.HubDB = { getMeta, setMeta, delMeta, metaKeys, gravarRazao, lancamentos, lancamentosConta, limparRazao };
 })();
