@@ -1,0 +1,270 @@
+{
+ "v": 1,
+ "fontes": {
+  "pop": {
+   "nome": "IBGE · Estimativas da população residente",
+   "ano": "2025",
+   "url": "https://sidra.ibge.gov.br/tabela/6579"
+  },
+  "pib": {
+   "nome": "IBGE · PIB dos Municípios / Contas Regionais",
+   "ano": "2023",
+   "url": "https://sidra.ibge.gov.br/tabela/5938"
+  },
+  "atac": {
+   "nome": "IBGE · Pesquisa Anual de Comércio, receita bruta de revenda do comércio por atacado, por UF de atuação",
+   "ano": "2024",
+   "url": "https://sidra.ibge.gov.br/tabela/10653"
+  },
+  "atacAlim": {
+   "nome": "IBGE · PAC, atacado de alimentos, bebidas e fumo (só divulgado para 6 UFs)",
+   "ano": "2024",
+   "url": "https://sidra.ibge.gov.br/tabela/10653"
+  }
+ },
+ "uf": {
+  "RO": {
+   "nome": "Rondônia",
+   "regiao": "Norte",
+   "pop": 1751950.0,
+   "pib": 76456179000.0,
+   "atac": 37370495000.0,
+   "atacEmp": 2517.0,
+   "atacAlim": null
+  },
+  "AC": {
+   "nome": "Acre",
+   "regiao": "Norte",
+   "pop": 884372.0,
+   "pib": 26291321000.0,
+   "atac": 4212774000.0,
+   "atacEmp": 341.0,
+   "atacAlim": null
+  },
+  "AM": {
+   "nome": "Amazonas",
+   "regiao": "Norte",
+   "pop": 4321616.0,
+   "pib": 161794976000.0,
+   "atac": 31076003000.0,
+   "atacEmp": 1952.0,
+   "atacAlim": null
+  },
+  "RR": {
+   "nome": "Roraima",
+   "regiao": "Norte",
+   "pop": 738772.0,
+   "pib": 25124805000.0,
+   "atac": 6178396000.0,
+   "atacEmp": 541.0,
+   "atacAlim": null
+  },
+  "PA": {
+   "nome": "Pará",
+   "regiao": "Norte",
+   "pop": 8711196.0,
+   "pib": 254546511000.0,
+   "atac": 92506913000.0,
+   "atacEmp": 3867.0,
+   "atacAlim": null
+  },
+  "AP": {
+   "nome": "Amapá",
+   "regiao": "Norte",
+   "pop": 806517.0,
+   "pib": 28020120000.0,
+   "atac": 5635672000.0,
+   "atacEmp": 510.0,
+   "atacAlim": null
+  },
+  "TO": {
+   "nome": "Tocantins",
+   "regiao": "Norte",
+   "pop": 1586859.0,
+   "pib": 64317699000.0,
+   "atac": 28267619000.0,
+   "atacEmp": 790.0,
+   "atacAlim": null
+  },
+  "MA": {
+   "nome": "Maranhão",
+   "regiao": "Nordeste",
+   "pop": 7018211.0,
+   "pib": 149227195000.0,
+   "atac": 85642572000.0,
+   "atacEmp": 3475.0,
+   "atacAlim": null
+  },
+  "PI": {
+   "nome": "Piauí",
+   "regiao": "Nordeste",
+   "pop": 3384547.0,
+   "pib": 80916856000.0,
+   "atac": 24817937000.0,
+   "atacEmp": 2892.0,
+   "atacAlim": null
+  },
+  "CE": {
+   "nome": "Ceará",
+   "regiao": "Nordeste",
+   "pop": 9268836.0,
+   "pib": 232239257000.0,
+   "atac": 60578896000.0,
+   "atacEmp": 5446.0,
+   "atacAlim": null
+  },
+  "RN": {
+   "nome": "Rio Grande do Norte",
+   "regiao": "Nordeste",
+   "pop": 3455236.0,
+   "pib": 101740275000.0,
+   "atac": 25163997000.0,
+   "atacEmp": 2398.0,
+   "atacAlim": null
+  },
+  "PB": {
+   "nome": "Paraíba",
+   "regiao": "Nordeste",
+   "pop": 4164468.0,
+   "pib": 96963174000.0,
+   "atac": 35801356000.0,
+   "atacEmp": 2342.0,
+   "atacAlim": null
+  },
+  "PE": {
+   "nome": "Pernambuco",
+   "regiao": "Nordeste",
+   "pop": 9562007.0,
+   "pib": 270474919000.0,
+   "atac": 102077404000.0,
+   "atacEmp": 7665.0,
+   "atacAlim": null
+  },
+  "AL": {
+   "nome": "Alagoas",
+   "regiao": "Nordeste",
+   "pop": 3220848.0,
+   "pib": 89688932000.0,
+   "atac": 20224238000.0,
+   "atacEmp": 1540.0,
+   "atacAlim": null
+  },
+  "SE": {
+   "nome": "Sergipe",
+   "regiao": "Nordeste",
+   "pop": 2299425.0,
+   "pib": 60816662000.0,
+   "atac": 13378161000.0,
+   "atacEmp": 1805.0,
+   "atacAlim": null
+  },
+  "BA": {
+   "nome": "Bahia",
+   "regiao": "Nordeste",
+   "pop": 14870907.0,
+   "pib": 430987853000.0,
+   "atac": 143534460000.0,
+   "atacEmp": 11315.0,
+   "atacAlim": null
+  },
+  "MG": {
+   "nome": "Minas Gerais",
+   "regiao": "Sudeste",
+   "pop": 21393441.0,
+   "pib": 971977551000.0,
+   "atac": 396818615000.0,
+   "atacEmp": 29098.0,
+   "atacAlim": 61962281000.0
+  },
+  "ES": {
+   "nome": "Espírito Santo",
+   "regiao": "Sudeste",
+   "pop": 4126854.0,
+   "pib": 209829732000.0,
+   "atac": 168536482000.0,
+   "atacEmp": 5262.0,
+   "atacAlim": null
+  },
+  "RJ": {
+   "nome": "Rio de Janeiro",
+   "regiao": "Sudeste",
+   "pop": 17223547.0,
+   "pib": 1172871443000.0,
+   "atac": 194394781000.0,
+   "atacEmp": 15401.0,
+   "atacAlim": 44286941000.0
+  },
+  "SP": {
+   "nome": "São Paulo",
+   "regiao": "Sudeste",
+   "pop": 46081801.0,
+   "pib": 3444814033000.0,
+   "atac": 1173772811000.0,
+   "atacEmp": 84982.0,
+   "atacAlim": 226642495000.0
+  },
+  "PR": {
+   "nome": "Paraná",
+   "regiao": "Sul",
+   "pop": 11890517.0,
+   "pib": 670919162000.0,
+   "atac": 350543257000.0,
+   "atacEmp": 23845.0,
+   "atacAlim": 53293808000.0
+  },
+  "SC": {
+   "nome": "Santa Catarina",
+   "regiao": "Sul",
+   "pop": 8187029.0,
+   "pib": 513392973000.0,
+   "atac": 273807430000.0,
+   "atacEmp": 23159.0,
+   "atacAlim": 40439081000.0
+  },
+  "RS": {
+   "nome": "Rio Grande do Sul",
+   "regiao": "Sul",
+   "pop": 11233263.0,
+   "pib": 650107022000.0,
+   "atac": 254259901000.0,
+   "atacEmp": 22398.0,
+   "atacAlim": 50154603000.0
+  },
+  "MS": {
+   "nome": "Mato Grosso do Sul",
+   "regiao": "Centro-Oeste",
+   "pop": 2924631.0,
+   "pib": 184402118000.0,
+   "atac": 76849811000.0,
+   "atacEmp": 3650.0,
+   "atacAlim": null
+  },
+  "MT": {
+   "nome": "Mato Grosso",
+   "regiao": "Centro-Oeste",
+   "pop": 3893659.0,
+   "pib": 273008586000.0,
+   "atac": 239108486000.0,
+   "atacEmp": 6797.0,
+   "atacAlim": null
+  },
+  "GO": {
+   "nome": "Goiás",
+   "regiao": "Centro-Oeste",
+   "pop": 7423629.0,
+   "pib": 336746975000.0,
+   "atac": 153000110000.0,
+   "atacEmp": 13697.0,
+   "atacAlim": null
+  },
+  "DF": {
+   "nome": "Distrito Federal",
+   "regiao": "Centro-Oeste",
+   "pop": 2996899.0,
+   "pib": 365669108000.0,
+   "atac": 56051876000.0,
+   "atacEmp": 3325.0,
+   "atacAlim": null
+  }
+ }
+}
