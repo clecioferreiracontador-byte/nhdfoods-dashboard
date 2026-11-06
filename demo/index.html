@@ -1,0 +1,574 @@
+<meta charset="utf-8">
+<title>Dash Online Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: sidebar de navegação + topbar fixa + área de abas; padrão visual "Dash Online" Audicon (navy + dourado), tema escuro único */
+:root{
+  --navy:#0D1B2E; --n3:#0F2035; --n2:#1A3A6B; --line:#1F3657;
+  --gold:#C9A84C; --g2:#E8C96A; --white:#EDEAE4; --soft:#B5C0CC; --gray:#8595A6;
+  --green:#3CC47C; --red:#E5604F; --amber:#E89A3C; --blue:#4F9BD6;
+  --font:"Segoe UI", Calibri, system-ui, -apple-system, sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden}
+canvas{display:block;max-width:100%}
+body{margin:0;background:var(--navy);color:var(--white);font-family:var(--font);font-size:14px;line-height:1.45}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--n3);z-index:10}
+.num,td,.kv{font-variant-numeric:tabular-nums}
+button,select,input{font:inherit;color:var(--white)}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:600}
+
+.app{display:flex;min-height:100%}
+.side{width:248px;flex:none;background:var(--n3);border-right:1px solid var(--line);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding-left:env(safe-area-inset-left,0px)}
+.brand{padding:22px 20px 16px;border-bottom:1px solid var(--line)}
+.brand .tag{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700}
+.brand .nm{font-size:20px;font-weight:700;margin-top:4px}
+nav.tabs{display:flex;flex-direction:column;gap:2px;padding:12px 10px}
+nav.tabs a{display:block;padding:10px 12px;border-radius:8px;color:var(--soft);text-decoration:none;font-weight:500;border:1px solid transparent;white-space:nowrap}
+nav.tabs a:hover{background:#ffffff0d;color:var(--white)}
+nav.tabs a.on{background:#C9A84C1f;color:var(--g2);border-color:#C9A84C55}
+.sidekpi{margin:6px 10px;border-top:1px solid var(--line);padding-top:8px}
+.sidekpi summary{cursor:pointer;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray);padding:6px 4px;font-weight:700}
+.sidekpi .r{display:flex;justify-content:space-between;padding:5px 4px;font-size:13px;color:var(--soft)}
+.sidekpi .r b{color:var(--white)}
+.foot{margin-top:auto;padding:14px 20px;border-top:1px solid var(--line);font-size:12px;color:var(--gray)}
+.foot b{color:var(--gold)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--n3);border-bottom:1px solid var(--line);padding:14px max(24px,env(safe-area-inset-right,0px)) 14px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px}
+.top .co{min-width:0}
+.top .co h1{font-size:18px}
+.top .co p{margin:2px 0 0;color:var(--gray);font-size:12.5px}
+.badge{background:var(--gold);color:var(--navy);font-weight:700;font-size:12px;padding:4px 12px;border-radius:99px;white-space:nowrap}
+.demo{border:1px solid #E89A3C88;color:var(--amber);font-weight:700;font-size:11px;letter-spacing:1px;padding:3px 10px;border-radius:99px;text-transform:uppercase;white-space:nowrap}
+.sp{flex:1}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters label{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:6px}
+select,input[type=number]{background:var(--navy);border:1px solid var(--line);border-radius:7px;padding:6px 8px}
+input[type=number]{width:150px;text-align:right}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{background:transparent;border:0;padding:6px 11px;color:var(--soft);font-size:12.5px}
+.seg button.on{background:var(--n2);color:var(--g2)}
+
+.content{padding:22px 24px 60px;padding-left:max(16px,env(safe-area-inset-left,0px),24px);padding-right:max(16px,env(safe-area-inset-right,0px),24px);max-width:1320px;width:100%;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.view[hidden]{display:none!important}
+.view{display:flex;flex-direction:column;gap:18px}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--n3);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{font-size:14px;color:var(--soft);font-weight:600;margin-bottom:10px}
+.kpi .l{font-size:11.5px;letter-spacing:1px;text-transform:uppercase;color:var(--gray);font-weight:700}
+.kpi .v{font-size:26px;font-weight:700;margin-top:4px}
+.kpi .s{font-size:12.5px;color:var(--soft);margin-top:2px}
+.kpi.gold{border-top:3px solid var(--gold)}
+.up{color:var(--green)} .dn{color:var(--red)} .wa{color:var(--amber)}
+.chart{position:relative;height:260px;width:100%;min-width:0}
+.chart.tall{height:var(--h,320px)}
+.note{color:var(--gray);font-size:12.5px}
+
+/* DRE */
+.dretools{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.tw{overflow:auto;max-height:68vh;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:separate;border-spacing:0;width:100%}
+.dre{font-size:var(--z,13px)}
+.dre th,.dre td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:right}
+.dre thead th{position:sticky;top:0;background:var(--n2);color:var(--white);z-index:2;font-weight:600}
+.dre th:first-child,.dre td:first-child{position:sticky;left:0;text-align:left;background:var(--n3);z-index:1;min-width:250px}
+.dre thead th:first-child{z-index:3;background:var(--n2)}
+.dre tr.rt td{font-weight:700;background:#132845}
+.dre tr.rt td:first-child{background:#132845;color:var(--g2)}
+.dre tr.rst td{font-weight:600}
+.dre tr.ch td:first-child{padding-left:30px;color:var(--soft)}
+.dre tr.ch2 td:first-child{padding-left:50px;color:var(--soft)}
+.dre td .av{display:block;font-size:.82em;color:var(--gray);font-weight:400}
+.dre td.tot{background:#0b1726}
+.tg{background:none;border:0;color:var(--gold);padding:0 6px 0 0;font-size:1em;width:18px}
+.neg{color:#F08A7C}
+
+/* Balanço */
+.idx .v{font-size:24px;font-weight:700}
+.idx .f{font-size:12px;color:var(--gray);margin-top:4px}
+.st{font-size:12px;font-weight:700;padding:2px 9px;border-radius:99px;display:inline-block;margin-top:6px}
+.st.ok{background:#3CC47C22;color:var(--green)} .st.at{background:#E89A3C22;color:var(--amber)}
+.bal td{padding:6px 4px;border-bottom:1px solid var(--line)}
+.bal td:last-child{text-align:right}
+.bal tr.h td{font-weight:700;color:var(--g2);border-bottom-color:var(--n2)}
+.bal tr.t td{font-weight:700;background:#132845}
+.interp{border-left:3px solid var(--gold);background:#C9A84C12}
+.interp p{margin:0 0 8px;color:var(--white);max-width:80ch}
+.interp p:last-child{margin:0}
+
+/* LALUR */
+.lal td{padding:8px 10px;border-bottom:1px solid var(--line)}
+.lal td:last-child{text-align:right;white-space:nowrap}
+.lal tr.t td{font-weight:700;background:#132845;color:var(--g2)}
+.lal tr.s td:first-child{padding-left:26px;color:var(--soft)}
+.lal td small{color:var(--gray)}
+.full th,.full td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+.full th:first-child,.full td:first-child{text-align:left}
+.full thead th{background:var(--n2)}
+.params{display:flex;flex-wrap:wrap;gap:14px;align-items:end}
+.params label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--gray)}
+
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){
+  .app{flex-direction:column}
+  .side{width:auto;height:auto;position:static;border-right:0;border-bottom:1px solid var(--line);padding-left:0}
+  .brand{padding:14px 16px 10px}
+  nav.tabs{flex-direction:row;overflow-x:auto;padding:8px 12px}
+  .sidekpi,.foot{display:none}
+  .top{position:static;padding-left:16px;padding-right:16px}
+  .g3,.g2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:520px){
+  .g4{grid-template-columns:minmax(0,1fr)}
+  .kpi .v{font-size:22px}
+  .content{padding:14px 12px 48px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));gap:14px}
+  .view{gap:14px}
+  .card{padding:12px 12px}
+  .card h2,.kpi .l,.kpi .s,.idx .f,.note,.interp p{overflow-wrap:anywhere}
+  .chart{height:280px}
+  .chart.tall{height:380px}
+  .bal{table-layout:fixed}
+  .bal td:first-child{width:58%;overflow-wrap:anywhere}
+  .bal td:last-child{white-space:nowrap}
+  .lal td{padding:7px 6px}
+  .lal td:first-child{overflow-wrap:anywhere}
+  .lal td small{display:block}
+  .params label{width:100%}
+  .params input[type=number],.params select{width:100%}
+  .top .co h1{font-size:16px}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="tag">Dash Online</div><div class="nm">Painel Contábil</div></div>
+    <nav class="tabs" id="tabs">
+      <a href="#visao" data-v="visao">Visão Geral</a>
+      <a href="#dre" data-v="dre">DRE</a>
+      <a href="#vertical" data-v="vertical">Análise Vertical</a>
+      <a href="#indicadores" data-v="indicadores">Indicadores</a>
+      <a href="#balanco" data-v="balanco">Balanço &amp; Índices</a>
+      <a href="#lalur" data-v="lalur">LALUR</a>
+    </nav>
+    <details class="sidekpi" open>
+      <summary>Acumulado 2026</summary>
+      <div id="sideKpis"></div>
+    </details>
+    <div class="foot">Elaborado por <b>Audicon Contadores</b><br>Dados fictícios para demonstração</div>
+  </aside>
+
+  <div class="main">
+    <header class="top">
+      <div class="co">
+        <h1>Sabor do Campo Alimentos Ltda</h1>
+        <p>CNPJ 00.000.000/0001-00 · Ribeirão Preto/SP · Lucro Real</p>
+      </div>
+      <span class="badge">2026 · Jan–Jul</span>
+      <span class="demo">Demonstração</span>
+      <div class="sp"></div>
+      <div class="filters" id="filters">
+        <label for="fPer">Período
+          <select id="fPer"></select>
+        </label>
+        <span id="rangeBox" hidden>
+          <label for="fDe">de <select id="fDe"></select></label>
+          <label for="fAte">até <select id="fAte"></select></label>
+        </span>
+        <label>Base %
+          <span class="seg" id="fBase"><button data-b="rl" class="on">Rec. Líquida</button><button data-b="rb">Rec. Bruta</button></span>
+        </label>
+      </div>
+    </header>
+
+    <main class="content">
+      <!-- VISÃO GERAL -->
+      <section class="view" id="v-visao">
+        <div class="grid g4" id="kpis"></div>
+        <div class="grid g2">
+          <div class="card"><h2>Receita Líquida × Lucro Líquido</h2><div class="chart"><canvas id="cRlLl" aria-label="Receita líquida e lucro líquido por mês"></canvas></div></div>
+          <div class="card"><h2>Margens % (Bruta, EBITDA, Líquida)</h2><div class="chart"><canvas id="cMarg" aria-label="Margens percentuais por mês"></canvas></div></div>
+          <div class="card"><h2>Resultado Operacional × EBITDA</h2><div class="chart"><canvas id="cRoEb" aria-label="Resultado operacional e EBITDA por mês"></canvas></div></div>
+          <div class="card"><h2>Composição das despesas</h2><div class="chart"><canvas id="cDesp" aria-label="Composição das despesas no período"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- DRE -->
+      <section class="view" id="v-dre" hidden>
+        <div class="card">
+          <div class="dretools">
+            <span class="seg" id="dMode"><button data-m="both" class="on">Valor + AV%</button><button data-m="val">Apenas R$</button><button data-m="pct">Apenas %</button></span>
+            <span class="seg"><button id="zOut" aria-label="Diminuir zoom">−</button><button id="zIn" aria-label="Aumentar zoom">+</button></span>
+            <button class="seg" id="expAll" style="background:transparent;padding:6px 11px;border:1px solid var(--line);border-radius:7px">Expandir tudo</button>
+            <span class="note">Valores em R$ mil · passe o mouse no nome da linha para ver de onde vem</span>
+          </div>
+        </div>
+        <div class="tw"><table class="dre" id="dreT"></table></div>
+      </section>
+
+      <!-- ANÁLISE VERTICAL -->
+      <section class="view" id="v-vertical" hidden>
+        <div class="grid g3" id="avCards"></div>
+        <div class="card"><h2>Evolução mensal dos percentuais</h2><div class="chart tall" style="--h:320px"><canvas id="cAv" aria-label="Evolução mensal dos percentuais da análise vertical"></canvas></div></div>
+      </section>
+
+      <!-- INDICADORES -->
+      <section class="view" id="v-indicadores" hidden>
+        <div class="grid g3" id="indCards"></div>
+        <div class="card"><h2>Formação do resultado no período</h2><div class="chart tall" style="--h:320px"><canvas id="cWf" aria-label="Cascata da receita bruta até o lucro líquido"></canvas></div></div>
+        <div class="grid g2">
+          <div class="card"><h2>Lucro Líquido mensal</h2><div class="chart"><canvas id="cLl" aria-label="Lucro líquido por mês"></canvas></div></div>
+          <div class="card"><h2>Despesas operacionais por natureza</h2><div class="chart"><canvas id="cOpe" aria-label="Despesas operacionais mensais por natureza"></canvas></div></div>
+        </div>
+      </section>
+
+      <!-- BALANÇO -->
+      <section class="view" id="v-balanco" hidden>
+        <div class="card" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center">
+          <label class="note" for="bMes">Balanço de</label><select id="bMes"></select>
+          <span class="note">Na versão do cliente, o balancete de cada mês é importado em Excel e todas as abas se atualizam.</span>
+        </div>
+        <h2 style="font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray)">Liquidez</h2>
+        <div class="grid g4" id="idxLiq"></div>
+        <h2 style="font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gray)">Endividamento e estrutura</h2>
+        <div class="grid g4" id="idxEnd"></div>
+        <div class="card interp" id="interp"></div>
+        <div class="grid g3" id="balCols"></div>
+        <div class="card"><h2>Composição do passivo e PL</h2><div class="chart tall" style="--h:300px"><canvas id="cPas" aria-label="Composição do passivo e patrimônio líquido"></canvas></div></div>
+      </section>
+
+      <!-- LALUR -->
+      <section class="view" id="v-lalur" hidden>
+        <div class="card">
+          <div class="params">
+            <label for="lMes">Apuração até<select id="lMes"></select></label>
+            <label for="pAjuste">Ajustes de exercícios anteriores (R$)<input type="number" id="pAjuste" step="1000" value="0"></label>
+            <label for="pPrej">Saldo inicial de prejuízo fiscal (R$)<input type="number" id="pPrej" step="1000" value="350000"></label>
+            <span class="seg" id="lView"><button data-l="mes" class="on">Apuração do mês</button><button data-l="ano">Ano completo</button></span>
+          </div>
+          <p class="note" style="margin:10px 0 0">Lucro Real anual por estimativa (balanço de suspensão/redução). Parâmetros ficam salvos neste navegador.</p>
+        </div>
+        <div class="card" id="lalBox"></div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+(function(){
+"use strict";
+/* ================= CONFIGURAÇÃO DO CLIENTE (o que muda por empresa) ================= */
+const CFG = { empresa:"Sabor do Campo Alimentos Ltda", ano:2026, storageKey:"dash_demo_sabordocampo", lucroReal:true };
+const MES = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul"];
+const MESF = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho"];
+const N = MES.length;
+
+/* ================= DADOS FICTÍCIOS ================= */
+const f1=[1,.98,1.02,1.03,.99,1.01,.97], f2=[1.02,1,.97,1.01,1.03,.98,1];
+const RB=[3950,4120,4480,4010,4630,4790,5020].map(x=>x*1000);
+const mk=fn=>MES.map((_,i)=>Math.round(fn(i)));
+const neg=a=>a.map(x=>-x);
+const add=(...as)=>MES.map((_,i)=>as.reduce((s,a)=>s+a[i],0));
+const vendaProd=mk(i=>RB[i]*.92), revenda=mk(i=>RB[i]-vendaProd[i]);
+const icms=mk(i=>RB[i]*.11), pis=mk(i=>RB[i]*.06), devol=mk(i=>RB[i]*.01*f1[i]);
+const rlx=i=>RB[i]-icms[i]-pis[i]-devol[i];
+const mp=mk(i=>rlx(i)*.37*f1[i]), mo=mk(i=>rlx(i)*.135), ggf=mk(i=>rlx(i)*.11*f2[i]);
+const deprFab=mk(()=>45000), deprAdm=mk(()=>15000);
+const fretes=mk(i=>rlx(i)*.045*f1[i]), comis=mk(i=>rlx(i)*.03), mktc=mk(i=>rlx(i)*.015*f2[i]);
+const folha=mk(i=>255000+i*2500), serv=mk(i=>62000*f1[i]), ocup=mk(i=>48000*f2[i]), admd=mk(i=>31000*f1[i]);
+const outras=[12000,-8000,5000,15000,-3000,9000,4000];
+const recFin=[18000,21000,19500,22000,24000,23000,26000], despFin=[92000,88000,95000,90000,87000,85000,83000];
+const subvICMS=mk(i=>RB[i]*.0275), adicoes=[6000,4500,7200,5000,8100,5500,6300];
+
+const PREJ0=350000;
+/* Lucro real acumulado Jan → k: IRPJ 15% + adicional 10% (acima de R$ 20 mil × meses) + CSLL 9%, compensação limitada a 30% */
+function taxCalc(k,ajuste,prej){
+  const r={}, ix=MES.map((_,i)=>i).filter(i=>i<=k);
+  r.lair=ix.reduce((s,i)=>s+V.lair[i],0);
+  r.adic=ix.reduce((s,i)=>s+adicoes[i],0);
+  r.subv=ix.reduce((s,i)=>s+subvICMS[i],0);
+  r.ajuste=ajuste;
+  r.antes=r.lair+r.adic-r.subv-r.ajuste;
+  r.comp=r.antes>0?Math.min(prej,r.antes*.3):0;
+  r.base=r.antes-r.comp;
+  const bp=Math.max(0,r.base);
+  r.ir=bp*.15; r.adicIR=Math.max(0,bp-20000*(k+1))*.10; r.csll=bp*.09;
+  r.total=r.ir+r.adicIR+r.csll;
+  return r;
+}
+const taxTotal=(k,a,p)=>taxCalc(k,a,p).total;
+/* árvore da DRE: t = rt (total), rst (subtotal), rs (linha) */
+let uid=0;
+const leaf=(l,v,d)=>({id:"x"+(uid++),l,t:"rs",v,d});
+const DTREE=[
+ {id:"rb",l:"RECEITA BRUTA",t:"rst",d:"Contas 3.1.01 · vendas de produtos e revenda (C−D)",c:[leaf("Venda de produtos",vendaProd,"3.1.01.01"),leaf("Revenda de mercadorias",revenda,"3.1.01.02")]},
+ {id:"ded",l:"( − ) Deduções",t:"rs",d:"Impostos sobre vendas e devoluções · 3.1.02",c:[leaf("ICMS s/ vendas",neg(icms),"3.1.02.01"),leaf("PIS/COFINS",neg(pis),"3.1.02.02"),leaf("Devoluções",neg(devol),"3.1.02.03")]},
+ {id:"rl",l:"RECEITA LÍQUIDA",t:"rt",d:"Receita bruta − deduções"},
+ {id:"cus",l:"( − ) Custos dos produtos vendidos",t:"rs",d:"CPV · 4.1 (D−C), sem a depreciação da fábrica",c:[leaf("Matéria-prima e embalagens",neg(mp),"4.1.01"),leaf("Mão de obra da produção",neg(mo),"4.1.02"),leaf("Gastos gerais de fabricação",neg(ggf),"4.1.03")]},
+ {id:"dep",l:"( − ) Depreciações",t:"rs",d:"Separadas porque voltam no EBITDA",c:[leaf("Depreciação fábrica",neg(deprFab),"4.1.04"),leaf("Depreciação ADM",neg(deprAdm),"4.2.09")]},
+ {id:"mb",l:"≈ MARGEM BRUTA",t:"rt",d:"Receita líquida − custos − depreciações"},
+ {id:"dt",l:"DESPESAS TOTAIS",t:"rst",d:"Comerciais + operacionais",c:[
+   {id:"dcom",l:"Despesas comerciais",t:"rs",d:"4.2.01 · vendas",c:[leaf("Fretes sobre vendas",neg(fretes),"4.2.01.01"),leaf("Comissões",neg(comis),"4.2.01.02"),leaf("Marketing comercial",neg(mktc),"4.2.01.03")]},
+   {id:"dope",l:"Despesas operacionais",t:"rs",d:"4.2.02 a 4.2.08 · administrativas",c:[leaf("Folha e encargos",neg(folha),"4.2.02"),leaf("Serviços de terceiros",neg(serv),"4.2.03"),leaf("Ocupação e utilidades",neg(ocup),"4.2.04"),leaf("Administrativas gerais",neg(admd),"4.2.05")]}]},
+ {id:"ro",l:"RESULTADO OPERACIONAL",t:"rt",d:"Margem bruta − despesas totais"},
+ {id:"out",l:"Outras receitas e despesas",t:"rs",v:outras,d:"3.3 e 4.4 · venda de ativos, recuperações"},
+ {id:"fin",l:"Resultado financeiro",t:"rs",d:"3.2 receitas financeiras − 4.3 despesas financeiras",c:[leaf("Receitas financeiras",recFin,"3.2.01"),leaf("Despesas financeiras",neg(despFin),"4.3.01")]},
+ {id:"lair",l:"RES. ANTES IRPJ E CSLL",t:"rt",d:"Resultado operacional + outras + financeiro"},
+ {id:"ircs",l:"Provisão IRPJ e CSLL",t:"rs",d:"Contas de provisão 4.9.01 e 4.9.02"},
+ {id:"ll",l:"LUCRO LÍQUIDO",t:"rt",d:"Resultado antes do IR − provisão IRPJ e CSLL"},
+ {id:"ebitda",l:"EBITDA",t:"rt",d:"Resultado operacional + depreciações"}
+];
+const V={}, NODE={};
+(function build(){
+  const walk=n=>{NODE[n.id]=n; if(n.c){n.c.forEach(walk); n.v=add(...n.c.map(c=>c.v));} if(n.v) V[n.id]=n.v;};
+  DTREE.forEach(walk);
+  V.rl=add(V.rb,V.ded); V.mb=add(V.rl,V.cus,V.dep); V.ro=add(V.mb,V.dt);
+  V.lair=add(V.ro,V.out,V.fin);
+  /* provisão contabilizada = estimativa mensal pelo LALUR com os parâmetros padrão, com um ajuste não feito em junho (para a conferência mostrar uma diferença) */
+  const noise=[0,0,0,0,0,-4800,0];
+  const prov=MES.map((_,k)=>Math.round(taxTotal(k,0,PREJ0)-(k?taxTotal(k-1,0,PREJ0):0)+noise[k])); V.ircs=neg(prov);
+  V.ll=add(V.lair,V.ircs); V.ebitda=MES.map((_,i)=>V.ro[i]-V.dep[i]);
+  ["rl","mb","ro","lair","ircs","ll","ebitda"].forEach(k=>NODE[k].v=V[k]);
+})();
+
+/* Balanço (saldo atual por mês) */
+const cumLL=[]; V.ll.reduce((s,x,i)=>(cumLL[i]=s+x),0);
+const BAL=MES.map((_,i)=>{
+  const b={clientes:4200000+i*85000*f1[i],trib:850000+i*12000,estoques:3100000*f2[i]+i*40000,rlp:400000,inv:250000,
+    imob:6800000-(i+1)*60000+(i>=3?380000:0),intang:120000,
+    forn:2600000*f1[i]+i*30000,empCP:1900000-i*25000,trab:780000+i*6000,tribP:520000+V.ll[i]*.2,outPC:300000,
+    empLP:3800000-i*60000+(i>=3?300000:0),parcLP:600000-i*15000,outPNC:150000,
+    capital:5000000,reservas:1200000,lucAc:900000,resEx:cumLL[i]};
+  const ativoSemCaixa=b.clientes+b.trib+b.estoques+b.rlp+b.inv+b.imob+b.intang;
+  const pas=b.forn+b.empCP+b.trab+b.tribP+b.outPC+b.empLP+b.parcLP+b.outPNC+b.capital+b.reservas+b.lucAc+b.resEx;
+  b.caixa=pas-ativoSemCaixa;
+  b.AC=b.caixa+b.clientes+b.trib+b.estoques; b.ANC=b.rlp+b.inv+b.imob+b.intang; b.AT=b.AC+b.ANC;
+  b.PC=b.forn+b.empCP+b.trab+b.tribP+b.outPC; b.PNC=b.empLP+b.parcLP+b.outPNC;
+  b.PL=b.capital+b.reservas+b.lucAc+b.resEx; b.PT=b.PC+b.PNC+b.PL;
+  return b;
+});
+
+/* ================= FORMATAÇÃO ================= */
+const nf1=new Intl.NumberFormat("pt-BR",{minimumFractionDigits:1,maximumFractionDigits:1});
+const nf2=new Intl.NumberFormat("pt-BR",{minimumFractionDigits:2,maximumFractionDigits:2});
+const nf0=new Intl.NumberFormat("pt-BR",{maximumFractionDigits:0});
+const money=v=>{const a=Math.abs(v),s=v<0?"−":""; if(a>=1e6) return s+"R$ "+nf2.format(a/1e6)+"M"; if(a>=1e3) return s+"R$ "+nf0.format(a/1e3)+"K"; return s+"R$ "+nf0.format(a);};
+const brl=v=>{v=Math.round(v);return (v<0?"−":"")+"R$ "+nf0.format(Math.abs(v));};
+const mil=v=>(v<0?"−":"")+nf1.format(Math.abs(v)/1000);
+const pc=(x,b)=>b?x/b*100:0;
+const pf=x=>(x<0?"−":"")+nf1.format(Math.abs(x))+"%";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ================= ESTADO ================= */
+const store={get(){try{return JSON.parse(localStorage.getItem(CFG.storageKey)||"{}")}catch(e){return {}}},set(o){try{localStorage.setItem(CFG.storageKey,JSON.stringify(o))}catch(e){}}};
+const saved=store.get();
+const S={per:"ano",de:0,ate:N-1,base:"rl",dMode:"both",zoom:13,open:new Set(),bMes:N-1,lMes:N-1,lView:"mes",
+  ajuste:Number(saved.ajuste)||0, prej:saved.prej!=null?Number(saved.prej):PREJ0};
+const sel=()=>S.per==="ano"?MES.map((_,i)=>i):S.per==="range"?MES.map((_,i)=>i).filter(i=>i>=Math.min(S.de,S.ate)&&i<=Math.max(S.de,S.ate)):[Number(S.per)];
+const sum=(id,ix)=>ix.reduce((s,i)=>s+V[id][i],0);
+const baseOf=ix=>sum(S.base,ix);
+
+/* ================= GRÁFICOS ================= */
+Chart.defaults.color="#B5C0CC"; Chart.defaults.font.family='"Segoe UI", Calibri, sans-serif'; Chart.defaults.borderColor="#1F3657";
+const C={};
+function draw(id,cfg){ if(C[id]) C[id].destroy(); C[id]=new Chart(document.getElementById(id),cfg); }
+/* celular: legenda embaixo, fonte menor, eixo com valores curtos */
+const isNarrow=()=>document.documentElement.clientWidth<=520;
+const short=v=>{const a=Math.abs(v),s=v<0?"−":""; if(a>=1e6) return s+nf1.format(a/1e6)+"M"; if(a>=1e3) return s+nf0.format(a/1e3)+"K"; return s+nf0.format(a);};
+const tickM={get callback(){return isNarrow()?short:(v=>money(v))},maxTicksLimit:6}, tickP={callback:v=>nf0.format(v)+"%",maxTicksLimit:6};
+const legend=()=>isNarrow()?{position:"bottom",labels:{boxWidth:10,boxHeight:10,padding:8,font:{size:11}}}:{labels:{boxWidth:12}};
+const xTicks=()=>isNarrow()?{autoSkip:false,maxRotation:0,minRotation:0,font:{size:10}}:{};
+const baseOpts=(y)=>({responsive:true,maintainAspectRatio:false,animation:{duration:300},layout:{padding:isNarrow()?{right:4}:0},plugins:{legend:legend(),tooltip:{callbacks:{label:c=>c.dataset.label+": "+(y==="p"?pf(c.parsed.y):money(c.parsed.y))}}},scales:{y:{ticks:{...(y==="p"?tickP:tickM),font:isNarrow()?{size:10}:undefined},grid:{color:"#1F365766"}},x:{ticks:xTicks(),grid:{display:false}}}});
+
+/* ================= RENDER ================= */
+function sideKpis(){
+  const ix=MES.map((_,i)=>i), rl=sum("rl",ix), ll=sum("ll",ix), eb=sum("ebitda",ix);
+  document.getElementById("sideKpis").innerHTML=
+   [["Receita líquida",money(rl)],["EBITDA",money(eb)],["Lucro líquido",money(ll)],["Margem líquida",pf(pc(ll,rl))]]
+   .map(([a,b])=>`<div class="r"><span>${a}</span><b>${b}</b></div>`).join("");
+}
+
+function rVisao(){
+  const ix=sel(), b=baseOf(ix), lbl=ix.map(i=>MES[i]);
+  const k=[["Receita Líquida","rl"],["Lucro Líquido","ll"],["EBITDA","ebitda"],["Margem Bruta","mb"]];
+  document.getElementById("kpis").innerHTML=k.map(([l,id])=>{const v=sum(id,ix);return `<div class="card kpi gold"><div class="l">${l}</div><div class="v ${v<0?"dn":""}">${money(v)}</div><div class="s">${pf(pc(v,b))} da ${S.base==="rl"?"receita líquida":"receita bruta"}</div></div>`}).join("");
+  draw("cRlLl",{type:"bar",data:{labels:lbl,datasets:[{label:"Receita Líquida",data:ix.map(i=>V.rl[i]),backgroundColor:"#4F9BD6"},{label:"Lucro Líquido",data:ix.map(i=>V.ll[i]),backgroundColor:"#C9A84C"}]},options:baseOpts()});
+  const pm=id=>ix.map(i=>pc(V[id][i],V[S.base][i]));
+  draw("cMarg",{type:"line",data:{labels:lbl,datasets:[{label:"Margem Bruta",data:pm("mb"),borderColor:"#4F9BD6",backgroundColor:"#4F9BD6",tension:.3},{label:"EBITDA",data:pm("ebitda"),borderColor:"#C9A84C",backgroundColor:"#C9A84C",tension:.3},{label:"Lucro Líquido",data:pm("ll"),borderColor:"#3CC47C",backgroundColor:"#3CC47C",tension:.3,borderDash:[5,4]}]},options:baseOpts("p")});
+  draw("cRoEb",{type:"bar",data:{labels:lbl,datasets:[{label:"Resultado Operacional",data:ix.map(i=>V.ro[i]),backgroundColor:"#2F5E96"},{label:"EBITDA",data:ix.map(i=>V.ebitda[i]),backgroundColor:"#E8C96A"}]},options:baseOpts()});
+  const dc=-sum("dcom",ix), dop=-sum("dope",ix), df=ix.reduce((s,i)=>s+despFin[i],0);
+  draw("cDesp",{type:"doughnut",data:{labels:["Comerciais","Operacionais","Financeiras"],datasets:[{data:[dc,dop,df],backgroundColor:["#4F9BD6","#C9A84C","#E89A3C"],borderColor:"#0F2035",borderWidth:3}]},options:{responsive:true,maintainAspectRatio:false,cutout:"62%",plugins:{legend:isNarrow()?legend():{position:"right",labels:{boxWidth:12}},tooltip:{callbacks:{label:c=>c.label+": "+money(c.parsed)+" ("+pf(pc(c.parsed,dc+dop+df))+")"}}}}});
+}
+
+function rDre(){
+  const ix=sel(), t=document.getElementById("dreT");
+  t.style.setProperty("--z",S.zoom+"px");
+  let h=`<thead><tr><th>Demonstração do resultado</th>${ix.map(i=>`<th>${MES[i]}</th>`).join("")}<th>Total</th></tr></thead><tbody>`;
+  const cell=(v,b,tot)=>{const neg=v<0?" neg":"";const pv=`<span class="av">${pf(pc(v,b))}</span>`;
+    const inner=S.dMode==="pct"?pf(pc(v,b)):S.dMode==="val"?mil(v):mil(v)+pv;return `<td class="${tot?"tot":""}${neg}">${inner}</td>`;};
+  const row=(n,depth)=>{
+    const has=!!n.c, open=S.open.has(n.id);
+    const cls=[n.t,depth===1?"ch":depth>=2?"ch2":""].join(" ");
+    const tg=has?`<button class="tg" data-tg="${n.id}" aria-expanded="${open}" aria-label="${open?"Recolher":"Expandir"} ${esc(n.l)}">${open?"▾":"▸"}</button>`:`<span style="display:inline-block;width:18px"></span>`;
+    let r=`<tr class="${cls}"><td title="${esc(n.d||"")}">${tg}${esc(n.l)}</td>`;
+    ix.forEach(i=>{r+=cell(n.v[i],V[S.base][i])});
+    r+=cell(ix.reduce((s,i)=>s+n.v[i],0),baseOf(ix),true)+"</tr>";
+    if(has&&open) n.c.forEach(c=>r+=row(c,depth+1));
+    return r;
+  };
+  DTREE.forEach(n=>h+=row(n,0));
+  t.innerHTML=h+"</tbody>";
+}
+
+function rVertical(){
+  const ix=sel(), last=ix[ix.length-1], prev=last-1;
+  const items=[["Margem bruta","mb",1],["EBITDA","ebitda",1],["Resultado operacional","ro",1],["Lucro líquido","ll",1],["Custos dos produtos","cus",-1],["Despesas totais","dt",-1]];
+  document.getElementById("avCards").innerHTML=items.map(([l,id,good])=>{
+    const v=pc(Math.abs(V[id][last]),V[S.base][last]);
+    let ar="";
+    if(prev>=0){const p=pc(Math.abs(V[id][prev]),V[S.base][prev]), d=v-p, better=d*good>0;
+      ar=`<div class="s ${Math.abs(d)<.05?"":better?"up":"dn"}">${d>=0?"▲":"▼"} ${nf1.format(Math.abs(d))} p.p. vs ${MES[prev]} ${Math.abs(d)<.05?"(estável)":better?"(melhorou)":"(piorou)"}</div>`;}
+    return `<div class="card kpi"><div class="l">${l} · ${MES[last]}</div><div class="v">${pf(v)}</div>${ar}</div>`;}).join("");
+  const cols=["#4F9BD6","#C9A84C","#8FB3DD","#3CC47C","#E89A3C","#E5604F"];
+  draw("cAv",{type:"line",data:{labels:ix.map(i=>MES[i]),datasets:items.map(([l,id],k)=>({label:l,data:ix.map(i=>pc(Math.abs(V[id][i]),V[S.base][i])),borderColor:cols[k],backgroundColor:cols[k],tension:.3}))},options:baseOpts("p")});
+}
+
+function rInd(){
+  const ix=sel(), rl=sum("rl",ix), rb=sum("rb",ix);
+  const cards=[["Receita líquida",money(rl),`${ix.length} ${ix.length>1?"meses":"mês"} no período`],
+    ["Margem bruta",pf(pc(sum("mb",ix),rl)),"sobre a receita líquida"],
+    ["Margem EBITDA",pf(pc(sum("ebitda",ix),rl)),money(sum("ebitda",ix))],
+    ["Margem líquida",pf(pc(sum("ll",ix),rl)),money(sum("ll",ix))],
+    ["Despesas / receita",pf(pc(-sum("dt",ix),rl)),money(-sum("dt",ix))],
+    ["Resultado financeiro",money(sum("fin",ix)),pf(pc(sum("fin",ix),rl))+" da receita líquida"]];
+  document.getElementById("indCards").innerHTML=cards.map(([l,v,s])=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join("");
+  const steps=[["Receita bruta",rb,"t"],["Deduções",sum("ded",ix)],["Custos e depreciações",sum("cus",ix)+sum("dep",ix)],["Despesas",sum("dt",ix)],["Outras e financeiro",sum("out",ix)+sum("fin",ix)],["IRPJ e CSLL",sum("ircs",ix)],["Lucro líquido",sum("ll",ix),"t"]];
+  let acc=0; const data=[], col=[];
+  steps.forEach(([l,v,t])=>{ if(t){data.push([0,v]);col.push(l==="Lucro líquido"?"#3CC47C":"#4F9BD6");acc=v;} else {data.push([acc,acc+v]);col.push(v<0?"#E5604F":"#3CC47C");acc+=v;} });
+  const wfShort=[["Receita","bruta"],"Deduç.","Custos","Desp.",["Outras","e fin."],["IRPJ","CSLL"],["Lucro","líquido"]];
+  draw("cWf",{type:"bar",data:{labels:isNarrow()?wfShort:steps.map(s=>s[0]),datasets:[{label:"Formação do resultado",data,backgroundColor:col,borderRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const s=steps[c.dataIndex];return s[0]+": "+money(s[1])}}}},scales:{y:{ticks:{...tickM,font:isNarrow()?{size:10}:undefined},grid:{color:"#1F365766"}},x:{ticks:xTicks(),grid:{display:false}}}}});
+  draw("cLl",{type:"bar",data:{labels:ix.map(i=>MES[i]),datasets:[{label:"Lucro Líquido",data:ix.map(i=>V.ll[i]),backgroundColor:ix.map(i=>V.ll[i]>=0?"#3CC47C":"#E5604F")}]},options:baseOpts()});
+  const st=(lbl,a,c)=>({label:lbl,data:ix.map(i=>a[i]),backgroundColor:c,stack:"s"});
+  const o=baseOpts(); o.scales.x.stacked=true; o.scales.y.stacked=true;
+  draw("cOpe",{type:"bar",data:{labels:ix.map(i=>MES[i]),datasets:[st("Folha e encargos",folha,"#4F9BD6"),st("Serviços de terceiros",serv,"#C9A84C"),st("Outros",add(ocup,admd),"#8595A6")]},options:o});
+}
+
+function rBal(){
+  const b=BAL[S.bMes];
+  const liq=[["Liquidez imediata",b.caixa/b.PC,"Caixa ÷ Passivo circulante",.3,"Quanto do passivo de curto prazo o caixa paga hoje"],
+    ["Liquidez seca",(b.AC-b.estoques)/b.PC,"(AC − Estoques) ÷ PC",1,"Capacidade de pagamento sem depender de vender o estoque"],
+    ["Liquidez corrente",b.AC/b.PC,"Ativo circulante ÷ Passivo circulante",1.2,"Recursos de curto prazo para cada R$ 1 de dívida de curto prazo"],
+    ["Liquidez geral",(b.AC+b.rlp)/(b.PC+b.PNC),"(AC + RLP) ÷ (PC + PNC)",1,"Capacidade de pagar todas as dívidas com o ativo realizável"]];
+  const dfin=b.empCP+b.empLP;
+  const end=[["Endividamento geral",(b.PC+b.PNC)/b.AT,"(PC + PNC) ÷ Ativo total",.6,"Parte do ativo financiada por terceiros",true,true],
+    ["PC ÷ PL",b.PC/b.PL,"Passivo circulante ÷ PL",1,"Dívida de curto prazo para cada R$ 1 de capital próprio",true],
+    ["Alavancagem financeira",dfin/b.PL,"Empréstimos ÷ PL",1,"Dívida bancária em relação ao patrimônio líquido",true],
+    ["Capital de giro líquido",b.AC-b.PC,"AC − PC",0,"Folga financeira de curto prazo",false,false,true]];
+  const card=([l,v,f,lim,tip,lower,asPct,asMoney])=>{const ok=lower?v<=lim:v>=lim;
+    const val=asMoney?money(v):asPct?pf(v*100):nf2.format(v);
+    return `<div class="card idx" title="${esc(tip)}"><div class="kpi"><div class="l">${l}</div></div><div class="v">${val}</div><div class="f">${f}</div><span class="st ${ok?"ok":"at"}">${ok?"✓ Adequado":"⚠ Atenção"}</span></div>`;};
+  document.getElementById("idxLiq").innerHTML=liq.map(card).join("");
+  document.getElementById("idxEnd").innerHTML=end.map(card).join("");
+  const lc=b.AC/b.PC, eg=(b.PC+b.PNC)/b.AT, cg=b.AC-b.PC;
+  document.getElementById("interp").innerHTML=`<h2>Leitura automática · ${MESF[S.bMes]}/${CFG.ano}</h2>
+    <p>Para cada R$ 1,00 de obrigações de curto prazo a empresa tem R$ ${nf2.format(lc)} em ativos circulantes, ${lc>=1.2?"uma posição confortável":lc>=1?"uma posição justa, que pede acompanhamento do caixa":"uma posição apertada, com risco de pressão no caixa"}.</p>
+    <p>Terceiros financiam ${pf(eg*100)} do ativo e a dívida bancária soma ${money(dfin)}, ${pf(dfin/b.PL*100)} do patrimônio líquido. O capital de giro líquido é de ${money(cg)}.</p>
+    <p>O resultado acumulado no ano, ${money(b.resEx)}, já está no patrimônio líquido, que chega a ${money(b.PL)}.</p>`;
+  const tbl=(title,rows,tot)=>`<div class="card"><h2>${title}</h2><table class="bal">${rows.map(r=>r[2]==="h"?`<tr class="h"><td>${r[0]}</td><td>${money(r[1])}</td></tr>`:`<tr><td>${r[0]}</td><td>${money(r[1])}</td></tr>`).join("")}<tr class="t"><td>${tot[0]}</td><td>${money(tot[1])}</td></tr></table></div>`;
+  document.getElementById("balCols").innerHTML=
+    tbl("Ativo",[["Ativo circulante",b.AC,"h"],["Caixa e equivalentes",b.caixa],["Clientes",b.clientes],["Tributos a recuperar",b.trib],["Estoques",b.estoques],["Ativo não circulante",b.ANC,"h"],["Realizável a longo prazo",b.rlp],["Investimentos",b.inv],["Imobilizado",b.imob],["Intangível",b.intang]],["Ativo total",b.AT])+
+    tbl("Passivo",[["Passivo circulante",b.PC,"h"],["Fornecedores",b.forn],["Empréstimos CP",b.empCP],["Obrigações trabalhistas",b.trab],["Obrigações tributárias",b.tribP],["Outros PC",b.outPC],["Passivo não circulante",b.PNC,"h"],["Empréstimos LP",b.empLP],["Tributos parcelados LP",b.parcLP],["Outros PNC",b.outPNC]],["Total do passivo",b.PC+b.PNC])+
+    tbl("Patrimônio líquido",[["Capital social",b.capital],["Reservas",b.reservas],["Lucros acumulados",b.lucAc],["Resultado do exercício",b.resEx]],["Passivo + PL",b.PT]);
+  const items=[["Fornecedores",b.forn],["Empréstimos CP",b.empCP],["Obrig. trabalhistas",b.trab],["Obrig. tributárias",b.tribP],["Empréstimos LP",b.empLP],["Parcelamentos LP",b.parcLP],["Patrimônio líquido",b.PL]];
+  draw("cPas",{type:"bar",data:{labels:items.map(x=>x[0]),datasets:[{label:"Saldo",data:items.map(x=>x[1]),backgroundColor:items.map(x=>x[0]==="Patrimônio líquido"?"#C9A84C":x[0].startsWith("Empr")?"#E89A3C":"#4F9BD6"),borderRadius:4}]},options:{indexAxis:"y",responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>money(c.parsed.x)+" · "+pf(pc(c.parsed.x,b.PT))+" do total"}}},scales:{x:{ticks:{...tickM,maxTicksLimit:isNarrow()?4:6,font:isNarrow()?{size:10}:undefined},grid:{color:"#1F365766"}},y:{ticks:{font:isNarrow()?{size:10}:undefined},grid:{display:false}}}}});
+}
+
+/* LALUR: apuração acumulada Jan → k */
+function apura(k){ const r=taxCalc(k,S.ajuste,S.prej); r.provMes=-V.ircs[k]; return r; }
+function rLalur(){
+  const box=document.getElementById("lalBox");
+  if(S.lView==="ano"){
+    let h=`<h2>Ano completo · valores do mês</h2><div class="tw" style="max-height:none"><table class="full"><thead><tr><th>Mês</th><th>Base acumulada</th><th>IRPJ + adicional</th><th>CSLL</th><th>Apurado no mês</th><th>Provisão contabilizada</th><th>Diferença</th></tr></thead><tbody>`;
+    let prevTot=0;
+    MES.forEach((m,k)=>{const r=apura(k), mesV=r.total-prevTot; prevTot=r.total; const d=r.provMes-mesV;
+      h+=`<tr><td>${MESF[k]}</td><td>${brl(r.base)}</td><td>${brl(r.ir+r.adicIR)}</td><td>${brl(r.csll)}</td><td>${brl(mesV)}</td><td>${brl(r.provMes)}</td><td class="${Math.abs(d)>1000?"wa":""}">${brl(d)}</td></tr>`;});
+    box.innerHTML=h+"</tbody></table></div>"; return;
+  }
+  const k=S.lMes, r=apura(k), ant=k>0?apura(k-1).total:0, mesV=r.total-ant, dif=r.provMes-mesV;
+  const L=(l,v,cls,src)=>`<tr class="${cls||""}"><td title="${esc(src||"")}">${l}${src?` <small>· ${esc(src)}</small>`:""}</td><td>${brl(v)}</td></tr>`;
+  box.innerHTML=`<h2>Apuração acumulada · Janeiro a ${MESF[k]}/${CFG.ano}</h2><table class="lal" style="width:100%">
+   ${L("Lucro antes do IRPJ e CSLL",r.lair,"","DRE, linha RES. ANTES IRPJ E CSLL")}
+   ${L("(+) Adições: multas e brindes indedutíveis",r.adic,"s","contas 4.2.05.07 e 4.2.05.09")}
+   ${L("(−) Exclusões: subvenção de ICMS",-r.subv,"s","conta 3.4.01, automática")}
+   ${L("(−) Ajustes de exercícios anteriores",-r.ajuste,"s","parâmetro manual")}
+   ${L("Lucro real antes da compensação",r.antes,"t")}
+   ${L("(−) Compensação de prejuízo fiscal (limite 30%)",-r.comp,"s","saldo inicial informado")}
+   ${L("Base de cálculo",r.base,"t")}
+   ${L("IRPJ 15%",r.ir,"s")}
+   ${L(`Adicional 10% sobre o que passa de R$ 20.000 × ${k+1} ${k?"meses":"mês"}`,r.adicIR,"s")}
+   ${L("CSLL 9%",r.csll,"s")}
+   ${L("Total apurado no acumulado",r.total,"t")}
+   ${L("(−) Já apurado até o mês anterior",-ant,"s")}
+   ${L(`Valor de ${MESF[k]}`,mesV,"t")}
+   ${L("Provisão contabilizada no balancete",r.provMes,"s","contas 4.9.01 e 4.9.02")}
+   <tr class="t"><td>Diferença a ajustar</td><td class="${Math.abs(dif)>1000?"wa":"up"}">${brl(dif)} ${Math.abs(dif)>1000?"⚠":"✓"}</td></tr>
+  </table>`;
+}
+
+/* ================= NAVEGAÇÃO E CONTROLES ================= */
+const VIEWS=["visao","dre","vertical","indicadores","balanco","lalur"];
+const R={visao:rVisao,dre:rDre,vertical:rVertical,indicadores:rInd,balanco:rBal,lalur:rLalur};
+let cur="visao";
+function show(){
+  const h=location.hash.replace("#",""); cur=VIEWS.includes(h)?h:"visao";
+  VIEWS.forEach(v=>document.getElementById("v-"+v).hidden=v!==cur);
+  document.querySelectorAll("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.v===cur));
+  document.getElementById("filters").style.display=(cur==="balanco"||cur==="lalur")?"none":"";
+  R[cur]();
+}
+window.addEventListener("hashchange",show);
+
+const opt=(a,v)=>a.map((m,i)=>`<option value="${i}"${i===v?" selected":""}>${m}</option>`).join("");
+const fPer=document.getElementById("fPer");
+fPer.innerHTML=`<option value="ano">Anual (Jan–Jul)</option>${MESF.map((m,i)=>`<option value="${i}">${m}</option>`).join("")}<option value="range">Escolher período…</option>`;
+document.getElementById("fDe").innerHTML=opt(MESF,0);
+document.getElementById("fAte").innerHTML=opt(MESF,N-1);
+fPer.onchange=()=>{S.per=fPer.value;document.getElementById("rangeBox").hidden=S.per!=="range";R[cur]();};
+document.getElementById("fDe").onchange=e=>{S.de=+e.target.value;R[cur]();};
+document.getElementById("fAte").onchange=e=>{S.ate=+e.target.value;R[cur]();};
+document.getElementById("fBase").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.base=b.dataset.b;
+  document.querySelectorAll("#fBase button").forEach(x=>x.classList.toggle("on",x===b));R[cur]();};
+document.getElementById("dMode").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.dMode=b.dataset.m;
+  document.querySelectorAll("#dMode button").forEach(x=>x.classList.toggle("on",x===b));rDre();};
+document.getElementById("zIn").onclick=()=>{S.zoom=Math.min(18,S.zoom+1);rDre();};
+document.getElementById("zOut").onclick=()=>{S.zoom=Math.max(10,S.zoom-1);rDre();};
+document.getElementById("expAll").onclick=e=>{const all=["rb","ded","cus","dep","dt","dcom","dope","fin"];
+  const opening=S.open.size<all.length; S.open=new Set(opening?all:[]); e.target.textContent=opening?"Recolher tudo":"Expandir tudo"; rDre();};
+document.getElementById("dreT").onclick=e=>{const b=e.target.closest("[data-tg]");if(!b)return;const id=b.dataset.tg;
+  S.open.has(id)?S.open.delete(id):S.open.add(id);rDre();};
+const bMes=document.getElementById("bMes"); bMes.innerHTML=opt(MESF,N-1); bMes.onchange=()=>{S.bMes=+bMes.value;rBal();};
+const lMes=document.getElementById("lMes"); lMes.innerHTML=opt(MESF,N-1); lMes.onchange=()=>{S.lMes=+lMes.value;rLalur();};
+const pAj=document.getElementById("pAjuste"), pPr=document.getElementById("pPrej");
+pAj.value=S.ajuste; pPr.value=S.prej;
+const saveP=()=>{S.ajuste=Number(pAj.value)||0;S.prej=Math.max(0,Number(pPr.value)||0);store.set({ajuste:S.ajuste,prej:S.prej});rLalur();};
+pAj.oninput=saveP; pPr.oninput=saveP;
+document.getElementById("lView").onclick=e=>{const b=e.target.closest("button");if(!b)return;S.lView=b.dataset.l;
+  document.querySelectorAll("#lView button").forEach(x=>x.classList.toggle("on",x===b));rLalur();};
+
+/* redesenha ao girar o celular ou trocar entre largura de celular e desktop */
+let wasNarrow=isNarrow(), rt;
+window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(isNarrow()!==wasNarrow){wasNarrow=isNarrow();R[cur]();}},150);});
+sideKpis(); show();
+})();
+</script>
