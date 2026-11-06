@@ -1,0 +1,38 @@
+{
+  "v": 1,
+  "atualizado": "2026-11",
+  "setor": "Atacado de alimentos (CNAE 4637)",
+  "periodo": "IBGE 2023 · empresas 2025 · Damodaran jan/2026",
+  "avisos": [
+    "As referências são do setor como um todo. Nenhuma fonte publica dados só da CNAE 4637; a mais próxima é o grupo 463 do IBGE (atacado de alimentos, bebidas e fumo).",
+    "A faixa vai do menor ao maior valor de referência entre as fontes; a marca dourada é a mediana escolhida.",
+    "As empresas listadas são muito maiores que a NHD e algumas são indústrias ou atacarejos. Servem como referência, não como meta.",
+    "A NHD é medida no acumulado do ano. Prazos usam o saldo do último balancete; dívida líquida/EBITDA usa o EBITDA anualizado.",
+    "Os critérios variam entre fontes (ajustado x reportado, antes ou depois do IFRS 16, base de 360 ou 365 dias). As diferenças pequenas não devem ser lidas como exatas."
+  ],
+  "fontes": {
+    "ibge": {"nome": "IBGE · Pesquisa Anual de Comércio, grupo 463", "ano": "2023", "url": "https://ftp.ibge.gov.br/Comercio_e_Servicos/Pesquisa_Anual_de_Comercio/2023/xlsx/tabelas_2023_xlsx.zip", "obs": "Tabelas 5 e 15; margem bruta e prazo de estoque calculados a partir da receita, margem, CMV e estoques"},
+    "damo": {"nome": "Damodaran (NYU) · Food Wholesalers, mercados emergentes e global", "ano": "jan/2026", "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datacurrent.html", "obs": "121 empresas em emergentes; prazos calculados a partir de recebíveis, estoque e fornecedores sobre vendas"},
+    "pares": {"nome": "Releases anuais das empresas listadas (Assaí, Grupo Mateus, Camil, M. Dias Branco)", "ano": "2025", "url": "https://www.rad.cvm.gov.br/", "obs": "Sites de RI das empresas; Camil com exercício mar/25 a fev/26"}
+  },
+  "indicadores": [
+    {"k": "mb", "nome": "Margem bruta", "curto": "Mg. bruta", "un": "%", "melhor": "alto", "p25": 13.2, "med": 20.9, "p75": 22.4, "fontes": ["ibge", "damo", "pares"], "nota": "Mediana: IBGE, atacado de alimentos."},
+    {"k": "eb", "nome": "Margem EBITDA", "curto": "Mg. EBITDA", "un": "%", "melhor": "alto", "p25": 3.5, "med": 4.2, "p75": 7.3, "fontes": ["damo", "pares"], "nota": "Mediana: Damodaran, atacadistas de alimentos em emergentes."},
+    {"k": "ll", "nome": "Margem líquida", "curto": "Mg. líquida", "un": "%", "melhor": "alto", "p25": 1.0, "med": 1.3, "p75": 4.1, "fontes": ["damo", "pares"]},
+    {"k": "dlEb", "nome": "Dívida líquida / EBITDA", "curto": "DL/EBITDA", "un": "x", "melhor": "baixo", "p25": 0.4, "med": 1.5, "p75": 3.2, "fontes": ["pares"], "nota": "Quanto menor, menos anos de geração de caixa para quitar a dívida."},
+    {"k": "pmr", "nome": "Prazo médio de recebimento", "curto": "PMR", "un": "d", "melhor": "baixo", "p25": 20, "med": 26, "p75": 34, "fontes": ["damo", "pares"]},
+    {"k": "pmp", "nome": "Prazo médio de pagamento", "curto": "PMP", "un": "d", "melhor": "alto", "p25": 31, "med": 54, "p75": 65, "fontes": ["damo", "pares"]},
+    {"k": "pme", "nome": "Prazo médio de estoque", "curto": "PME", "un": "d", "melhor": "baixo", "p25": 42, "med": 58, "p75": 71, "fontes": ["ibge", "pares"], "nota": "Mediana: IBGE, empresas com 20 ou mais empregados."}
+  ],
+  "pares": {
+    "titulo": "Empresas de referência (2025)",
+    "linhas": [
+      {"nome": "Assaí", "seg": "atacarejo", "ano": 2025, "fonte": "pares", "v": {"mb": 16.8, "eb": 5.8, "ll": 0.9, "dlEb": 2.56, "pmr": 25, "pmp": 65, "pme": 42}},
+      {"nome": "Grupo Mateus", "seg": "atacarejo e distribuição", "ano": 2025, "fonte": "pares", "v": {"mb": 22.4, "eb": 7.3, "ll": 4.1, "dlEb": 0.41, "pmr": 34, "pmp": 54, "pme": 63}},
+      {"nome": "Camil", "seg": "indústria de alimentos", "ano": "2025/26", "fonte": "pares", "v": {"mb": 22.4, "eb": 8.2, "ll": 1.3, "dlEb": 3.24}},
+      {"nome": "M. Dias Branco", "seg": "biscoitos e massas", "ano": 2025, "fonte": "pares", "v": {"mb": 32.2, "eb": 10.6, "ll": 6.3, "dlEb": -0.5, "pmr": 61, "pmp": 65, "pme": 77}},
+      {"nome": "Damodaran · atacado de alimentos", "seg": "emergentes", "ano": "jan/2026", "fonte": "damo", "v": {"mb": 13.15, "eb": 4.19, "ll": 1.02, "pmr": 26, "pmp": 31, "pme": 50}},
+      {"nome": "IBGE · atacado de alimentos", "seg": "grupo 463", "ano": 2023, "fonte": "ibge", "v": {"mb": 20.9, "pme": 71}}
+    ]
+  }
+}
