@@ -160,6 +160,7 @@ table{border-collapse:separate;border-spacing:0;width:100%}
       <a href="#indicadores" data-v="indicadores">Indicadores</a>
       <a href="#balanco" data-v="balanco">Balanço &amp; Índices</a>
       <a href="#lalur" data-v="lalur">LALUR</a>
+      <a href="#agenda" data-v="agenda">Agenda</a>
     </nav>
     <details class="sidekpi" open>
       <summary>Acumulado 2026</summary>
@@ -246,6 +247,9 @@ table{border-collapse:separate;border-spacing:0;width:100%}
         <div class="grid g3" id="balCols"></div>
         <div class="card"><h2>Composição do passivo e PL</h2><div class="chart tall" style="--h:300px"><canvas id="cPas" aria-label="Composição do passivo e patrimônio líquido"></canvas></div></div>
       </section>
+
+      <!-- AGENDA DE FECHAMENTO -->
+      <section class="view" id="v-agenda" hidden><div id="agRoot"></div></section>
 
       <!-- LALUR -->
       <section class="view" id="v-lalur" hidden>
@@ -527,14 +531,14 @@ function rLalur(){
 }
 
 /* ================= NAVEGAÇÃO E CONTROLES ================= */
-const VIEWS=["visao","dre","vertical","indicadores","balanco","lalur"];
-const R={visao:rVisao,dre:rDre,vertical:rVertical,indicadores:rInd,balanco:rBal,lalur:rLalur};
+const VIEWS=["visao","dre","vertical","indicadores","balanco","lalur","agenda"];
+const R={visao:rVisao,dre:rDre,vertical:rVertical,indicadores:rInd,balanco:rBal,lalur:rLalur,agenda:()=>{if(window.DemoAgenda)DemoAgenda.render();}};
 let cur="visao";
 function show(){
   const h=location.hash.replace("#",""); cur=VIEWS.includes(h)?h:"visao";
   VIEWS.forEach(v=>document.getElementById("v-"+v).hidden=v!==cur);
   document.querySelectorAll("#tabs a").forEach(a=>a.classList.toggle("on",a.dataset.v===cur));
-  document.getElementById("filters").style.display=(cur==="balanco"||cur==="lalur")?"none":"";
+  document.getElementById("filters").style.display=(cur==="balanco"||cur==="lalur"||cur==="agenda")?"none":"";
   R[cur]();
 }
 window.addEventListener("hashchange",show);
@@ -570,5 +574,217 @@ document.getElementById("lView").onclick=e=>{const b=e.target.closest("button");
 let wasNarrow=isNarrow(), rt;
 window.addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(isNarrow()!==wasNarrow){wasNarrow=isNarrow();R[cur]();}},150);});
 sideKpis(); show();
+})();
+</script>
+
+<!-- AGENDA DE FECHAMENTO (demonstração: dados fictícios, alterações ficam só neste navegador) -->
+<style>
+#agRoot{display:flex;flex-direction:column;gap:16px}
+.ag-head{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:flex-end;justify-content:space-between}
+.ag-head h2{font-size:20px}.ag-head p{margin:2px 0 0;color:var(--gray);font-size:12.5px}
+.ag-bar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center}
+.ag-bar .lbl{font-size:12px;color:var(--gray)}
+.ag-sp{flex:1}
+.ag-btn{background:transparent;border:1px solid var(--line);border-radius:7px;padding:6px 11px;color:var(--soft);font-size:12.5px}
+.ag-btn:hover{color:var(--white);border-color:#C9A84C88}
+.ag-pri{border-color:var(--gold);color:var(--g2);font-weight:700;background:#C9A84C1a}
+.ag-del{border-color:#E5604F88;color:#F08A7C}
+.ag-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
+.ag-pbar{height:8px;border-radius:99px;background:#ffffff14;overflow:hidden;margin:6px 0}
+.ag-pbar span{display:block;height:100%;border-radius:99px;transition:width .4s}
+.ag-pbar.gold span{background:var(--gold)}.ag-pbar.cli span{background:#5DADE2}.ag-pbar.ctb span{background:var(--g2)}
+.ag-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:16px;align-items:start}
+.ag-ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ag-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.ag-dw{font-size:11px;color:var(--gray);text-align:center;font-weight:700;text-transform:uppercase}
+.ag-c{position:relative;min-height:84px;background:#ffffff06;border:1px solid var(--line);border-radius:7px;padding:4px 5px;text-align:left;display:flex;flex-direction:column;gap:3px;min-width:0;overflow:hidden;color:var(--white)}
+.ag-c:hover{border-color:#C9A84C77}.ag-out{visibility:hidden}.ag-nu{background:transparent;opacity:.5}
+.ag-today{border-color:var(--gold);box-shadow:inset 0 0 0 1px var(--gold)}.ag-sel{background:#C9A84C24;border-color:var(--gold)}
+.ag-n{font-size:13px;font-weight:700}.ag-today .ag-n{color:var(--g2)}
+.ag-chips{display:flex;flex-direction:column;gap:2px;min-width:0}
+.ag-chip{font-size:11px;line-height:1.25;padding:1px 5px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-left:3px solid}
+.ag-chip.cli{background:#5DADE224;border-color:#5DADE2}.ag-chip.ctb{background:#C9A84C24;border-color:var(--gold)}
+.ag-chip.s-ok{opacity:.5;text-decoration:line-through}.ag-chip.s-atraso{background:#E5604F33;border-color:var(--red)}
+.ag-more{font-size:11px;color:var(--soft)}.ag-dots{display:none}
+.ag-cnt{position:absolute;right:5px;top:4px;font-size:11px;color:var(--soft);font-weight:700}
+.ag-lh{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.ag-lh h2{margin:0}
+.ag-legend{font-size:12px;color:var(--soft);display:flex;align-items:center;gap:6px}
+.ag-legend i{width:10px;height:10px;border-radius:3px;display:inline-block;margin-left:6px}.ag-legend i.cli{background:#5DADE2}.ag-legend i.ctb{background:var(--gold)}
+.ag-it{display:flex;gap:10px;align-items:flex-start;padding:9px 10px;border-radius:8px;background:#ffffff08;border-left:3px solid;margin-bottom:6px}
+.ag-it.cli{border-color:#5DADE2}.ag-it.ctb{border-color:var(--gold)}.ag-it.done .ag-it-t{text-decoration:line-through;opacity:.6}
+.ag-chk{flex:none;width:24px;height:24px;border-radius:6px;border:1.5px solid #C9A84C99;background:transparent;color:var(--green);font-weight:800;font-size:14px;line-height:1;display:grid;place-items:center;padding:0}
+.ag-chk.ro{cursor:default;border-color:#ffffff40}.ag-it.done .ag-chk{background:#3CC47C26;border-color:var(--green)}
+.ag-it-b{flex:1;min-width:0}.ag-it-t{font-weight:600;overflow-wrap:anywhere}
+.ag-it-m{font-size:12px;color:var(--soft);display:flex;flex-wrap:wrap;gap:4px 6px;align-items:center;margin-top:2px}
+.ag-obs{font-size:12px;color:var(--soft);margin-top:4px;font-style:italic;overflow-wrap:anywhere}
+.ag-st{font-size:11px;font-weight:700;padding:1px 8px;border-radius:99px}
+.ag-st.ok{background:#3CC47C26;color:var(--green)}.ag-st.atr{background:#E5604F2e;color:#F08A7C}
+.ag-st.and{background:#4F9BD62e;color:var(--blue)}.ag-st.pen{background:#ffffff12;color:var(--soft)}
+.ag-ed{flex:none;font-size:12px;padding:3px 9px}
+.ag-gd{font-size:12px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.04em;margin:6px 0}.ag-gtoday{color:var(--g2)}
+.ag-modal{position:fixed;inset:0;z-index:50;background:#050a14b3;display:none;align-items:center;justify-content:center;padding:16px}
+.ag-modal.on{display:flex}
+.ag-dlg{background:var(--n3);border:1px solid #C9A84C66;border-radius:12px;padding:18px;width:min(460px,100%);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:12px}
+.ag-dlg label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--soft);font-weight:600}
+.ag-dlg input,.ag-dlg select,.ag-dlg textarea{width:100%;background:var(--navy);border:1px solid var(--line);border-radius:7px;padding:7px 8px;font:inherit;color:var(--white)}
+.ag-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ag-acts{display:flex;gap:8px;align-items:center}
+@media (max-width:1100px){.ag-main{grid-template-columns:minmax(0,1fr)}.ag-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){
+  .ag-c{min-height:50px;padding:3px;align-items:center}.ag-chips,.ag-cnt{display:none}
+  .ag-dots{display:flex;flex-wrap:wrap;gap:2px;justify-content:center}.ag-dots i{width:6px;height:6px;border-radius:50%}
+  .ag-dots i.cli{background:#5DADE2}.ag-dots i.ctb{background:var(--gold)}.ag-dots i.s-ok{opacity:.35}.ag-dots i.s-atraso{background:var(--red)}
+  .ag-grid{gap:3px}.ag-dw{font-size:10px}.ag-2{grid-template-columns:1fr}
+  .ag-kpis .card:first-child{grid-column:1/-1}
+}
+</style>
+<div class="ag-modal" id="agModal"></div>
+<script>
+(function(){
+"use strict";
+const KEY="dash_demo_agenda_v1";
+const MESES=["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+const DSEM=["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const FER={"2026-01-01":1,"2026-02-16":1,"2026-02-17":1,"2026-04-03":1,"2026-04-21":1,"2026-05-01":1,"2026-06-04":1,"2026-09-07":1,"2026-10-12":1,"2026-11-02":1,"2026-11-15":1,"2026-11-20":1,"2026-12-25":1,
+ "2027-01-01":1,"2027-02-08":1,"2027-02-09":1,"2027-03-26":1,"2027-04-21":1,"2027-05-01":1,"2027-05-27":1,"2027-09-07":1,"2027-10-12":1,"2027-11-02":1,"2027-11-15":1,"2027-11-20":1,"2027-12-25":1};
+const MODELO=[["cliente","Enviar extratos bancários do mês (contas e aplicações)",2],["cliente","Enviar relatório de contas a pagar e a receber",2],
+ ["cliente","Enviar notas fiscais de entrada e saída pendentes",3],["cliente","Enviar contratos e extratos de empréstimos e consórcios",3],
+ ["contador","Importar balancete e razão do mês",3],["contador","Conciliação bancária",4],["contador","Conferência de faturamento",5],
+ ["contador","Parcelamentos federais e estaduais",5],["contador","Empréstimos, financiamentos e consórcios",6],["contador","Book de conciliação (ativo, passivo e PL)",6],
+ ["contador","Enviar pendências da conciliação ao cliente",6],["cliente","Responder pendências da conciliação",8],["contador","Provisões, ajustes e lançamentos finais",8],
+ ["contador","Apuração de IRPJ e CSLL (LALUR)",9],["contador","Publicar o Dash do mês",9],["cliente","Reunião de resultado e aprovação do fechamento",10],["contador","Reunião de resultado com o cliente",10]];
+const RESP={cliente:"Cliente",contador:"Contabilidade"};
+const pad=n=>(n<10?"0":"")+n, iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parse=s=>{const p=s.split("-");return new Date(+p[0],+p[1]-1,+p[2]);};
+const util=d=>{const w=d.getDay();return w!==0&&w!==6&&!FER[iso(d)];};
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const dataBR=s=>{const d=parse(s);return pad(d.getDate())+"/"+pad(d.getMonth()+1);};
+const dataLonga=s=>{const d=parse(s);return DSEM[d.getDay()]+", "+d.getDate()+" de "+MESES[d.getMonth()].toLowerCase();};
+const uid=()=>"t"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const hoje=()=>iso(new Date());
+function diaUtil(ano,mes,n){const d=new Date(ano,mes,1);let k=0;for(;;){if(util(d)&&++k===n)return iso(d);d.setDate(d.getDate()+1);}}
+function utilIdx(s){const d=parse(s),x=new Date(d.getFullYear(),d.getMonth(),1);let k=0;while(x<=d){if(util(x))k++;x.setDate(x.getDate()+1);}return k;}
+
+/* competência fictícia: o mês anterior a hoje; o fechamento é executado no mês atual.
+   Para parecer um fechamento em andamento em qualquer dia da apresentação, o "dia útil de referência"
+   fica entre o 4º e o 7º: o que vence antes dele está concluído (menos uma tarefa do cliente, atrasada). */
+function somaUteis(s,k){const d=parse(s),p=k<0?-1:1;let n=Math.abs(k);while(n>0){d.setDate(d.getDate()+p);if(util(d))n--;}return iso(d);}
+function gerar(){
+  /* hoje (ou o próximo dia útil) é sempre o 5º dia útil do fechamento */
+  const ref=5; let base=new Date(); while(!util(base))base.setDate(base.getDate()+1); base=iso(base);
+  const bd=parse(base), c=new Date(bd.getFullYear(),bd.getMonth()-1,1), comp=c.getFullYear()+"-"+pad(c.getMonth()+1);
+  let atrasou=false;
+  const tarefas=MODELO.map(([resp,titulo,n])=>{
+    const t={id:uid(),titulo,resp,data:n===ref?base:somaUteis(base,n-ref),status:"pendente",obs:""};
+    if(n<ref){ if(resp==="cliente"&&n===3&&!atrasou){atrasou=true;t.obs="Faltam as notas de entrada da filial 2.";} else t.status="concluida"; }
+    else if(n===ref)t.status="andamento";
+    return t;});
+  return {comp,inicio:base,tarefas,criado:hoje()};
+}
+let A=null, view="todas", modo="contador", calMes=null, diaSel=null, refHoje=hoje();
+function load(){try{const x=JSON.parse(localStorage.getItem(KEY)||"null");if(x&&x.criado===hoje())A=x;}catch(e){} if(!A)A=gerar();}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(A));}catch(e){}}
+/* como a demo fixa os prazos relativos a hoje, "atrasada" usa a data real */
+function sit(t){if(t.status==="concluida")return "ok";const h=refHoje;if(t.data<h)return "atraso";return (parse(t.data)-parse(h))/864e5<=2?"breve":"futuro";}
+const vis=()=>view==="todas"?A.tarefas:A.tarefas.filter(t=>t.resp===view);
+const pct=ts=>ts.length?Math.round(ts.filter(t=>t.status==="concluida").length/ts.length*100):0;
+const compNome=()=>{const p=A.comp.split("-");return MESES[+p[1]-1]+"/"+p[0];};
+const edit=()=>modo==="contador";
+
+function render(){
+  const el=document.getElementById("agRoot"); if(!el)return; if(!A)load();
+  const ts=vis(), todas=A.tarefas;
+  const seg=(id,opts,cur)=>`<span class="seg" id="${id}">${opts.map(([v,l])=>`<button data-v="${v}" class="${v===cur?"on":""}">${l}</button>`).join("")}</span>`;
+  let h=`<div class="ag-head"><div><h2>Agenda de fechamento · ${compNome()}</h2><p>Tarefas do cliente e da contabilidade, com prazos e andamento. Na versão do cliente, a contabilidade publica a agenda e o cliente acompanha pelo mesmo link.</p></div></div>`;
+  h+=`<div class="card ag-bar"><span class="lbl">Ver agenda de</span>${seg("agView",[["todas","Todas"],["cliente","Cliente"],["contador","Contabilidade"]],view)}
+    <span class="lbl">Acessando como</span>${seg("agModo",[["contador","Contador"],["cliente","Cliente"]],modo)}
+    <span class="ag-sp"></span><button class="ag-btn" id="agReset" title="Volta a agenda para o exemplo inicial">Recomeçar exemplo</button></div>`;
+  const pc=pct(todas.filter(t=>t.resp==="cliente")), pa=pct(todas.filter(t=>t.resp==="contador")), pg=pct(ts);
+  const atr=ts.filter(t=>sit(t)==="atraso").length, brev=ts.filter(t=>sit(t)==="breve").length, conc=ts.filter(t=>t.status==="concluida").length;
+  const fim=todas.reduce((m,t)=>t.data>m?t.data:m,"");
+  const kp=(l,v,s,p,c)=>`<div class="card kpi"><div class="l">${l}</div><div class="v">${v}</div><div class="ag-pbar ${c}"><span style="width:${p}%"></span></div><div class="s">${s}</div></div>`;
+  h+=`<div class="ag-kpis">${kp("Progresso "+(view==="todas"?"geral":view==="cliente"?"do cliente":"da contabilidade"),pg+"%",conc+" de "+ts.length+" tarefas concluídas",pg,"gold")}
+    ${kp("Cliente",pc+"%","tarefas da empresa",pc,"cli")}${kp("Contabilidade",pa+"%","tarefas da Audicon",pa,"ctb")}
+    <div class="card kpi"><div class="l">Prazos</div><div class="v ${atr?"dn":"up"}">${atr} atrasada${atr===1?"":"s"}</div><div class="s">${brev} vence${brev===1?"":"m"} em até 2 dias · fim previsto ${fim?dataBR(fim):"—"}</div></div></div>`;
+  if(!calMes)calMes=A.inicio.slice(0,7);
+  h+=`<div class="ag-main"><div class="card">${cal(ts)}</div><div class="card" id="agDay">${dia(ts)}</div></div>`;
+  h+=`<div class="card"><div class="ag-lh"><h2>Todas as tarefas</h2><span class="ag-legend"><i class="cli"></i>Cliente <i class="ctb"></i>Contabilidade</span></div>${lista(ts)}</div>`;
+  if(!edit())h+=`<p class="note" style="text-align:center">Acessando como cliente: a agenda é só para acompanhar. Quem atualiza as tarefas é a contabilidade.</p>`;
+  el.innerHTML=h;
+  el.querySelector("#agView").onclick=e=>{const b=e.target.closest("button");if(b){view=b.dataset.v;render();}};
+  el.querySelector("#agModo").onclick=e=>{const b=e.target.closest("button");if(b){modo=b.dataset.v;render();}};
+  el.querySelector("#agReset").onclick=()=>{if(confirm("Voltar a agenda para o exemplo inicial?")){A=gerar();save();calMes=null;diaSel=null;render();}};
+}
+function cal(ts){
+  const [y,m]=calMes.split("-").map(Number), ano=y, mes=m-1, ini=new Date(ano,mes,1).getDay(), nd=new Date(ano,mes+1,0).getDate(), h=refHoje;
+  const por={}; ts.forEach(t=>(por[t.data]=por[t.data]||[]).push(t));
+  let o=`<div class="ag-ch"><button class="ag-btn" data-mes="-1" aria-label="Mês anterior">‹</button><h2 style="margin:0">${MESES[mes]} ${ano}</h2><button class="ag-btn" data-mes="1" aria-label="Próximo mês">›</button></div><div class="ag-grid">`;
+  o+=DSEM.map(x=>`<div class="ag-dw">${x}</div>`).join("");
+  for(let i=0;i<ini;i++)o+=`<div class="ag-c ag-out"></div>`;
+  for(let n=1;n<=nd;n++){
+    const ds=ano+"-"+pad(mes+1)+"-"+pad(n), l=por[ds]||[], dt=new Date(ano,mes,n), f=l.filter(t=>t.status==="concluida").length, at=l.some(t=>sit(t)==="atraso");
+    o+=`<button class="ag-c${util(dt)?"":" ag-nu"}${ds===h?" ag-today":""}${ds===diaSel?" ag-sel":""}" data-dia="${ds}" aria-label="${esc(dataLonga(ds))}${l.length?", "+l.length+" tarefas, "+f+" concluídas":""}"><span class="ag-n">${n}</span>`;
+    if(l.length){
+      o+=`<span class="ag-chips">${l.slice(0,3).map(t=>`<span class="ag-chip ${t.resp==="cliente"?"cli":"ctb"} s-${sit(t)}">${esc(t.titulo)}</span>`).join("")}${l.length>3?`<span class="ag-more">+${l.length-3}</span>`:""}</span>`;
+      o+=`<span class="ag-dots">${l.map(t=>`<i class="${t.resp==="cliente"?"cli":"ctb"} s-${sit(t)}"></i>`).join("")}</span><span class="ag-cnt ${at?"dn":f===l.length?"up":""}">${f}/${l.length}</span>`;
+    }
+    o+=`</button>`;
+  }
+  return o+"</div>";
+}
+function dia(ts){
+  const d=diaSel||refHoje, l=ts.filter(t=>t.data===d);
+  let o=`<div class="ag-lh"><h2>${esc(dataLonga(d))}</h2>${edit()?`<button class="ag-btn ag-pri" data-novo="${d}">+ Tarefa</button>`:""}</div>`;
+  if(!l.length)o+=`<p class="note">${diaSel?"Nenhuma tarefa neste dia.":"Nenhuma tarefa hoje. Toque em um dia do calendário."}</p>`;
+  return o+l.map(item).join("");
+}
+function lista(ts){
+  if(!ts.length)return `<p class="note">Nenhuma tarefa nesta visão.</p>`;
+  const g={}; ts.slice().sort((a,b)=>a.data.localeCompare(b.data)||a.resp.localeCompare(b.resp)).forEach(t=>(g[t.data]=g[t.data]||[]).push(t));
+  return Object.keys(g).map(d=>`<div><div class="ag-gd${d===refHoje?" ag-gtoday":""}">${esc(dataLonga(d))}${d===refHoje?" · hoje":""}</div>${g[d].map(item).join("")}</div>`).join("");
+}
+function item(t){
+  const s=sit(t), mark=t.status==="concluida"?"✓":t.status==="andamento"?"◐":"";
+  const badge=t.status==="concluida"?`<span class="ag-st ok">✓ Concluída</span>`:s==="atraso"?`<span class="ag-st atr">Atrasada</span>`:t.status==="andamento"?`<span class="ag-st and">Em andamento</span>`:`<span class="ag-st pen">Pendente</span>`;
+  return `<div class="ag-it ${t.resp==="cliente"?"cli":"ctb"}${t.status==="concluida"?" done":""}">`+
+    (edit()?`<button class="ag-chk" data-ciclo="${t.id}" title="Mudar status (pendente → em andamento → concluída)" aria-label="Mudar status de ${esc(t.titulo)}">${mark}</button>`:`<span class="ag-chk ro" aria-hidden="true">${mark}</span>`)+
+    `<div class="ag-it-b"><div class="ag-it-t">${esc(t.titulo)}</div><div class="ag-it-m"><span>${RESP[t.resp]}</span> · ${dataBR(t.data)} ${badge}</div>${t.obs?`<div class="ag-obs">${esc(t.obs)}</div>`:""}</div>`+
+    (edit()?`<button class="ag-btn ag-ed" data-edit="${t.id}" aria-label="Editar ${esc(t.titulo)}">Editar</button>`:"")+`</div>`;
+}
+const acha=id=>A.tarefas.find(t=>t.id===id);
+function editar(id,data){
+  const t=id?acha(id):{id:"",titulo:"",resp:view==="cliente"?"cliente":"contador",data:data||diaSel||refHoje,status:"pendente",obs:""};
+  const m=document.getElementById("agModal");
+  m.innerHTML=`<form class="ag-dlg" id="agForm"><h2 style="font-size:16px">${id?"Editar tarefa":"Nova tarefa"}</h2>
+    <label>Tarefa<input id="agfT" required maxlength="160" value="${esc(t.titulo)}"></label>
+    <div class="ag-2"><label>Responsável<select id="agfR"><option value="cliente"${t.resp==="cliente"?" selected":""}>Cliente</option><option value="contador"${t.resp==="contador"?" selected":""}>Contabilidade</option></select></label>
+    <label>Data<input type="date" id="agfD" required value="${esc(t.data)}"></label></div>
+    <label>Status<select id="agfS">${[["pendente","Pendente"],["andamento","Em andamento"],["concluida","Concluída"]].map(([k,l])=>`<option value="${k}"${t.status===k?" selected":""}>${l}</option>`).join("")}</select></label>
+    <label>Observação<textarea id="agfO" rows="3" maxlength="600">${esc(t.obs||"")}</textarea></label>
+    <div class="ag-acts">${id?`<button type="button" class="ag-btn ag-del" id="agfDel">Excluir</button>`:""}<span class="ag-sp"></span><button type="button" class="ag-btn" id="agfX">Cancelar</button><button class="ag-btn ag-pri">Salvar</button></div></form>`;
+  m.classList.add("on");
+  setTimeout(()=>{const i=document.getElementById("agfT");if(i)i.focus();},30);
+  document.getElementById("agfX").onclick=fechar;
+  if(id)document.getElementById("agfDel").onclick=()=>{if(confirm("Excluir esta tarefa?")){A.tarefas=A.tarefas.filter(x=>x.id!==id);save();fechar();render();}};
+  document.getElementById("agForm").onsubmit=e=>{e.preventDefault();
+    const v={titulo:document.getElementById("agfT").value.trim(),resp:document.getElementById("agfR").value,data:document.getElementById("agfD").value,status:document.getElementById("agfS").value,obs:document.getElementById("agfO").value.trim()};
+    if(!v.titulo||!v.data)return;
+    if(id)Object.assign(acha(id),v);else A.tarefas.push(Object.assign({id:uid()},v));
+    diaSel=v.data;calMes=v.data.slice(0,7);save();fechar();render();};
+}
+function fechar(){const m=document.getElementById("agModal");m.classList.remove("on");m.innerHTML="";}
+document.getElementById("agModal").addEventListener("click",e=>{if(e.target.id==="agModal")fechar();});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")fechar();});
+document.getElementById("agRoot").addEventListener("click",e=>{
+  const b=e.target.closest("[data-dia],[data-mes],[data-ciclo],[data-edit],[data-novo]"); if(!b)return;
+  if(b.dataset.dia){diaSel=b.dataset.dia;render();if(innerWidth<=1100){const d=document.getElementById("agDay");if(d)d.scrollIntoView({behavior:"smooth",block:"start"});}}
+  else if(b.dataset.mes){const [y,m]=calMes.split("-").map(Number),d=new Date(y,m-1+Number(b.dataset.mes),1);calMes=d.getFullYear()+"-"+pad(d.getMonth()+1);render();}
+  else if(b.dataset.ciclo&&edit()){const t=acha(b.dataset.ciclo);t.status=t.status==="pendente"?"andamento":t.status==="andamento"?"concluida":"pendente";save();render();}
+  else if(b.dataset.edit&&edit())editar(b.dataset.edit);
+  else if(b.dataset.novo&&edit())editar(null,b.dataset.novo);
+});
+window.DemoAgenda={render};
+load();
+if(location.hash==="#agenda")render();
 })();
 </script>
