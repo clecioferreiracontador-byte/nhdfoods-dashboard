@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Parcelamentos Estaduais Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:10px 0 9px;border-bottom:3px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.05rem,.95rem + .45vw,1.3rem);line-height:1.25}
+header.top p{margin:2px 0 0;font-size:.78rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+</style>
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Conciliação de Parcelamentos Estaduais — PGE/SEFAZ x Razão</h1>
+  <p>NHD Foods · Parcelamentos estaduais (SP) confrontados com os saldos contábeis, com a composição do endividamento por natureza</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Parcelamentos Estaduais</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="detalhe">3 · Parcelamentos</button>
+  </div>
+</div></nav>
+<main class="wrap">
+<div class="box">
+<div class="toolbar">
+  <button class="primary" onclick="document.getElementById('globalPdfInput').click()">📄 Carregar PDF(s) dos parcelamentos estaduais</button>
+  <button onclick="addCard()">+ Novo parcelamento em branco</button>
+  <button onclick="exportJSON()">Exportar dados (JSON)</button>
+  <button onclick="document.getElementById('importFile').click()">Importar dados (JSON)</button>
+  <button onclick="exportCSV()">Exportar resumo (CSV)</button>
+  <button class="primary" onclick="gerarRelatorioPDF()">📑 Gerar relatório (PDF)</button>
+  <button class="ghost" onclick="window.print()">Imprimir</button>
+  <span class="pdf-msg" id="globalPdfMsg"></span>
+  <label style="display:flex; align-items:center; gap:6px; margin:0; font-size:12.5px; color:var(--text);">Data-base:
+    <select id="baseSelect" onchange="setBase(this.value)" style="width:auto; padding:6px 8px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:var(--text); font-size:13px;"></select>
+  </label>
+  <input type="file" id="importFile" accept="application/json" onchange="importJSON(event)">
+  <input type="file" id="globalPdfInput" accept="application/pdf" multiple onchange="handleGlobalPdfUpload(event)">
+</div>
+<p class="muted small" style="margin:10px 0 0">Envie os PDFs dos parcelamentos estaduais (SP: extrato detalhado e termo de aceite da PGE – dívida ativa; pedido de parcelamento de ICMS da SEFAZ) e a ferramenta extrai os valores e calcula, na data-base escolhida, a composição do endividamento, as parcelas, o saldo de curto e longo prazo e os juros a apropriar (acréscimo Selic). Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</p>
+</div>
+
+<section class="panel" id="tab-processo">
+<div class="box"><h2>Objetivo</h2><p>Garantir todo mês que os saldos dos <b>parcelamentos estaduais</b> (dívida ativa na PGE e parcelamentos de ICMS na SEFAZ) registrados na contabilidade — valor líquido por natureza, juros Selic a apropriar, curto e longo prazo — sejam iguais aos documentos atualizados de cada parcelamento.</p><p class="muted small">Quando executar: todo mês, no fechamento contábil. Os documentos são lidos neste navegador e nada é enviado para a internet.</p></div><div class="box"><h2>Arquivos necessários (todo mês)</h2><table><thead><tr><th>Arquivo</th><th>De onde vem</th><th>O que deve conter</th></tr></thead><tbody><tr><td><b>Extrato detalhado da dívida ativa</b> e <b>termo de aceite</b> (PDF)</td><td>PGE-SP (portal da dívida ativa)</td><td>Valor consolidado por natureza (imposto, multa, juros, honorários), parcelas e pagamentos.</td></tr><tr><td><b>Pedido de parcelamento de ICMS</b> (PDF)</td><td>SEFAZ-SP (PEP)</td><td>Valores do parcelamento e cronograma de parcelas.</td></tr><tr><td><b>Balancete / razão do mês</b></td><td>Contabilidade</td><td>Saldos das contas de parcelamentos estaduais (curto e longo prazo) e de juros a apropriar.</td></tr></tbody></table></div><div class="box"><h2>Passo a passo</h2><ol class="steps"><li><b>Baixar</b> os documentos atualizados de cada parcelamento.</li><li>Na etapa <b>2 · Conferência</b>, clicar em <b>Carregar PDF(s)</b> e selecionar todos os documentos.</li><li>Escolher a <b>data-base</b> = último dia do mês.</li><li>Conferir o <b>resumo consolidado</b> e a <b>composição do endividamento por natureza</b> (imposto, multa, juros, honorários).</li><li>Conferir a <b>movimentação do mês</b>; diferença indica parcela em análise ou ajuste de cronograma.</li><li>Comparar com o <b>balancete</b> e lançar os juros Selic do período e a reclassificação de longo para curto prazo.</li><li>Gerar o <b>relatório (PDF)</b>, <b>exportar os dados (JSON)</b> e arquivar junto ao fechamento. Marcar o checklist abaixo.</li></ol></div><div class="box"><h2>Regras da conferência</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody><tr><td>R1</td><td><b>Valor líquido contábil</b> = valor das parcelas em aberto na adesão; <b>juros a apropriar</b> = atualização Selic acumulada (saldo líquido × (fator do mês − 1)).</td></tr><tr><td>R2</td><td><b>Saldo líquido por natureza</b> = consolidado na adesão × (saldo líquido ÷ consolidado): cada parcela amortiza todas as naturezas proporcionalmente.</td></tr><tr><td>R3</td><td><b>Curto prazo</b> = próximas até 12 parcelas; <b>longo prazo</b> = demais. Juros a apropriar rateados na mesma proporção.</td></tr><tr><td>R4</td><td>Pedido de parcelamento da SEFAZ sem pagamentos informados: parcelas com vencimento até a data da consulta são presumidas pagas — confirmar no extrato/DARE.</td></tr></tbody></table><p class="muted small" style="margin-top:10px">Fórmulas: Saldo devedor = Saldo da dívida (consolidação) + Juros incidentes acumulados. Curto prazo = próximas até 12 parcelas × valor da parcela. Longo prazo = Saldo devedor − Curto prazo.
+  % pago = Amortizações / Dívida consolidada. % a pagar = Saldo da dívida (líquido) / Dívida consolidada (soma 100% com % pago).
+  Juros do período = exato quando informado o extrato anterior (Δ juros incidentes); caso contrário, estimativa proporcional ao tempo decorrido desde a consolidação.</p></div><div class="box"><h2>Checklist do fechamento</h2><ul class="cl"><li><label><input type="checkbox"> <span>Documentos de todos os parcelamentos carregados</span></label></li><li><label><input type="checkbox"> <span>Data-base = último dia do mês</span></label></li><li><label><input type="checkbox"> <span>Composição por natureza conferida</span></label></li><li><label><input type="checkbox"> <span>Movimentação do mês sem diferença (ou justificada)</span></label></li><li><label><input type="checkbox"> <span>Saldos CP/LP e juros a apropriar conferidos com o balancete</span></label></li><li><label><input type="checkbox"> <span>Juros Selic do período lançados</span></label></li><li><label><input type="checkbox"> <span>Relatório PDF gerado e dados exportados (JSON)</span></label></li></ul><button class="ghost" id="btnLimparChecklist" type="button">Limpar checklist (novo mês)</button></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+<div class="summary">
+  <h2>Resumo consolidado <span id="baseChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div id="baseInfo" style="font-size:12px; margin:0 0 10px; color:var(--muted);"></div>
+  <div style="overflow-x:auto;">
+  <table id="summaryTable">
+    <thead>
+      <tr>
+        <th>Parcelamento</th>
+        <th>Dívida consolidada</th>
+        <th>Valor líquido contábil</th>
+        <th>Juros a apropriar</th>
+        <th>Saldo devedor total</th>
+        <th>Curto prazo</th>
+        <th>Longo prazo</th>
+        <th>Juros a apropriar CP</th>
+        <th>Juros a apropriar LP</th>
+        <th>Total de parcelas</th>
+        <th>Parcelas pagas</th>
+        <th>Parcelas restantes</th>
+        <th>% a pagar</th>
+        <th>Juros do período</th>
+      </tr>
+    </thead>
+    <tbody id="summaryBody"></tbody>
+    <tfoot id="summaryFoot"></tfoot>
+  </table>
+  </div>
+</div>
+
+<div class="summary" id="compPanel">
+  <h2>Composição do endividamento — consolidado <span id="compChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div style="overflow-x:auto;" id="compBody"></div>
+  <div style="font-size:12px; color:var(--muted); margin-top:8px;">Saldo líquido por natureza = consolidado na adesão × (saldo líquido ÷ consolidado), pois cada parcela amortiza todas as naturezas proporcionalmente. O juros Selic (acréscimo financeiro) é o que ainda deve ser apropriado ao resultado; o curto prazo considera as próximas 12 parcelas.</div>
+</div>
+
+<div class="summary" id="movPanel" style="display:none;">
+  <h2>Movimentação do saldo devedor no mês <span id="movChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Parcelamento</th><th id="movIniTh">Saldo anterior</th><th>(+) Consolidação no mês</th><th>(+) Juros do mês</th><th>(−) Pagamentos do mês</th><th id="movFimTh">Saldo na data-base</th><th>Diferença</th></tr></thead>
+      <tbody id="movBody"></tbody><tfoot id="movFoot"></tfoot>
+    </table>
+  </div>
+  <div style="font-size:12px; color:var(--muted); margin-top:8px;">Saldo anterior + consolidação + juros do mês − pagamentos = saldo na data-base. Diferença diferente de zero indica parcela em análise/ajuste de cronograma.</div>
+</div>
+
+<div class="summary">
+  <h2>Composição anual — pago × a pagar
+    <select id="anoComposicaoSelect" onchange="setAnoComposicao(this.value)" style="font-size:13px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); margin-left:8px;"></select>
+  </h2>
+  <div style="overflow-x:auto;">
+  <table id="composicaoTable">
+    <thead>
+      <tr><th>Mês</th><th>Pago</th><th>A pagar</th><th>Total</th></tr>
+    </thead>
+    <tbody id="composicaoBody"></tbody>
+    <tfoot id="composicaoFoot"></tfoot>
+  </table>
+  </div>
+</div>
+</section>
+
+<section class="panel" id="tab-detalhe">
+<div id="cards"></div>
+</section>
+</main>
+
+<script>
+const STORAGE_KEY = 'audicon-parcelamentos-estaduais-v1';
+let cards = [];
+let anoComposicao = new Date().getFullYear();
+
+// ---------- tema (modo noturno) ----------
+const THEME_KEY = 'audicon-parcelamentos-estaduais-tema';
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Modo claro' : '🌙 Modo noturno';
+  try { localStorage.setItem(THEME_KEY, theme); } catch(e){}
+}
+function toggleTheme(){
+  const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  applyTheme(current === 'dark' ? 'light' : 'dark');
+}
+(function initTheme(){
+  let saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch(e){}
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme('light');
+})();
+
+function uid(){ return 'c'+Math.random().toString(36).slice(2,9); }
+
+function blankCard(){
+  return {
+    id: uid(),
+    nome:'', cnpj:'', parcelamento:'',
+    dataConsolidacao:'', dataExtrato:'',
+    dividaConsolidada:'', amortizacoes:'', saldoDivida:'', jurosIncidentes:'', saldoDevedor:'',
+    totalParcelas:'', parcelasPagas:'', qtdRestante:'', valorParcela:'',
+    dataExtratoAnterior:'', jurosIncidentesAnterior:'',
+    open:true, rawPaste:''
+  };
+}
+
+// ---------- number / date helpers ----------
+function toNum(v){
+  if (v===undefined || v===null || v==='') return NaN;
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/\./g,'').replace(',', '.').trim());
+}
+function fmtBRL(v){
+  if (isNaN(v) || v===undefined || v===null) return '—';
+  return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+function fmtPct(v){
+  if (isNaN(v) || v===undefined || v===null) return '—';
+  return v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}) + '%';
+}
+function parseBRDate(s){
+  if(!s) return null;
+  const m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if(!m) { const d = new Date(s); return isNaN(d) ? null : d; }
+  return new Date(+m[3], +m[2]-1, +m[1]);
+}
+function toISODate(brOrIso){
+  if(!brOrIso) return '';
+  const m = String(brOrIso).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  if(m) return `${m[3]}-${m[2]}-${m[1]}`;
+  return brOrIso;
+}
+function monthsBetween(d1, d2){
+  if(!d1 || !d2) return NaN;
+  return (d2 - d1) / (1000*60*60*24*30.4368);
+}
+
+// ---------- leitura dos PDFs estaduais (SP) ----------
+// Três formatos: (1) Extrato Detalhado da PGE (dívida ativa), (2) Termo de Aceite da PGE (complementa o extrato),
+// (3) Pedido de Parcelamento de ICMS não inscrito (SEFAZ). Todos seguem a mesma mecânica dos federais:
+// parcela × fator mensal (Selic acumulada até o mês anterior + 1% do mês do pagamento).
+const MONEY = '(\\d[\\d.]*,\\d{2})';
+function ymFromBR(br){ const d = parseBRDate(br); return d ? ymOf(d) : ''; }
+
+function parseExtrato(raw){
+  const flat = raw.replace(/\s+/g, ' ').trim();
+  if (/EXTRATO DETALHADO/.test(flat) && /PARCELAS EMITIDAS/.test(flat)) return parsePGE(flat);
+  if (/TERMO DE ACEITE DO PARCELAMENTO/i.test(flat)) return parseTermo(flat);
+  if (/Pedido de Parcelamento de Débitos Fiscais/i.test(flat) && /Acréscimo Financeiro/i.test(flat)) return parseSefaz(flat);
+  return {};
+}
+
+function parsePGE(flat){
+  const res = { estadual: true, tipoDoc: 'pge', orgao: 'PGE-SP — Dívida Ativa (ICMS)' };
+  let m = flat.match(/Razão Social CNPJ\/CPF (.+?) (\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/);
+  if (m){ res.nome = m[1].trim(); res.cnpj = m[2]; }
+  m = flat.match(/Saldo do Parcelamento (\d{8}-\d) (\d{1,3}) (\d{2}\/\d{2}\/\d{4}) R\$ ([\d.,]+) (\d{2}\/\d{2}\/\d{4}) ([A-Za-zÀ-ú ]+?) Principal/);
+  if (m){
+    res.parcelamento = m[1]; res.totalParcelas = parseInt(m[2], 10); res.dividaConsolidada = toNum(m[4]);
+    const d1 = parseBRDate(m[3]), d2 = parseBRDate(m[5]);          // celebração e solicitação (a solicitação é a data-base da consolidação)
+    res.dataConsolidacao = localToBR(d1 < d2 ? d1 : d2); res.situacaoParcelamento = m[6].trim();
+  } else { m = flat.match(/(\d{8}-\d)/); if (m) res.parcelamento = m[1]; }
+  m = flat.match(/Principal R\$ ([\d.,]+) Correção R\$ ([\d.,]+) Juros de Mora do Principal R\$ ([\d.,]+) Multa de Mora do Principal R\$ ([\d.,]+) Honorários [A-Za-zÀ-ú]+ R\$ ([\d.,]+) Total Atualizado R\$ ([\d.,]+)/);
+  if (m){
+    res.composicao = { principal: toNum(m[1]), correcao: toNum(m[2]), juros: toNum(m[3]), multa: toNum(m[4]), honorarios: toNum(m[5]) };
+    if (res.dividaConsolidada === undefined) res.dividaConsolidada = toNum(m[6]);
+  }
+  m = flat.match(/Emitido em (\d{2}\/\d{2}\/\d{4})/); if (m) res.dataExtrato = m[1];
+
+  const i0 = flat.indexOf('PARCELAS EMITIDAS'), i1 = flat.indexOf('DÉBITOS INCLUÍDOS');
+  const sec = flat.slice(i0 < 0 ? 0 : i0, i1 > i0 ? i1 : undefined);
+  const rowRe = /(\d{1,2}) (\d{2}\/\d{2}\/\d{4}) R\$ ([\d.,]+)(?: (\d{2}\/\d{2}\/\d{4})((?: R\$ [\d.,]+){1,2}) Paga| Aguardando Pagamento)/g;
+  const todas = [], pagamentos = [];
+  let rm;
+  while ((rm = rowRe.exec(sec))){
+    const n = parseInt(rm[1], 10), venc = rm[2], orig = toNum(rm[3]);
+    if (rm[4]){
+      const vals = [...rm[5].matchAll(/R\$ ([\d.,]+)/g)].map(x => toNum(x[1]));
+      const pago = vals[vals.length - 1], multa = vals.length > 1 ? vals[0] : 0;
+      todas.push({ n, venc, orig, atual: 0, situacao: 'Paga', pgto: rm[4], am: orig, multa });
+      pagamentos.push({ data: rm[4], valor: pago, amort: orig, juros: r2(pago - orig), multa });
+    } else todas.push({ n, venc, orig, atual: 0, situacao: 'A vencer' });
+  }
+  if (todas.length){
+    res.parcelasTodas = todas; res.pagamentos = pagamentos;
+    res.totalParcelas = Math.max(res.totalParcelas || 0, ...todas.map(t => t.n));
+    res.parcelasPagas = todas.filter(t => t.situacao === 'Paga').length;
+    const pend = todas.filter(t => t.situacao !== 'Paga');
+    res.qtdRestante = pend.length;
+    res.saldoDivida = r2(pend.reduce((a, t) => a + t.orig, 0));
+    if (res.dividaConsolidada !== undefined) res.amortizacoes = r2(res.dividaConsolidada - res.saldoDivida);
+    res.parcelasFuturas = pend.map(t => ({ vencimento: t.venc, saldoAtualizado: t.orig, situacao: t.situacao }));
+    if (pend.length) res.valorParcela = pend[0].orig;
+    const ab = flat.match(/Emitida\(s\) em Aberto R\$ ([\d.,]+) R\$ ([\d.,]+)/);
+    if (ab){ const alvo = [toNum(ab[1]), toNum(ab[2])]; res.conferenciaResumo = alvo.some(v => Math.abs(v - res.saldoDivida) < 1.5); }
+  }
+  return res;
+}
+
+function parseTermo(flat){
+  const res = { estadual: true, tipoDoc: 'termo' };
+  let m = flat.match(/TERMO DE ACEITE DO PARCELAMENTO Nº (\d{8}-\d)/); if (m) res.parcelamento = m[1];
+  m = flat.match(/Deferido e Emitido pela Internet em (\d{2}\/\d{2}\/\d{4}) (\d{2}:\d{2})/); if (m) res.termoDeferido = m[1] + ' ' + m[2];
+  m = flat.match(/CPF (\d{3}\.\d{3}\.\d{3}-\d{2}) (.+?) Nome Telefone/); if (m) res.solicitante = m[2].trim();
+  m = flat.match(/Inscrição Estadual ([\d.]+)/); if (m) res.inscricaoEstadual = m[1];
+  m = flat.match(/(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}) CPF\/CNPJ/) || flat.match(/CPF\/CNPJ[: ]+(\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/); if (m) res.cnpj = m[1];
+  const cdas = [], seen = {};
+  const re = /(\d{10}) R\$ ([\d.,]+) (\d{12}) (Ajuizado|Não Ajuizado) ICMS Declarado/g;
+  let cm;
+  while ((cm = re.exec(flat))){ if (!seen[cm[1]]){ seen[cm[1]] = 1; cdas.push({ cda: cm[1], valor: toNum(cm[2]), situacao: cm[4] }); } }
+  if (cdas.length) res.cdas = cdas;
+  return res;
+}
+
+function parseSefaz(flat){
+  const res = { estadual: true, tipoDoc: 'sefaz', orgao: 'SEFAZ-SP — ICMS não inscrito na dívida ativa' };
+  let m = flat.match(/Razão Social: (.+?) Data Início Atividade/); if (m) res.nome = m[1].trim();
+  m = flat.match(/CNPJ: (\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2})/); if (m) res.cnpj = m[1];
+  m = flat.match(/Inscrição Estadual: ([\d.]+)/); if (m) res.inscricaoEstadual = m[1];
+  m = flat.match(/Número do Parcelamento: (\d{8}-\d)/); if (m) res.parcelamento = m[1];
+  m = flat.match(/Número do Parcelamento: \d{8}-\d (\d{2}\/\d{2}\/\d{4}) Data Pedido/) || flat.match(/Data Pedido: (\d{2}\/\d{2}\/\d{4})/); if (m) res.dataConsolidacao = m[1];
+  m = flat.match(/Data da consulta: (\d{2}\/\d{2}\/\d{4})/); if (m) res.dataExtrato = m[1];
+  m = flat.match(/Situação: (\d{3} - [A-ZÀ-Ú ]+?) (?:Código|$)/); if (m) res.situacaoParcelamento = m[1].trim();
+  m = flat.match(/Quantidade de Parcelas: (\d+)/) || flat.match(/(\d+) Quantidade de Parcelas:/); if (m) res.totalParcelas = parseInt(m[1], 10);
+
+  const rowRe = new RegExp('(\\d{1,2}) (\\d{2}/\\d{2}/\\d{4}) ' + [MONEY, MONEY, MONEY, MONEY, MONEY, MONEY].join(' '), 'g');
+  const rows = {}; let rm;
+  while ((rm = rowRe.exec(flat))){ const n = parseInt(rm[1], 10); if (!rows[n]) rows[n] = { n, venc: rm[2], icms: toNum(rm[3]), juros: toNum(rm[4]), multa: toNum(rm[5]), orig: toNum(rm[6]), acresc: toNum(rm[7]), total: toNum(rm[8]) }; }
+  const lista = Object.values(rows).sort((a, b) => a.n - b.n);
+  m = flat.match(new RegExp('Total ' + [MONEY, MONEY, MONEY, MONEY, MONEY, MONEY].join(' ')));
+  if (m) res.composicao = { principal: toNum(m[1]), correcao: 0, juros: toNum(m[2]), multa: toNum(m[3]), honorarios: 0 };
+  if (lista.length){
+    const dCons = parseBRDate(res.dataExtrato);
+    res.totalParcelas = Math.max(res.totalParcelas || 0, lista.length);
+    res.dividaConsolidada = r2(lista.reduce((a, r) => a + r.orig, 0));
+    // O pedido não informa pagamentos: parcelas com vencimento até a data da consulta são PRESUMIDAS pagas (ajustável no cartão).
+    const todas = lista.map(r => Object.assign({}, r, { atual: 0 }));
+    res.parcelasTodas = todas;
+    aplicarPresumidas(res, todas.filter(r => parseBRDate(r.venc) <= dCons).length);
+    // fator do mês de cada parcela = 1 + acréscimo ÷ valor amortizável; parcelas futuras trazem o valor do mês corrente
+    const fat = {};
+    todas.forEach(r => { if (parseBRDate(r.venc) <= dCons) fat[ymFromBR(r.venc)] = 1 + r.acresc / r.orig; });
+    const futura = todas.find(r => parseBRDate(r.venc) > dCons);
+    if (futura) fat[ymOf(dCons)] = 1 + futura.acresc / futura.orig;
+    res.fatores = fat;
+    res.pagamentoPresumido = true;
+  }
+  const deb = [], dre = /([A-Z][A-Z0-9-]+) \d{4} \d{4} (\d{2}\/\d{4}) ([\d.,]+) C \d{2}\/\d{2}\/\d{4} \d{2}\/\d{2}\/\d{4}/g;
+  let dm;
+  while ((dm = dre.exec(flat))) deb.push({ tipo: dm[1], referencia: dm[2], valor: toNum(dm[3]) });
+  if (deb.length) res.debitosSefaz = deb;
+  return res;
+}
+
+// Marca as n primeiras parcelas como pagas (SEFAZ: pagamento presumido) e refaz pagamentos, saldo e contagens.
+function aplicarPresumidas(c, n){
+  const rows = (c.parcelasTodas || []).slice().sort((a, b) => a.n - b.n);
+  rows.forEach((r, i) => {
+    if (i < n){ r.situacao = 'Paga'; r.pgto = r.venc; r.am = r.orig; } else { r.situacao = 'A vencer'; delete r.pgto; delete r.am; }
+  });
+  c.parcelasTodas = rows;
+  c.pagamentos = rows.filter(r => r.situacao === 'Paga').map(r => ({ data: r.venc, valor: r2(r.orig + r.acresc), amort: r.orig, juros: r.acresc, presumido: true }));
+  c.parcelasPagas = n;
+  const pend = rows.filter(r => r.situacao !== 'Paga');
+  c.qtdRestante = pend.length;
+  c.saldoDivida = r2(pend.reduce((a, r) => a + r.orig, 0));
+  c.amortizacoes = r2((c.dividaConsolidada || 0) - c.saldoDivida);
+  c.parcelasFuturas = pend.map(r => ({ vencimento: r.venc, saldoAtualizado: r.orig, situacao: 'A vencer' }));
+  c.valorParcela = pend.length ? pend[0].orig : '';
+}
+
+// ---------- compute ----------
+function computeCard(c){
+  const dividaConsolidada = toNum(c.dividaConsolidada);
+  const amortizacoes = toNum(c.amortizacoes);
+  const saldoDivida = toNum(c.saldoDivida);
+  const jurosIncidentes = toNum(c.jurosIncidentes);
+  const saldoDevedorInformado = toNum(c.saldoDevedor);
+  const saldoDevedor = !isNaN(saldoDevedorInformado) ? saldoDevedorInformado :
+                        (!isNaN(saldoDivida) && !isNaN(jurosIncidentes) ? saldoDivida + jurosIncidentes : NaN);
+
+  const totalParcelas = toNum(c.totalParcelas);
+  const parcelasPagas = toNum(c.parcelasPagas);
+  let qtdRestante = toNum(c.qtdRestante);
+  if (isNaN(qtdRestante) && !isNaN(totalParcelas) && !isNaN(parcelasPagas)) qtdRestante = totalParcelas - parcelasPagas;
+  const valorParcela = toNum(c.valorParcela);
+
+  // Com a lista de parcelas do extrato, usa o valor real de cada parcela pendente (elas nem sempre
+  // são iguais); sem a lista (preenchimento manual), cai no cálculo aproximado qtd × valor da parcela.
+  const pend = Array.isArray(c.parcelasFuturas) ? c.parcelasFuturas : [];
+  const usaLista = pend.length > 0 && (isNaN(qtdRestante) || qtdRestante === pend.length);
+  const somaPend = n => pend.slice(0, n).reduce((a, p) => a + (p.saldoAtualizado || 0), 0);
+
+  const valorAPagar = usaLista ? somaPend(pend.length)
+    : ((!isNaN(qtdRestante) && !isNaN(valorParcela)) ? qtdRestante * valorParcela : NaN);
+
+  const curtoQtd = !isNaN(qtdRestante) ? Math.min(12, qtdRestante) : NaN;
+  const longoQtd = !isNaN(qtdRestante) ? Math.max(0, qtdRestante - 12) : NaN;
+  const curtoPrazo = usaLista ? somaPend(Math.min(12, pend.length))
+    : ((!isNaN(curtoQtd) && !isNaN(valorParcela)) ? curtoQtd * valorParcela : NaN);
+  const longoBruto = (!isNaN(saldoDevedor) && !isNaN(curtoPrazo)) ? saldoDevedor - curtoPrazo : NaN;
+  const longoPrazo = Math.abs(longoBruto) < 0.5 ? 0 : longoBruto;
+
+  // Juros a apropriar (e valor líquido) rateados entre curto e longo prazo na mesma
+  // proporção em que o saldo devedor total já foi dividido entre os dois horizontes.
+  const propCurto = (!isNaN(curtoPrazo) && saldoDevedor) ? curtoPrazo / saldoDevedor : NaN;
+  const jurosCurtoPrazo = (!isNaN(jurosIncidentes) && !isNaN(propCurto)) ? jurosIncidentes * propCurto : NaN;
+  const jurosLongoPrazo = (!isNaN(jurosIncidentes) && !isNaN(jurosCurtoPrazo)) ? jurosIncidentes - jurosCurtoPrazo : NaN;
+  const liquidoCurtoPrazo = (!isNaN(curtoPrazo) && !isNaN(jurosCurtoPrazo)) ? curtoPrazo - jurosCurtoPrazo : NaN;
+  const liquidoLongoPrazo = (!isNaN(longoPrazo) && !isNaN(jurosLongoPrazo)) ? longoPrazo - jurosLongoPrazo : NaN;
+
+  const percPago = (!isNaN(amortizacoes) && dividaConsolidada) ? (amortizacoes / dividaConsolidada) * 100 : NaN;
+  const percAPagar = (!isNaN(saldoDivida) && dividaConsolidada) ? (saldoDivida / dividaConsolidada) * 100 : NaN;
+
+  const dConsol = parseBRDate(c.dataConsolidacao);
+  const dExtrato = parseBRDate(c.dataExtrato);
+  const jurosAnt = toNum(c.jurosIncidentesAnterior);
+  let jurosPeriodo = NaN, jurosPeriodoExato = false;
+  if (!isNaN(jurosAnt) && !isNaN(jurosIncidentes)) {
+    // juros do período = variação dos juros incidentes + juros que já foram quitados nos pagamentos do período
+    jurosPeriodo = jurosIncidentes - jurosAnt + (toNum(c.jurosPagosPeriodo) || 0);
+    jurosPeriodoExato = true;
+  } else if (!isNaN(jurosIncidentes)) {
+    const meses = monthsBetween(dConsol, dExtrato);
+    jurosPeriodo = (meses && meses > 0) ? jurosIncidentes / meses : jurosIncidentes;
+  }
+
+  return {
+    dividaConsolidada, amortizacoes, saldoDivida, jurosIncidentes, saldoDevedor,
+    totalParcelas, parcelasPagas, qtdRestante, valorParcela, valorAPagar,
+    curtoQtd, longoQtd, curtoPrazo, longoPrazo,
+    jurosCurtoPrazo, jurosLongoPrazo, liquidoCurtoPrazo, liquidoLongoPrazo,
+    percPago, percAPagar, jurosPeriodo, jurosPeriodoExato
+  };
+}
+
+/* ---------- data-base (posição reconstruída em fechamentos anteriores) ----------
+   A RFB atualiza cada parcela (valor originário) por um fator mensal: 1 + Selic acumulada até o mês anterior + 1% do mês.
+   Em cada pagamento, "valor total ÷ dívida amortizada" é exatamente esse fator do mês do pagamento. O extrato atual
+   traz o histórico de pagamentos, então dá para reconstruir o fator, o saldo e as parcelas em aberto de qualquer mês. */
+let competencia = '';   // '' = posição do próprio extrato; senão data-base ISO (yyyy-mm-dd)
+const BASE_KEY = 'audicon-parcelamentos-estaduais-base';
+const ymOf = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+function addYM(ym, n){ const [y, m] = ym.split('-').map(Number); const t = new Date(y, m - 1 + n, 1); return ymOf(t); }
+function isoToLocal(iso){ const p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function localToBR(d){ return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); }
+const med = a => { const s = a.slice().sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : NaN; };
+const r2 = v => Math.round(v * 100) / 100;
+
+function fatoresConhecidos(c){
+  const por = {};
+  (c.pagamentos || []).forEach(p => {
+    const d = parseBRDate(p.data);
+    if (d && p.amort > 0) (por[ymOf(d)] = por[ymOf(d)] || []).push(p.valor / p.amort);
+  });
+  const k = {};
+  Object.keys(por).forEach(m => { k[m] = med(por[m]); });
+  // mês do extrato: parcelas em aberto já trazem saldo atualizado ÷ valor originário
+  const dE = parseBRDate(c.dataExtrato);
+  const abertas = (c.parcelasTodas || []).filter(p => p.situacao !== 'Paga' && p.orig > 0 && p.atual > 0);
+  if (dE && abertas.length) k[ymOf(dE)] = med(abertas.map(p => p.atual / p.orig));
+  Object.assign(k, c.fatores || {});      // estaduais: fatores informados no próprio documento (ex.: acréscimo financeiro da SEFAZ)
+  return k;
+}
+// Selic mensal implícita (incremento do fator de um mês para o seguinte), comum a todos os parcelamentos
+function serieSelic(){
+  const por = {};
+  cards.forEach(c => {
+    const k = fatoresConhecidos(c);
+    Object.keys(k).forEach(m => { const nx = addYM(m, 1); if (k[nx] !== undefined) (por[m] = por[m] || []).push(k[nx] - k[m]); });
+  });
+  const s = {}; Object.keys(por).forEach(m => { s[m] = med(por[m]); });
+  return s;
+}
+function fatorMes(c, ym, serie, info){
+  const k = fatoresConhecidos(c);
+  if (k[ym] !== undefined) return k[ym];
+  const meses = Object.keys(k);
+  if (!meses.length) return NaN;
+  // Selic do mês ainda não divulgada/conhecida: usa a variação mais recente da série e avisa que o fator é estimado
+  const chaves = Object.keys(serie).sort();
+  const ultima = chaves.length ? serie[chaves[chaves.length - 1]] : NaN;
+  const incr = m => { if (serie[m] !== undefined) return serie[m]; if (!isNaN(ultima)){ if (info) info.est = true; return ultima; } return NaN; };
+  const dist = m => Math.abs((+ym.slice(0, 4) - +m.slice(0, 4)) * 12 + (+ym.slice(5) - +m.slice(5)));
+  const ref = meses.sort((a, b) => dist(a) - dist(b))[0];
+  let f = k[ref], m = ref;
+  while (m !== ym){
+    if (m < ym){ const s = incr(m); if (isNaN(s)) return NaN; f += s; m = addYM(m, 1); }
+    else { const ant = addYM(m, -1), s = incr(ant); if (isNaN(s)) return NaN; f -= s; m = ant; }
+  }
+  return f;
+}
+// Posição do parcelamento na data D (D anterior ou igual à data do extrato)
+function estadoEm(c, D, serie, info){
+  const dCons = parseBRDate(c.dataConsolidacao);
+  if (dCons && D < dCons) return { naoExiste: true, amort: 0, pagas: 0, saldoDivida: 0, f: 1, juros: 0, saldoDevedor: 0, pend: [], pagsAte: [], pagsApos: [] };
+  const f = fatorMes(c, ymOf(D), serie, info);
+  if (isNaN(f)) return null;
+  const rows = c.parcelasTodas || [];
+  const pays = c.pagamentos || [];
+  const apos = pays.filter(p => parseBRDate(p.data) > D), ate = pays.filter(p => parseBRDate(p.data) <= D);
+  // parcelas pagas depois da data-base voltam a ser saldo em aberto; deve bater com o histórico de pagamentos
+  const pagaApos = rows.filter(r => r.situacao === 'Paga' && r.pgto && parseBRDate(r.pgto) > D);
+  if (pagaApos.length !== apos.length) return null;
+  const kExt = fatoresConhecidos(c)[ymOf(parseBRDate(c.dataExtrato))];
+  // valor originário em aberto: parcelas em aberto hoje (saldo atualizado ÷ fator do extrato, o que respeita pagamentos parciais)
+  // + parcelas pagas depois da data-base (dívida amortizada no documento)
+  const abertas = rows.filter(r => r.situacao !== 'Paga').map(r => ({ n: r.n, vencimento: r.venc, orig: (r.atual > 0 && kExt) ? r.atual / kExt : r.orig }))
+    .concat(pagaApos.map(r => ({ n: r.n, vencimento: r.venc, orig: r.am || r.orig })))
+    .sort((a, b) => parseBRDate(a.vencimento) - parseBRDate(b.vencimento) || a.n - b.n);
+  const saldoDivida = abertas.reduce((a, r) => a + r.orig, 0);
+  const pagas = rows.filter(r => r.situacao === 'Paga').length - pagaApos.length;
+  const amort = toNum(c.dividaConsolidada) - saldoDivida;
+  if (isNaN(saldoDivida) || isNaN(amort)) return null;
+  const pend = abertas.map(r => ({ vencimento: r.vencimento, saldoAtualizado: r.orig * f, situacao: 'A vencer' }));
+  return { amort, pagas, saldoDivida, f, juros: saldoDivida * (f - 1), saldoDevedor: saldoDivida * f, pend, pagsAte: ate, pagsApos: apos };
+}
+// Versão do cartão na data-base escolhida (ou o próprio cartão, se for a posição do extrato)
+function viewCard(c){
+  const dE = parseBRDate(c.dataExtrato);
+  if (!dE) return c;
+  let T = competencia ? isoToLocal(competencia) : dE;
+  if (T > dE) T = dE;                                   // não projeta além da data do extrato
+  // estaduais: o extrato não traz saldo atualizado, então o valor também é calculado na própria data do extrato
+  if (!c.estadual && (!competencia || T >= dE)) return c;
+  const temDados = (c.pagamentos || []).every(p => typeof p.amort === 'number') && (c.parcelasTodas || []).length && c.dataConsolidacao;
+  if (!temDados) return Object.assign({}, c, { __semDados: true });
+  const serie = serieSelic();
+  const info = {};
+  const est = estadoEm(c, T, serie, info);
+  if (!est) return Object.assign({}, c, { __semDados: true });
+  const prevD = new Date(T.getFullYear(), T.getMonth(), 0);   // último dia do mês anterior
+  const ant = estadoEm(c, prevD, serie);
+  const jurosPagos = est.pagsAte.filter(p => parseBRDate(p.data) > prevD).reduce((a, p) => a + p.juros, 0);
+  const v = Object.assign({}, c, {
+    dataExtrato: localToBR(T),
+    dividaConsolidada: est.naoExiste ? '0,00' : c.dividaConsolidada,
+    amortizacoes: fmtBRL(est.amort), saldoDivida: fmtBRL(est.saldoDivida), jurosIncidentes: fmtBRL(est.juros), saldoDevedor: fmtBRL(est.saldoDevedor),
+    parcelasPagas: est.pagas, qtdRestante: est.naoExiste ? 0 : est.pend.length, valorParcela: est.pend.length ? fmtBRL(est.pend[0].saldoAtualizado) : '',
+    parcelasFuturas: est.pend, pagamentos: est.pagsAte, parcelasEmAnalise: 0,
+    __reconstruido: true, __fator: est.f, __naoExiste: !!est.naoExiste, __atual: T.getTime() === dE.getTime(), __fatorEstimado: !!info.est
+  });
+  if (ant){
+    v.dataExtratoAnterior = localToBR(prevD); v.jurosIncidentesAnterior = fmtBRL(ant.juros); v.jurosPagosPeriodo = fmtBRL(jurosPagos);
+  } else { v.dataExtratoAnterior = ''; v.jurosIncidentesAnterior = ''; v.jurosPagosPeriodo = ''; }
+  return v;
+}
+function setBase(v){
+  competencia = v || '';
+  try { localStorage.setItem(BASE_KEY, competencia); } catch(e){}
+  render();
+}
+
+// Composição mensal (jan-dez) de um ano: quanto foi pago (histórico de pagamentos)
+// e quanto há a pagar (parcelas "a vencer") em cada mês daquele ano.
+function computeComposicaoAno(c, ano){
+  const pago = new Array(12).fill(0);
+  const aPagar = new Array(12).fill(0);
+  (c.pagamentos || []).forEach(p => {
+    const d = parseBRDate(p.data);
+    if (d && d.getFullYear() === ano) pago[d.getMonth()] += (p.valor || 0);
+  });
+  (c.parcelasFuturas || []).forEach(p => {
+    const d = parseBRDate(p.vencimento);
+    if (d && d.getFullYear() === ano) aPagar[d.getMonth()] += (p.saldoAtualizado || 0);
+  });
+  return { pago, aPagar };
+}
+
+function anosDisponiveis(cardsArr){
+  const anos = new Set([new Date().getFullYear()]);
+  cardsArr.forEach(c => {
+    (c.pagamentos || []).forEach(p => { const d = parseBRDate(p.data); if (d) anos.add(d.getFullYear()); });
+    (c.parcelasFuturas || []).forEach(p => { const d = parseBRDate(p.vencimento); if (d) anos.add(d.getFullYear()); });
+  });
+  return [...anos].sort((a,b)=>a-b);
+}
+
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+// ---------- render ----------
+function fieldRow(card, key, label, placeholder){
+  const val = card[key] ?? '';
+  return `<div><label>${label}</label><input type="text" value="${(val+'').replace(/"/g,'&quot;')}"
+    oninput="updateField('${card.id}','${key}', this.value)" placeholder="${placeholder||''}"></div>`;
+}
+
+// ---------- composição do endividamento por natureza ----------
+const NATUREZAS = [['principal', 'ICMS (principal)'], ['correcao', 'Correção monetária'], ['juros', 'Juros de mora consolidados'], ['multa', 'Multa de mora'], ['honorarios', 'Honorários']];
+// lista: [{c, v, r}] (cartão, cartão na data-base, resultado do computeCard). Cada parcela amortiza todas as naturezas
+// proporcionalmente, então o saldo líquido de cada natureza = consolidado × (saldo líquido ÷ consolidado).
+function composicaoNaturezas(lista){
+  const linhas = NATUREZAS.map(([k, rot]) => ({ k, rot, adesao: 0, amort: 0, saldo: 0, cp: 0, lp: 0 }));
+  const selic = { total: 0, cp: 0, lp: 0 };
+  lista.forEach(({c, v, r}) => {
+    const cons = toNum(v.dividaConsolidada), saldo = r.saldoDivida;
+    if (!(cons > 0) || isNaN(saldo)) return;
+    const comp = c.composicao || { principal: cons, correcao: 0, juros: 0, multa: 0, honorarios: 0 };
+    const fSaldo = saldo / cons, fCP = saldo ? (r.liquidoCurtoPrazo / saldo) : 0;
+    linhas.forEach(l => { const a = comp[l.k] || 0, s = a * fSaldo; l.adesao += a; l.saldo += s; l.amort += a - s; l.cp += s * fCP; l.lp += s * (1 - fCP); });
+    selic.total += r.jurosIncidentes || 0; selic.cp += r.jurosCurtoPrazo || 0; selic.lp += r.jurosLongoPrazo || 0;
+  });
+  const sub = linhas.reduce((a, l) => { a.adesao += l.adesao; a.amort += l.amort; a.saldo += l.saldo; a.cp += l.cp; a.lp += l.lp; return a; }, { adesao: 0, amort: 0, saldo: 0, cp: 0, lp: 0 });
+  return { linhas, sub, selic };
+}
+function composicaoHTML(lista){
+  const { linhas, sub, selic } = composicaoNaturezas(lista);
+  const pct = v => sub.saldo ? fmtPct(v / sub.saldo * 100) : '—';
+  const tr = l => (Math.abs(l.adesao) < 0.005 ? '' : `<tr><td>${l.rot}</td><td>${fmtBRL(l.adesao)}</td><td>${fmtBRL(l.amort)}</td><td>${fmtBRL(l.saldo)}</td><td>${fmtBRL(l.cp)}</td><td>${fmtBRL(l.lp)}</td><td>${pct(l.saldo)}</td></tr>`);
+  return `<table>
+    <thead><tr><th>Natureza</th><th>Consolidado na adesão</th><th>Já amortizado</th><th>Saldo líquido a pagar</th><th>Curto prazo</th><th>Longo prazo</th><th>% do saldo líquido</th></tr></thead>
+    <tbody>
+      ${linhas.map(tr).join('')}
+      <tr style="font-weight:700;"><td>Saldo líquido contábil (sem Selic)</td><td>${fmtBRL(sub.adesao)}</td><td>${fmtBRL(sub.amort)}</td><td>${fmtBRL(sub.saldo)}</td><td>${fmtBRL(sub.cp)}</td><td>${fmtBRL(sub.lp)}</td><td>100,00%</td></tr>
+      <tr><td>(+) Juros Selic a apropriar (acréscimo financeiro)</td><td>—</td><td>—</td><td>${fmtBRL(selic.total)}</td><td>${fmtBRL(selic.cp)}</td><td>${fmtBRL(selic.lp)}</td><td>—</td></tr>
+    </tbody>
+    <tfoot><tr><td>Saldo devedor atualizado</td><td></td><td></td><td>${fmtBRL(sub.saldo + selic.total)}</td><td>${fmtBRL(sub.cp + selic.cp)}</td><td>${fmtBRL(sub.lp + selic.lp)}</td><td></td></tr></tfoot>
+  </table>`;
+}
+function debitosHTML(c){
+  if (c.cdas && c.cdas.length){
+    const aj = c.cdas.filter(x => x.situacao === 'Ajuizado').reduce((a, x) => a + x.valor, 0), tot = c.cdas.reduce((a, x) => a + x.valor, 0);
+    return `<table><thead><tr><th>CDA</th><th>Situação</th><th>Valor atualizado na data do pedido</th></tr></thead><tbody>${
+      c.cdas.map(x => `<tr><td>${x.cda}</td><td>${x.situacao}</td><td>${fmtBRL(x.valor)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>Total (${c.cdas.length} CDAs)</td><td>ajuizado R$ ${fmtBRL(aj)} · não ajuizado R$ ${fmtBRL(tot - aj)}</td><td>${fmtBRL(tot)}</td></tr></tfoot></table>`;
+  }
+  if (c.debitosSefaz && c.debitosSefaz.length){
+    const tot = c.debitosSefaz.reduce((a, x) => a + x.valor, 0);
+    return `<table><thead><tr><th>Tipo de débito</th><th>Referência</th><th>Valor original</th></tr></thead><tbody>${
+      c.debitosSefaz.map(x => `<tr><td>${x.tipo}</td><td>${x.referencia}</td><td>${fmtBRL(x.valor)}</td></tr>`).join('')}</tbody>
+      <tfoot><tr><td>Total</td><td></td><td>${fmtBRL(tot)}</td></tr></tfoot></table>`;
+  }
+  return '';
+}
+function setPresumidas(id, val){
+  const c = cards.find(x => x.id === id), n = Math.max(0, Math.min(parseInt(val, 10) || 0, (c.parcelasTodas || []).length));
+  aplicarPresumidas(c, n);
+  render();
+}
+
+// Campo do cartão: na data-base reconstruída mostra o valor reconstruído (somente leitura); senão, o campo editável do extrato
+function fieldRowV(c, v, key, label, placeholder){
+  if (!v.__reconstruido) return fieldRow(c, key, label, placeholder);
+  const val = v[key] ?? '';
+  return `<div><label>${label}</label><input type="text" readonly value="${(val+'').replace(/"/g,'&quot;')}" style="opacity:.9; background:var(--panel-2);"></div>`;
+}
+
+function render(){
+  const cardsEl = document.getElementById('cards');
+  cardsEl.innerHTML = '';
+  const summaryBody = document.getElementById('summaryBody');
+  const summaryFoot = document.getElementById('summaryFoot');
+  summaryBody.innerHTML = '';
+
+  // seletor de data-base: posição do extrato + últimos 24 fechamentos mensais
+  const hojeD = new Date(), fins = [];
+  for (let k = 1; k <= 24; k++){ const d = new Date(hojeD.getFullYear(), hojeD.getMonth() - k + 1, 0); fins.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0')); }
+  const fimDe = iso => MESES[+iso.slice(5, 7) - 1] + '/' + iso.slice(0, 4) + ' (' + iso.slice(8) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) + ')';
+  const opts = [['', 'Posição do extrato (atual)']].concat(fins.map(f => [f, 'Fechamento ' + fimDe(f)]));
+  if (competencia && !fins.includes(competencia)) opts.push([competencia, 'Data personalizada ' + competencia]);
+  document.getElementById('baseSelect').innerHTML = opts.map(([v, t]) => `<option value="${v}" ${v === competencia ? 'selected' : ''}>${t}</option>`).join('');
+  document.getElementById('baseChip').textContent = competencia ? 'posição em ' + fimDe(competencia) : '';
+
+  renderComposicaoAnual();
+
+  let totals = {divida:0, liquido:0, juros:0, saldo:0, curto:0, longo:0, jurosCurto:0, jurosLongo:0, totalParcelas:0, parcelasPagas:0, restantes:0, jurosPeriodo:0};
+
+  cards.forEach((c, idx) => {
+    const v = viewCard(c);          // cartão na data-base escolhida (ou o próprio cartão)
+    const r = computeCard(v);
+
+    totals.divida += toNum(v.dividaConsolidada) || 0;
+    totals.liquido += toNum(v.saldoDivida) || 0;
+    totals.juros += toNum(v.jurosIncidentes) || 0;
+    totals.saldo += r.saldoDevedor || 0;
+    totals.curto += r.curtoPrazo || 0;
+    totals.longo += r.longoPrazo || 0;
+    totals.jurosCurto += r.jurosCurtoPrazo || 0;
+    totals.jurosLongo += r.jurosLongoPrazo || 0;
+    totals.totalParcelas += r.totalParcelas || 0;
+    totals.parcelasPagas += r.parcelasPagas || 0;
+    totals.restantes += r.qtdRestante || 0;
+    totals.jurosPeriodo += r.jurosPeriodo || 0;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.parcelamento || c.nome || ('Parcelamento ' + (idx+1))}${c.orgao ? `<div style="font-size:10.5px; color:var(--muted); font-weight:400;">${c.orgao}${c.cnpj ? ' · ' + c.cnpj : ''}</div>` : ''}</td>
+      <td>${fmtBRL(toNum(v.dividaConsolidada))}</td>
+      <td>${fmtBRL(toNum(v.saldoDivida))}</td>
+      <td>${fmtBRL(toNum(v.jurosIncidentes))}</td>
+      <td>${fmtBRL(r.saldoDevedor)}</td>
+      <td>${fmtBRL(r.curtoPrazo)}</td>
+      <td>${fmtBRL(r.longoPrazo)}</td>
+      <td>${fmtBRL(r.jurosCurtoPrazo)}</td>
+      <td>${fmtBRL(r.jurosLongoPrazo)}</td>
+      <td>${isNaN(r.totalParcelas)?'—':r.totalParcelas}</td>
+      <td>${isNaN(r.parcelasPagas)?'—':r.parcelasPagas}</td>
+      <td>${isNaN(r.qtdRestante)?'—':r.qtdRestante}</td>
+      <td>${fmtPct(r.percAPagar)}</td>
+      <td>${fmtBRL(r.jurosPeriodo)}</td>
+    `;
+    summaryBody.appendChild(tr);
+
+    const card = document.createElement('div');
+    card.className = 'card' + (c.open ? ' open' : '');
+    card.innerHTML = `
+      <div class="card-head" onclick="toggleCard('${c.id}', event)">
+        <div class="title">${c.parcelamento || c.nome || ('Parcelamento ' + (idx+1))}
+          ${c.cnpj ? `<span class="tag">${c.cnpj}</span>` : ''}
+          ${v.__naoExiste ? '<span class="tag">ainda não consolidado nesta data</span>' : ''}${v.__semDados ? '<span class="tag" style="color:var(--warn)">recarregue o PDF para esta data-base</span>' : ''}
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="danger" onclick="event.stopPropagation(); removeCard('${c.id}')">Remover</button>
+          <span class="chev">▶</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="paste-box">
+          <div class="paste-actions" style="margin:0 0 10px;">
+            <button class="primary" onclick="document.getElementById('pdfInput-${c.id}').click()">📄 Carregar PDF deste parcelamento (extrato / termo)</button>
+            <input type="file" id="pdfInput-${c.id}" accept="application/pdf" onchange="handleCardPdfUpload('${c.id}', event)">
+            <span class="parse-msg" id="msg-${c.id}"></span>
+          </div>
+          <details>
+            <summary style="cursor:pointer; font-size:12px; color:var(--muted);">ou colar o texto do extrato manualmente</summary>
+            <label style="margin-top:8px;">Colar texto do documento (extrato detalhado, termo de aceite ou pedido de parcelamento)</label>
+            <textarea id="paste-${c.id}" placeholder="Cole aqui o texto do documento do parcelamento estadual...">${c.rawPaste || ''}</textarea>
+            <div class="paste-actions">
+              <button onclick="extract('${c.id}')">Extrair dados do texto colado</button>
+            </div>
+          </details>
+        </div>
+
+        <fieldset>
+          <legend>Identificação</legend>
+          <div class="grid">
+            ${fieldRow(c,'nome','Nome empresarial')}
+            ${fieldRow(c,'cnpj','CNPJ')}
+            ${fieldRow(c,'parcelamento','Número do parcelamento')}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>${v.__reconstruido ? (v.__atual ? 'Posição na data do extrato (' + v.dataExtrato + ') — calculada' : 'Posição em ' + v.dataExtrato + ' (reconstruída)') : 'Extrato atual'}</legend>
+          <div class="grid">
+            ${fieldRow(c,'dataConsolidacao','Data da consolidação','dd/mm/aaaa')}
+            ${fieldRowV(c,v,'dataExtrato', v.__reconstruido ? 'Data-base' : 'Data do extrato (referência)','dd/mm/aaaa')}
+            ${fieldRowV(c,v,'dividaConsolidada','Dívida consolidada (BRL)')}
+            ${fieldRowV(c,v,'amortizacoes','Amortizações / pagamentos até a data (BRL)')}
+            ${fieldRowV(c,v,'saldoDivida','Saldo da dívida (valor líquido) (BRL)')}
+            ${fieldRowV(c,v,'jurosIncidentes','Juros incidentes acumulados (BRL)')}
+            ${fieldRowV(c,v,'saldoDevedor', v.__reconstruido ? 'Saldo devedor final na data-base (BRL)' : 'Saldo devedor total informado (BRL, opcional)')}
+          </div>
+          ${v.__reconstruido ? `<div class="hint" style="font-size:11.5px; color:var(--muted); margin-top:8px;">${c.estadual
+            ? `O documento estadual informa as parcelas pelo valor na adesão e não traz o saldo atualizado: saldo devedor = parcelas em aberto × fator Selic do mês (${Number(v.__fator).toFixed(5)}). Juros a apropriar = saldo líquido × (fator − 1).`
+            : `Extrato original (${c.dataExtrato}): saldo devedor R$ ${c.saldoDevedor}, juros incidentes R$ ${c.jurosIncidentes}, ${c.parcelasPagas} parcela(s) paga(s). Esses valores do PDF não foram alterados; escolha "Posição do extrato (atual)" na data-base para editá-los.`}</div>` : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend>Parcelas${v.__reconstruido ? ' na data-base' : ''}</legend>
+          <div class="grid">
+            ${fieldRowV(c,v,'totalParcelas','Total de parcelas')}
+            ${fieldRowV(c,v,'parcelasPagas','Parcelas pagas')}
+            ${fieldRowV(c,v,'qtdRestante', v.__reconstruido ? 'Parcelas restantes' : 'Parcelas restantes (opcional, sobrepõe cálculo)')}
+            ${fieldRowV(c,v,'valorParcela','Valor de cada parcela restante na adesão (BRL)')}
+            ${c.pagamentoPresumido ? `<div><label>Parcelas pagas no extrato — presumidas pelo vencimento (ajustável)</label><input type="number" min="0" max="${(c.parcelasTodas || []).length}" value="${c.parcelasPagas}" onchange="setPresumidas('${c.id}', this.value)"></div>` : ''}
+          </div>
+          ${c.pagamentoPresumido ? `<div class="note">O pedido de parcelamento da SEFAZ não informa pagamentos. Considerei pagas as parcelas com vencimento até a data da consulta (${c.dataExtrato}). Confirme no extrato/DARE e ajuste o campo acima se alguma estiver em aberto.</div>` : ''}
+        </fieldset>
+
+        <fieldset>
+          <legend>${v.__reconstruido ? 'Fechamento anterior (reconstruído)' : 'Extrato anterior (opcional — para juros exatos do mês)'}</legend>
+          <div class="grid">
+            ${fieldRowV(c,v,'dataExtratoAnterior', v.__reconstruido ? 'Data do fechamento anterior' : 'Data do extrato anterior','dd/mm/aaaa')}
+            ${fieldRowV(c,v,'jurosIncidentesAnterior', v.__reconstruido ? 'Juros incidentes no fechamento anterior (BRL)' : 'Juros incidentes no extrato anterior (BRL)')}
+            ${v.__reconstruido ? fieldRowV(c,v,'jurosPagosPeriodo','Juros quitados nos pagamentos do mês (BRL)') : ''}
+          </div>
+        </fieldset>
+
+        <div class="results">
+          <h3>Resultado — o que lançar na contabilidade</h3>
+          <div class="rgrid">
+            <div class="item hi"><div class="lbl">Valor líquido contábil</div><div class="val">R$ ${fmtBRL(r.saldoDivida)}</div></div>
+            <div class="item hi"><div class="lbl">Juros a apropriar (acumulado)</div><div class="val">R$ ${fmtBRL(r.jurosIncidentes)}</div></div>
+            <div class="item hi"><div class="lbl">Saldo devedor total</div><div class="val">R$ ${fmtBRL(r.saldoDevedor)}</div></div>
+            <div class="item"><div class="lbl">Curto prazo (até 12 parcelas)</div><div class="val">R$ ${fmtBRL(r.curtoPrazo)}</div></div>
+            <div class="item"><div class="lbl">Longo prazo (acima de 12 meses)</div><div class="val">R$ ${fmtBRL(r.longoPrazo)}</div></div>
+            <div class="item"><div class="lbl">↳ Valor líquido — curto prazo</div><div class="val">R$ ${fmtBRL(r.liquidoCurtoPrazo)}</div></div>
+            <div class="item"><div class="lbl">↳ Juros a apropriar — curto prazo</div><div class="val">R$ ${fmtBRL(r.jurosCurtoPrazo)}</div></div>
+            <div class="item"><div class="lbl">↳ Valor líquido — longo prazo</div><div class="val">R$ ${fmtBRL(r.liquidoLongoPrazo)}</div></div>
+            <div class="item"><div class="lbl">↳ Juros a apropriar — longo prazo</div><div class="val">R$ ${fmtBRL(r.jurosLongoPrazo)}</div></div>
+            <div class="item"><div class="lbl">Parcelas restantes</div><div class="val">${isNaN(r.qtdRestante)?'—':r.qtdRestante} de ${isNaN(r.totalParcelas)?'—':r.totalParcelas}</div></div>
+            <div class="item"><div class="lbl">Valor total das parcelas a pagar</div><div class="val">R$ ${fmtBRL(r.valorAPagar)}</div></div>
+            <div class="item"><div class="lbl">% já pago</div><div class="val">${fmtPct(r.percPago)}</div></div>
+            <div class="item"><div class="lbl">% a pagar</div><div class="val">${fmtPct(r.percAPagar)}</div></div>
+            <div class="item hi"><div class="lbl">Juros reconhecido no período ${r.jurosPeriodoExato ? '<span class="badge">exato</span>' : '<span class="badge">estimado</span>'}</div><div class="val">R$ ${fmtBRL(r.jurosPeriodo)}</div></div>
+          </div>
+          <div class="note ${r.jurosPeriodoExato ? 'exact':''}">
+            ${r.jurosPeriodoExato
+              ? 'Cálculo exato: variação dos juros incidentes entre o fechamento anterior e a data-base + juros quitados nos pagamentos do período.'
+              : 'Estimativa: juros incidentes acumulados desde a consolidação divididos pelo número de meses decorridos. Informe o extrato anterior para obter o valor exato do mês.'}
+          </div>
+          ${v.__reconstruido ? `<div class="note exact">${v.__atual ? `Posição na data do extrato (${v.dataExtrato})` : `Posição reconstruída em ${v.dataExtrato} (extrato de ${c.dataExtrato})`}: fator de atualização do mês ${Number(v.__fator).toFixed(5)}, ${v.parcelasPagas} parcela(s) paga(s) até a data. Calculado pelo histórico de pagamentos do documento.</div>` : ''}
+          ${v.__fatorEstimado ? `<div class="note">Fator do mês estimado: a Selic do último mês ainda não consta nos documentos carregados; usei a variação mensal mais recente. Carregue um documento do mês seguinte ou confira o valor na GARE/DARE.</div>` : ''}
+          ${v.__semDados ? `<div class="note">Não foi possível reconstruir esta data-base: este parcelamento foi carregado antes do histórico completo ser guardado ou faltam meses de pagamento. Carregue o PDF novamente.</div>` : ''}
+          ${!v.__reconstruido && Number(c.parcelasEmAnalise) > 0 ? `<div class="note">Inclui ${c.parcelasEmAnalise} parcela(s) com situação "Em análise" (pagamento em processamento pela RFB): ainda compõe(m) o saldo devedor do extrato, por isso entra(m) em parcelas restantes, a pagar e curto prazo.</div>` : ''}
+          <div class="note">
+            Rateio curto/longo prazo: os juros a apropriar (e o valor líquido) são divididos entre os dois horizontes na mesma proporção em que o saldo devedor total já foi dividido (parcelas dos próximos 12 meses × valor da parcela ÷ saldo devedor). Curto prazo = valor líquido CP + juros CP; Longo prazo = valor líquido LP + juros LP.
+          </div>
+        </div>
+
+        <div class="results" style="margin-top:14px;">
+          <h3 style="color:var(--text);">Composição do endividamento deste parcelamento${c.orgao ? ' — ' + c.orgao : ''}</h3>
+          <div style="overflow-x:auto;">${composicaoHTML([{ c, v, r }])}</div>
+          <div class="note muted" style="color:var(--muted);">Cada parcela amortiza todas as naturezas proporcionalmente, então o saldo líquido de cada uma é o consolidado na adesão × (saldo líquido ÷ consolidado). A Selic acumulada desde a consolidação é o juros a apropriar.</div>
+          ${debitosHTML(c) ? `<details style="margin-top:8px;"><summary>Débitos que compõem o parcelamento</summary><div style="overflow-x:auto;">${debitosHTML(c)}</div></details>` : ''}
+          ${c.termoDeferido || c.solicitante ? `<div class="note muted" style="color:var(--muted);">Termo de aceite: deferido em ${c.termoDeferido || '—'}${c.solicitante ? ' · solicitante ' + c.solicitante : ''}${c.inscricaoEstadual ? ' · IE ' + c.inscricaoEstadual : ''}.</div>` : ''}
+        </div>
+
+        ${(v.pagamentos && v.pagamentos.length) || (v.parcelasFuturas && v.parcelasFuturas.length) ? (() => {
+          const comp = computeComposicaoAno(v, anoComposicao);
+          const rows = MESES.map((m,i) => `
+            <tr>
+              <td>${m}/${anoComposicao}</td>
+              <td>${fmtBRL(comp.pago[i])}</td>
+              <td>${fmtBRL(comp.aPagar[i])}</td>
+              <td>${fmtBRL(comp.pago[i] + comp.aPagar[i])}</td>
+            </tr>
+          `).join('');
+          const somaPago = comp.pago.reduce((a,b)=>a+b,0);
+          const somaAPagar = comp.aPagar.reduce((a,b)=>a+b,0);
+          return `
+            <div class="results" style="margin-top:14px;">
+              <h3 style="color:var(--text);">Composição mensal ${anoComposicao} deste parcelamento</h3>
+              <div style="overflow-x:auto;">
+                <table>
+                  <thead><tr><th>Mês</th><th>Pago</th><th>A pagar</th><th>Total</th></tr></thead>
+                  <tbody>${rows}</tbody>
+                  <tfoot><tr><td>TOTAL</td><td>${fmtBRL(somaPago)}</td><td>${fmtBRL(somaAPagar)}</td><td>${fmtBRL(somaPago+somaAPagar)}</td></tr></tfoot>
+                </table>
+              </div>
+            </div>
+          `;
+        })() : ''}
+      </div>
+    `;
+    cardsEl.appendChild(card);
+  });
+
+  // aviso da data-base
+  const vs = cards.map(viewCard);
+  const nRec = vs.filter(x => x.__reconstruido && !x.__naoExiste).length, nSem = vs.filter(x => x.__semDados).length, nNao = vs.filter(x => x.__naoExiste).length;
+  document.getElementById('baseInfo').innerHTML = !competencia ? 'Posição na data de cada documento: saldo devedor = parcelas em aberto × fator Selic do mês. Escolha uma data-base para voltar a um fechamento anterior.' :
+    `Posição reconstruída em ${localToBR(isoToLocal(competencia))} a partir do histórico de pagamentos e do fator de atualização (Selic) de cada mês: ${nRec} parcelamento(s) reconstruído(s)` +
+    (nNao ? `, ${nNao} ainda não consolidado(s) nessa data` : '') +
+    (nSem ? `, <b style="color:var(--warn)">${nSem} sem dados suficientes (carregue o PDF novamente) — mantida a posição do extrato</b>` : '') +
+    '. Parcelas pagas depois da data-base voltam a ser saldo a pagar.';
+
+  // composição do endividamento consolidada
+  document.getElementById('compBody').innerHTML = cards.length
+    ? composicaoHTML(cards.map(c0 => { const v0 = viewCard(c0); return { c: c0, v: v0, r: computeCard(v0) }; }).filter(x => !x.v.__semDados))
+    : '';
+  document.getElementById('compChip').textContent = competencia ? 'posição em ' + localToBR(isoToLocal(competencia)) : 'na data de cada documento';
+
+  // movimentação do mês (só quando há data-base escolhida)
+  const movPanel = document.getElementById('movPanel');
+  if (competencia){
+    const Tm = isoToLocal(competencia), prevD = new Date(Tm.getFullYear(), Tm.getMonth(), 0), iniM = new Date(Tm.getFullYear(), Tm.getMonth(), 1);
+    const saldoEm = (c, iso) => { const old = competencia; competencia = iso; const x = computeCard(viewCard(c)).saldoDevedor; competencia = old; return x || 0; };
+    const prevIso = prevD.getFullYear() + '-' + String(prevD.getMonth() + 1).padStart(2, '0') + '-' + String(prevD.getDate()).padStart(2, '0');
+    const mv = { ini: 0, nova: 0, jur: 0, pag: 0, fim: 0, dif: 0 };
+    document.getElementById('movBody').innerHTML = cards.map((c, i) => {
+      const vv = viewCard(c), rr = computeCard(vv);
+      const ini = saldoEm(c, prevIso), fim = rr.saldoDevedor || 0;
+      const dCons = parseBRDate(c.dataConsolidacao);
+      const nova = (dCons && dCons >= iniM && dCons <= Tm && !vv.__semDados) ? toNum(c.dividaConsolidada) : 0;
+      const pag = (vv.pagamentos || []).filter(p => { const d = parseBRDate(p.data); return d >= iniM && d <= Tm; }).reduce((a, p) => a + p.valor, 0);
+      const jur = vv.__semDados ? 0 : (rr.jurosPeriodo || 0);
+      const dif = vv.__semDados ? 0 : fim - (ini + nova + jur - pag);
+      mv.ini += ini; mv.nova += nova; mv.jur += jur; mv.pag += pag; mv.fim += fim; mv.dif += dif;
+      return `<tr><td>${c.parcelamento || c.nome || ('Parcelamento ' + (i + 1))}</td><td>${fmtBRL(ini)}</td><td>${fmtBRL(nova)}</td><td>${fmtBRL(jur)}</td><td>${fmtBRL(pag)}</td><td>${fmtBRL(fim)}</td><td>${Math.abs(dif) < 0.5 ? '—' : fmtBRL(dif)}</td></tr>`;
+    }).join('');
+    document.getElementById('movFoot').innerHTML = `<tr><td>TOTAL</td><td>${fmtBRL(mv.ini)}</td><td>${fmtBRL(mv.nova)}</td><td>${fmtBRL(mv.jur)}</td><td>${fmtBRL(mv.pag)}</td><td>${fmtBRL(mv.fim)}</td><td>${Math.abs(mv.dif) < 0.5 ? '—' : fmtBRL(mv.dif)}</td></tr>`;
+    document.getElementById('movIniTh').textContent = 'Saldo em ' + localToBR(prevD);
+    document.getElementById('movFimTh').textContent = 'Saldo em ' + localToBR(Tm);
+    document.getElementById('movChip').textContent = MESES[Tm.getMonth()] + '/' + Tm.getFullYear();
+    movPanel.style.display = '';
+  } else movPanel.style.display = 'none';
+
+  summaryFoot.innerHTML = `
+    <tr>
+      <td>TOTAL (${cards.length})</td>
+      <td>${fmtBRL(totals.divida)}</td>
+      <td>${fmtBRL(totals.liquido)}</td>
+      <td>${fmtBRL(totals.juros)}</td>
+      <td>${fmtBRL(totals.saldo)}</td>
+      <td>${fmtBRL(totals.curto)}</td>
+      <td>${fmtBRL(totals.longo)}</td>
+      <td>${fmtBRL(totals.jurosCurto)}</td>
+      <td>${fmtBRL(totals.jurosLongo)}</td>
+      <td>${totals.totalParcelas}</td>
+      <td>${totals.parcelasPagas}</td>
+      <td>${totals.restantes}</td>
+      <td>—</td>
+      <td>${fmtBRL(totals.jurosPeriodo)}</td>
+    </tr>
+  `;
+
+  save();
+}
+
+function setAnoComposicao(v){
+  anoComposicao = parseInt(v, 10);
+  render();
+}
+
+function renderComposicaoAnual(){
+  const select = document.getElementById('anoComposicaoSelect');
+  const anos = anosDisponiveis(cards);
+  if (!anos.includes(anoComposicao)) anoComposicao = anos[anos.length - 1];
+  select.innerHTML = anos.map(a => `<option value="${a}" ${a===anoComposicao?'selected':''}>${a}</option>`).join('');
+
+  const pagoTotal = new Array(12).fill(0);
+  const aPagarTotal = new Array(12).fill(0);
+  cards.forEach(c0 => {
+    const comp = computeComposicaoAno(viewCard(c0), anoComposicao);
+    comp.pago.forEach((v,i) => pagoTotal[i] += v);
+    comp.aPagar.forEach((v,i) => aPagarTotal[i] += v);
+  });
+
+  const body = document.getElementById('composicaoBody');
+  body.innerHTML = MESES.map((m,i) => `
+    <tr>
+      <td>${m}/${anoComposicao}</td>
+      <td>${fmtBRL(pagoTotal[i])}</td>
+      <td>${fmtBRL(aPagarTotal[i])}</td>
+      <td>${fmtBRL(pagoTotal[i] + aPagarTotal[i])}</td>
+    </tr>
+  `).join('');
+
+  const somaPago = pagoTotal.reduce((a,b)=>a+b,0);
+  const somaAPagar = aPagarTotal.reduce((a,b)=>a+b,0);
+  document.getElementById('composicaoFoot').innerHTML = `
+    <tr>
+      <td>TOTAL ${anoComposicao}</td>
+      <td>${fmtBRL(somaPago)}</td>
+      <td>${fmtBRL(somaAPagar)}</td>
+      <td>${fmtBRL(somaPago + somaAPagar)}</td>
+    </tr>
+  `;
+}
+
+function toggleCard(id, ev){
+  const c = cards.find(c=>c.id===id);
+  c.open = !c.open;
+  render();
+}
+function updateField(id, key, value){
+  const c = cards.find(c=>c.id===id);
+  c[key] = value;
+  save();
+  // live-recompute without full rerender/collapse loss on results only would be ideal,
+  // but full render keeps things simple and state (open) is preserved via c.open
+  renderResultsOnly(id);
+}
+function renderResultsOnly(id){
+  // simplest reliable approach: re-render everything (open state preserved in data)
+  render();
+  // restore focus is not critical for this internal tool
+}
+function addCard(){
+  cards.push(blankCard());
+  render();
+}
+function removeCard(id){
+  if(!confirm('Remover este parcelamento do painel?')) return;
+  cards = cards.filter(c=>c.id!==id);
+  render();
+}
+const MONEY_KEYS = ['dividaConsolidada','amortizacoes','saldoDivida','jurosIncidentes','saldoDevedor','valorParcela','jurosIncidentesAnterior'];
+
+// Campos que vêm sempre do extrato: ao atualizar um parcelamento com um extrato novo, zera os
+// valores do extrato antigo para não sobrar dado desatualizado quando o novo não traz o campo.
+const EXTRACT_KEYS = ['dataConsolidacao','dataExtrato','dividaConsolidada','amortizacoes','saldoDivida','jurosIncidentes','saldoDevedor',
+  'totalParcelas','parcelasPagas','qtdRestante','valorParcela','parcelasFuturas','parcelasTodas','pagamentos','parcelasEmAnalise'];
+
+// Campos próprios dos estaduais (composição, fatores, etc.) — também zerados ao recarregar o extrato
+const EXTRA_KEYS = ['composicao','fatores','debitosSefaz','conferenciaResumo','pagamentoPresumido','estadual','tipoDoc','orgao','situacaoParcelamento'];
+const TERMO_KEYS = ['termoDeferido','solicitante','inscricaoEstadual','cdas'];
+
+function applyParsedToCard(c, parsed){
+  let found = 0;
+  if (parsed.tipoDoc === 'termo'){
+    // o termo de aceite complementa o extrato (CDAs, solicitante, deferimento) sem apagar os valores já lidos
+    if (!c.parcelamento && parsed.parcelamento) { c.parcelamento = parsed.parcelamento; found++; }
+    if (!c.cnpj && parsed.cnpj) { c.cnpj = parsed.cnpj; found++; }
+    TERMO_KEYS.forEach(k => { if (parsed[k] !== undefined && parsed[k] !== '') { c[k] = parsed[k]; found++; } });
+    c.estadual = true;
+    return found;
+  }
+  EXTRACT_KEYS.forEach(k => { c[k] = (k === 'parcelasFuturas' || k === 'parcelasTodas' || k === 'pagamentos') ? [] : ''; });
+  EXTRA_KEYS.forEach(k => { delete c[k]; });
+  Object.keys(parsed).forEach(k=>{
+    if (parsed[k] !== undefined && parsed[k] !== '') {
+      c[k] = (MONEY_KEYS.includes(k) && typeof parsed[k] === 'number') ? fmtBRL(parsed[k]) : parsed[k];
+      found++;
+    }
+  });
+  return found;
+}
+
+function extract(id){
+  const c = cards.find(c=>c.id===id);
+  const raw = document.getElementById('paste-'+id).value;
+  c.rawPaste = raw;
+  const msg = document.getElementById('msg-'+id);
+  try {
+    const parsed = parseExtrato(raw);
+    const found = applyParsedToCard(c, parsed);
+    msg.className = 'parse-msg';
+    msg.textContent = found ? `${found} campo(s) preenchido(s) automaticamente. Confira antes de usar.` : 'Não foi possível reconhecer o texto colado. Preencha os campos manualmente.';
+  } catch(e){
+    msg.className = 'parse-msg err';
+    msg.textContent = 'Erro ao interpretar o texto. Preencha os campos manualmente.';
+  }
+  render();
+}
+
+// ---------- PDF reading (pdf.js, 100% local — nothing is uploaded anywhere) ----------
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+}
+
+async function pdfToText(file){
+  if (!window.pdfjsLib) {
+    throw new Error('biblioteca de leitura de PDF não carregada — a pasta "vendor\\pdfjs" precisa estar na mesma pasta deste arquivo HTML');
+  }
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function loadPdfIntoCard(cardId, file, msgEl){
+  if (msgEl){ msgEl.className = 'parse-msg pdf-msg'; msgEl.textContent = 'Lendo PDF...'; }
+  try {
+    const text = await pdfToText(file);
+    const parsed = parseExtrato(text);
+    const reconhecido = parsed.tipoDoc === 'termo' ? !!parsed.parcelamento : parsed.dividaConsolidada !== undefined;
+    if (!reconhecido) {
+      throw new Error('formato não reconhecido (esperado: extrato detalhado ou termo de aceite da PGE-SP, ou pedido de parcelamento de ICMS da SEFAZ-SP)');
+    }
+    let c = cardId ? cards.find(x=>x.id===cardId) : null;
+    if (!c && parsed.parcelamento) c = cards.find(x=>x.parcelamento === parsed.parcelamento);
+    // reaproveita o card em branco inicial em vez de deixá-lo sobrando
+    if (!c && cards.length === 1 && !cards[0].parcelamento && !cards[0].dividaConsolidada) c = cards[0];
+    let isNew = false;
+    if (!c) { c = blankCard(); cards.push(c); isNew = true; }
+    if (parsed.tipoDoc !== 'termo') c.rawPaste = text;
+    const found = applyParsedToCard(c, parsed);
+    render();
+    const resultMsg = document.getElementById('msg-'+c.id);
+    if (resultMsg){
+      resultMsg.className = 'parse-msg';
+      resultMsg.textContent = parsed.tipoDoc === 'termo'
+        ? `Termo de aceite "${file.name}" incorporado (CDAs e dados do deferimento).`
+        : `${isNew ? 'Novo parcelamento criado. ' : 'Atualizado. '}${found} campo(s) preenchido(s) a partir do PDF "${file.name}". Confira antes de usar.`;
+    }
+    return { ok: true };
+  } catch(e){
+    const msg = 'Erro ao ler o PDF "'+file.name+'": '+e.message;
+    if (msgEl){ msgEl.className='parse-msg err'; msgEl.textContent = msg; }
+    else alert(msg);
+    return { ok: false, error: msg };
+  }
+}
+
+async function handleCardPdfUpload(id, ev){
+  const file = ev.target.files[0];
+  ev.target.value = '';
+  if (!file) return;
+  const msgEl = document.getElementById('msg-'+id);
+  await loadPdfIntoCard(id, file, msgEl);
+}
+
+async function handleGlobalPdfUpload(ev){
+  const files = Array.from(ev.target.files || []);
+  ev.target.value = '';
+  const globalMsg = document.getElementById('globalPdfMsg');
+  const erros = [];
+  let okCount = 0;
+  for (const file of files){
+    if (globalMsg) { globalMsg.className = 'pdf-msg'; globalMsg.textContent = `Lendo ${file.name}...`; }
+    const r = await loadPdfIntoCard(null, file, null);
+    if (r.ok) okCount++; else erros.push(r.error);
+  }
+  if (!globalMsg) return;
+  if (erros.length) {
+    globalMsg.className = 'pdf-msg parse-msg err';
+    globalMsg.textContent = `${okCount} de ${files.length} PDF(s) lido(s). ${erros.length} com erro — ${erros[0]}${erros.length > 1 ? ` (+${erros.length - 1} outro(s))` : ''}`;
+  } else {
+    globalMsg.className = 'pdf-msg parse-msg';
+    globalMsg.textContent = `${okCount} PDF(s) lido(s) e atualizado(s) com sucesso.`;
+  }
+}
+
+// ---------- persistence ----------
+function save(){
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cards)); } catch(e){}
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { cards = JSON.parse(raw); return true; }
+  } catch(e){}
+  return false;
+}
+function exportJSON(){
+  const blob = new Blob([JSON.stringify(cards, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'parcelamentos-audicon.json';
+  a.click();
+}
+function importJSON(ev){
+  const file = ev.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      if (Array.isArray(data)) { cards = data; render(); }
+    } catch(e){ alert('Arquivo inválido.'); }
+  };
+  reader.readAsText(file);
+  ev.target.value = '';
+}
+function exportCSV(){
+  const headers = ['Parcelamento','Dívida consolidada','Valor líquido contábil','Juros a apropriar','Saldo devedor total','Curto prazo','Longo prazo','Juros a apropriar CP','Juros a apropriar LP','Parcelas restantes','% a pagar','Juros do período'];
+  const rows = cards.map(c0=>{
+    const c = viewCard(c0), r = computeCard(c);
+    return [c.parcelamento||c.nome, toNum(c.dividaConsolidada), toNum(c.saldoDivida), toNum(c.jurosIncidentes), r.saldoDevedor, r.curtoPrazo, r.longoPrazo, r.jurosCurtoPrazo, r.jurosLongoPrazo, r.qtdRestante, r.percAPagar, r.jurosPeriodo]
+      .map(v => typeof v === 'number' ? v.toFixed(2).replace('.',',') : `"${(v||'').toString().replace(/"/g,'""')}"`).join(';');
+  });
+  const csv = [headers.join(';'), ...rows].join('\n');
+  const blob = new Blob(['﻿'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'resumo-parcelamentos.csv';
+  a.click();
+}
+
+// ---------- relatório em PDF (jsPDF + autotable, 100% local) ----------
+const EH_ESTADUAL = typeof composicaoNaturezas === 'function';
+const pdfN = v => (v === undefined || v === null || isNaN(v)) ? '-' : fmtBRL(v);
+const pdfP = v => (v === undefined || v === null || isNaN(v)) ? '-' : fmtPct(v);
+
+// Movimentação do saldo devedor no mês da data-base: saldo anterior + consolidação + juros do mês - pagamentos = saldo
+function movimentacaoMes(){
+  if (!competencia) return null;
+  const Tm = isoToLocal(competencia), prevD = new Date(Tm.getFullYear(), Tm.getMonth(), 0), iniM = new Date(Tm.getFullYear(), Tm.getMonth(), 1);
+  const prevIso = prevD.getFullYear() + '-' + String(prevD.getMonth() + 1).padStart(2, '0') + '-' + String(prevD.getDate()).padStart(2, '0');
+  const saldoEm = (c, iso) => { const old = competencia; competencia = iso; const x = computeCard(viewCard(c)).saldoDevedor; competencia = old; return x || 0; };
+  const tot = { ini: 0, nova: 0, jur: 0, pag: 0, fim: 0, dif: 0 };
+  const rows = cards.map(c => {
+    const vv = viewCard(c), rr = computeCard(vv);
+    const ini = saldoEm(c, prevIso), fim = rr.saldoDevedor || 0;
+    const dCons = parseBRDate(c.dataConsolidacao);
+    const nova = (dCons && dCons >= iniM && dCons <= Tm && !vv.__semDados) ? toNum(c.dividaConsolidada) : 0;
+    const pag = (vv.pagamentos || []).filter(p => { const d = parseBRDate(p.data); return d >= iniM && d <= Tm; }).reduce((a, p) => a + p.valor, 0);
+    const jur = vv.__semDados ? 0 : (rr.jurosPeriodo || 0);
+    const dif = vv.__semDados ? 0 : fim - (ini + nova + jur - pag);
+    tot.ini += ini; tot.nova += nova; tot.jur += jur; tot.pag += pag; tot.fim += fim; tot.dif += dif;
+    return { c, ini, nova, jur, pag, fim, dif };
+  });
+  return { Tm, prevD, rows, tot };
+}
+
+function gerarRelatorioPDF(){
+  if (!window.jspdf || !window.jspdf.jsPDF){
+    alert('A biblioteca de PDF não foi carregada. A pasta "vendor\\jspdf" precisa estar ao lado deste arquivo HTML.');
+    return;
+  }
+  const dados = cards.map(c => { const v = viewCard(c), r = computeCard(v); return { c, v, r }; }).filter(d => d.c.parcelamento || d.c.dividaConsolidada);
+  if (!dados.length){ alert('Nenhum parcelamento carregado. Carregue os PDFs antes de gerar o relatório.'); return; }
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  if (typeof doc.autoTable !== 'function'){ alert('O complemento de tabelas do PDF não foi carregado (vendor\\jspdf).'); return; }
+
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 36;
+  const AZUL = [18, 42, 79], CINZA = [90, 100, 115];
+  const tipo = EH_ESTADUAL ? 'estaduais (SP)' : 'federais (RFB/PGFN)';
+  const dBase = competencia ? isoToLocal(competencia) : null;
+  const datasExt = dados.map(d => parseBRDate(d.c.dataExtrato)).filter(Boolean).sort((a, b) => a - b);
+  const dExtMax = datasExt.length ? datasExt[datasExt.length - 1] : null;
+  const dRef = dBase && dExtMax && dBase < dExtMax ? dBase : (dExtMax || dBase || new Date());
+  const baseTxt = (dBase && dExtMax && dBase < dExtMax)
+    ? 'Data-base: ' + localToBR(dBase) + ' (posição reconstruída; documentos de ' + localToBR(dExtMax) + ')'
+    : 'Posição na data dos documentos: ' + (dExtMax ? localToBR(dExtMax) : '-');
+
+  // agrupa pela raiz do CNPJ (o nome vem truncado em alguns documentos): usa o nome mais completo
+  const empresas = {};
+  dados.forEach(d => {
+    const raiz = (d.c.cnpj || '').slice(0, 10) || (d.c.nome || '?');
+    const e = empresas[raiz] = empresas[raiz] || { nome: '', cnpjs: new Set() };
+    if ((d.c.nome || '').length > e.nome.length) e.nome = d.c.nome;
+    if (d.c.cnpj) e.cnpjs.add(d.c.cnpj);
+  });
+
+  let y = M;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20, 30, 50);
+  doc.text('Relatório de composição dos parcelamentos ' + tipo, M, y + 12); y += 26;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...CINZA);
+  Object.values(empresas).forEach(e => { doc.text('Empresa: ' + (e.nome || 'não identificada') + '  |  CNPJ: ' + [...e.cnpjs].join(' / '), M, y + 8); y += 13; });
+  doc.text(baseTxt + '   |   Corte do curto prazo: próximas 12 parcelas em aberto   |   Valores em R$', M, y + 8); y += 13;
+  doc.setDrawColor(...AZUL); doc.setLineWidth(1.2); doc.line(M, y + 4, W - M, y + 4); y += 16;
+
+  const secao = titulo => {
+    if (y > H - 130){ doc.addPage(); y = M; }
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20, 30, 50);
+    doc.text(titulo, M, y + 8); y += 14;
+  };
+  const tabela = (head, body, foot, opts) => {
+    const o = opts || {};
+    const colunas = {}; head.forEach((_, i) => { colunas[i] = { halign: i === 0 ? 'left' : 'right' }; });
+    doc.autoTable({
+      startY: y, head: [head], body, foot: foot ? [foot] : undefined, theme: 'grid', margin: { left: M, right: M, bottom: 44 },
+      styles: { font: 'helvetica', fontSize: o.fontSize || 8.5, cellPadding: 3.2, lineColor: [205, 210, 220], lineWidth: 0.4, textColor: [25, 30, 45], overflow: 'linebreak' },
+      headStyles: { fillColor: AZUL, textColor: 255, halign: 'center', fontStyle: 'bold' },
+      footStyles: { fillColor: [232, 237, 246], textColor: [15, 20, 35], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [247, 249, 252] },
+      columnStyles: Object.assign(colunas, o.columnStyles || {}), showFoot: 'lastPage'
+    });
+    y = doc.lastAutoTable.finalY + 18;
+  };
+  const nomeParc = d => d.c.parcelamento || d.c.nome || 'Parcelamento';
+  const celulaParc = d => nomeParc(d) + (d.c.orgao ? '\n' + d.c.orgao : '') + (d.v.__naoExiste ? '\n(ainda não consolidado)' : '') + (d.v.__semDados ? '\n(sem dados para esta data)' : '');
+
+  // 1. posição consolidada
+  secao('1. Posição consolidada');
+  const T = { cons: 0, liq: 0, jur: 0, sdev: 0, cp: 0, lp: 0, pagas: 0, total: 0, rest: 0, liqCP: 0, jurCP: 0, liqLP: 0, jurLP: 0 };
+  dados.forEach(({ v, r }) => {
+    T.cons += toNum(v.dividaConsolidada) || 0; T.liq += r.saldoDivida || 0; T.jur += r.jurosIncidentes || 0; T.sdev += r.saldoDevedor || 0;
+    T.cp += r.curtoPrazo || 0; T.lp += r.longoPrazo || 0; T.pagas += r.parcelasPagas || 0; T.total += r.totalParcelas || 0; T.rest += r.qtdRestante || 0;
+    T.liqCP += r.liquidoCurtoPrazo || 0; T.jurCP += r.jurosCurtoPrazo || 0; T.liqLP += r.liquidoLongoPrazo || 0; T.jurLP += r.jurosLongoPrazo || 0;
+  });
+  tabela(['Parcelamento', 'Dívida consolidada', 'Valor líquido contábil', 'Juros a apropriar', 'Saldo devedor', 'Curto prazo', 'Longo prazo', 'Parcelas pagas / total', 'A pagar (qtd)'],
+    dados.map(d => [celulaParc(d), pdfN(toNum(d.v.dividaConsolidada)), pdfN(d.r.saldoDivida), pdfN(d.r.jurosIncidentes), pdfN(d.r.saldoDevedor), pdfN(d.r.curtoPrazo), pdfN(d.r.longoPrazo),
+      (isNaN(d.r.parcelasPagas) ? '-' : d.r.parcelasPagas) + ' / ' + (isNaN(d.r.totalParcelas) ? '-' : d.r.totalParcelas), isNaN(d.r.qtdRestante) ? '-' : d.r.qtdRestante]),
+    ['TOTAL (' + dados.length + ')', pdfN(T.cons), pdfN(T.liq), pdfN(T.jur), pdfN(T.sdev), pdfN(T.cp), pdfN(T.lp), T.pagas + ' / ' + T.total, T.rest]);
+
+  // 2. curto e longo prazo
+  secao('2. Curto e longo prazo - composição do saldo devedor');
+  tabela(['Parcelamento', 'Líquido - curto prazo', 'Juros a apropriar - curto prazo', 'Total curto prazo', 'Líquido - longo prazo', 'Juros a apropriar - longo prazo', 'Total longo prazo', '% a pagar (líquido s/ consolidado)'],
+    dados.map(d => [nomeParc(d), pdfN(d.r.liquidoCurtoPrazo), pdfN(d.r.jurosCurtoPrazo), pdfN(d.r.curtoPrazo), pdfN(d.r.liquidoLongoPrazo), pdfN(d.r.jurosLongoPrazo), pdfN(d.r.longoPrazo), pdfP(d.r.percAPagar)]),
+    ['TOTAL', pdfN(T.liqCP), pdfN(T.jurCP), pdfN(T.cp), pdfN(T.liqLP), pdfN(T.jurLP), pdfN(T.lp), T.cons ? pdfP(T.liq / T.cons * 100) : '-']);
+
+  // 3. composição por natureza (estaduais)
+  if (EH_ESTADUAL){
+    const lista = dados.filter(d => !d.v.__semDados);
+    const montar = lst => {
+      const { linhas, sub, selic } = composicaoNaturezas(lst);
+      const pct = v => sub.saldo ? pdfP(v / sub.saldo * 100) : '-';
+      const body = linhas.filter(l => Math.abs(l.adesao) >= 0.005).map(l => [l.rot, pdfN(l.adesao), pdfN(l.amort), pdfN(l.saldo), pdfN(l.cp), pdfN(l.lp), pct(l.saldo)]);
+      body.push(['Saldo líquido contábil (sem Selic)', pdfN(sub.adesao), pdfN(sub.amort), pdfN(sub.saldo), pdfN(sub.cp), pdfN(sub.lp), '100,00%']);
+      body.push(['(+) Juros Selic a apropriar (acréscimo financeiro)', '-', '-', pdfN(selic.total), pdfN(selic.cp), pdfN(selic.lp), '-']);
+      return { body, foot: ['Saldo devedor atualizado', '', '', pdfN(sub.saldo + selic.total), pdfN(sub.cp + selic.cp), pdfN(sub.lp + selic.lp), ''] };
+    };
+    const cab = ['Natureza', 'Consolidado na adesão', 'Já amortizado', 'Saldo líquido a pagar', 'Curto prazo', 'Longo prazo', '% do saldo líquido'];
+    secao('3. Composição do endividamento por natureza - consolidado');
+    const t = montar(lista); tabela(cab, t.body, t.foot);
+    if (lista.length > 1){
+      lista.forEach((d, i) => {
+        secao('3.' + (i + 1) + ' ' + nomeParc(d) + ' - ' + (d.c.orgao || '') + (d.c.cnpj ? ' - CNPJ ' + d.c.cnpj : ''));
+        const x = montar([d]); tabela(cab, x.body, x.foot);
+      });
+    }
+  }
+
+  // 4. movimentação do mês
+  const mov = movimentacaoMes();
+  if (mov){
+    secao((EH_ESTADUAL ? '4' : '3') + '. Movimentação do saldo devedor em ' + MESES[mov.Tm.getMonth()] + '/' + mov.Tm.getFullYear());
+    tabela(['Parcelamento', 'Saldo em ' + localToBR(mov.prevD), '(+) Consolidação no mês', '(+) Juros do mês', '(-) Pagamentos do mês', 'Saldo em ' + localToBR(mov.Tm), 'Diferença'],
+      mov.rows.map(x => [nomeParc({ c: x.c, v: {} }), pdfN(x.ini), pdfN(x.nova), pdfN(x.jur), pdfN(x.pag), pdfN(x.fim), Math.abs(x.dif) < 0.5 ? '-' : pdfN(x.dif)]),
+      ['TOTAL', pdfN(mov.tot.ini), pdfN(mov.tot.nova), pdfN(mov.tot.jur), pdfN(mov.tot.pag), pdfN(mov.tot.fim), Math.abs(mov.tot.dif) < 0.5 ? '-' : pdfN(mov.tot.dif)]);
+  }
+
+  // 5. composição mensal do ano
+  const pago = new Array(12).fill(0), aPagar = new Array(12).fill(0);
+  dados.forEach(({ v }) => { const comp = computeComposicaoAno(v, anoComposicao); comp.pago.forEach((x, i) => pago[i] += x); comp.aPagar.forEach((x, i) => aPagar[i] += x); });
+  secao((EH_ESTADUAL ? (mov ? '5' : '4') : (mov ? '4' : '3')) + '. Composição mensal de ' + anoComposicao + ' - pago x a pagar');
+  tabela(['Mês', 'Pago', 'A pagar', 'Total'],
+    MESES.map((m, i) => [m + '/' + anoComposicao, pdfN(pago[i]), pdfN(aPagar[i]), pdfN(pago[i] + aPagar[i])]),
+    ['TOTAL ' + anoComposicao, pdfN(pago.reduce((a, b) => a + b, 0)), pdfN(aPagar.reduce((a, b) => a + b, 0)), pdfN(pago.reduce((a, b) => a + b, 0) + aPagar.reduce((a, b) => a + b, 0))],
+    { columnStyles: { 0: { cellWidth: 140 } } });
+
+  // notas e premissas
+  const notas = [];
+  notas.push(EH_ESTADUAL
+    ? 'Valor líquido contábil = valor das parcelas em aberto no momento da adesão ao parcelamento. Juros a apropriar = atualização pela Selic acumulada (acréscimo financeiro): saldo líquido x (fator do mês - 1). Saldo devedor = líquido + juros a apropriar.'
+    : 'Valor líquido contábil = saldo da dívida (valor originário das parcelas em aberto). Juros a apropriar = juros incidentes (atualização Selic acumulada desde a consolidação). Saldo devedor = líquido + juros a apropriar.');
+  notas.push('Curto prazo = próximas até 12 parcelas em aberto (valor atualizado); longo prazo = demais parcelas. Os juros a apropriar são rateados entre curto e longo prazo na mesma proporção do saldo devedor.');
+  notas.push(dBase && dExtMax && dBase < dExtMax
+    ? 'Posição de ' + localToBR(dBase) + ' reconstruída a partir do histórico de pagamentos dos documentos: parcelas pagas depois da data-base voltam a ser saldo a pagar e o fator de atualização do mês é o valor pago dividido pela parcela amortizada.'
+    : 'Posição na data dos documentos carregados (' + (dExtMax ? localToBR(dExtMax) : '-') + ').');
+  if (EH_ESTADUAL){
+    const pres = dados.filter(d => d.c.pagamentoPresumido);
+    if (pres.length) notas.push('Parcelamento(s) ' + pres.map(d => d.c.parcelamento).join(', ') + ' (SEFAZ): o pedido de parcelamento não informa pagamentos; foram presumidas pagas as parcelas com vencimento até a data da consulta. Confirmar no extrato/DARE.');
+    if (dados.some(d => d.v.__fatorEstimado)) notas.push('O fator Selic do último mês foi estimado pela variação mensal mais recente disponível nos documentos.');
+    notas.push('Honorários advocatícios/administrativos e multa de mora fazem parte da dívida consolidada na adesão. Multa por atraso paga em parcelas específicas não está incluída nos valores acima.');
+  } else {
+    if (dados.some(d => !d.v.__reconstruido && Number(d.c.parcelasEmAnalise) > 0)) notas.push('Parcelas com situação "Em análise" (pagamento em processamento pela RFB) ainda compõem o saldo devedor do extrato e estão incluídas nas parcelas restantes.');
+  }
+  const semDados = dados.filter(d => d.v.__semDados);
+  if (semDados.length) notas.push('Atenção: ' + semDados.map(d => nomeParc(d)).join(', ') + ' sem dados suficientes para reconstruir a data-base (recarregar o PDF); mantida a posição do extrato.');
+
+  secao('Notas e premissas');
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(40, 45, 60);
+  notas.forEach(n => {
+    const linhas = doc.splitTextToSize('- ' + n, W - 2 * M);
+    if (y + linhas.length * 11 > H - 50){ doc.addPage(); y = M; }
+    doc.text(linhas, M, y + 8); y += linhas.length * 11 + 3;
+  });
+
+  // rodapé em todas as páginas
+  const n = doc.getNumberOfPages(), gerado = new Date().toLocaleString('pt-BR');
+  for (let i = 1; i <= n; i++){
+    doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...CINZA);
+    doc.setDrawColor(200, 205, 215); doc.setLineWidth(0.5); doc.line(M, H - 34, W - M, H - 34);
+    doc.text('Painel de Parcelamentos ' + (EH_ESTADUAL ? 'Estaduais ' : '') + 'Audicon - gerado em ' + gerado, M, H - 22);
+    doc.text('Página ' + i + ' de ' + n, W - M, H - 22, { align: 'right' });
+  }
+
+  const ym = dRef.getFullYear() + '-' + String(dRef.getMonth() + 1).padStart(2, '0');
+  const nomeArq = 'relatorio-composicao-parcelamentos-' + (EH_ESTADUAL ? 'estaduais-' : 'federais-') + ym + '.pdf';
+  if (window.__retornarPdf) return doc;       // gancho de teste
+  doc.save(nomeArq);
+}
+
+// ---------- init ----------
+if (!load() || cards.length === 0) {
+  cards = [blankCard()];
+}
+try { competencia = localStorage.getItem(BASE_KEY) || ''; } catch(e){}
+render();
+</script>
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+</body>
+</html>

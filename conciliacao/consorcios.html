@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Consórcios Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:10px 0 9px;border-bottom:3px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.05rem,.95rem + .45vw,1.3rem);line-height:1.25}
+header.top p{margin:2px 0 0;font-size:.78rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+</style>
+<script src="vendor/pdfjs/pdf.min.js"></script>
+<script src="vendor/jspdf/jspdf.umd.min.js"></script>
+<script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Conciliação de Consórcios — Extratos x Razão</h1>
+  <p>NHD Foods · Cotas de consórcio (Itaú e Sicoob) confrontadas com o saldo contábil de consórcios</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Conciliação de Consórcios</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="detalhe">3 · Cotas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+<div class="box">
+<div class="toolbar">
+  <button class="primary" onclick="document.getElementById('globalPdfInput').click()">📄 Carregar PDF(s) de consórcio</button>
+  <button onclick="addCard()">+ Nova cota em branco</button>
+  <button onclick="exportJSON()">Exportar dados (JSON)</button>
+  <button onclick="document.getElementById('importFile').click()">Importar dados (JSON)</button>
+  <button onclick="exportCSV()">Exportar resumo (CSV)</button>
+  <button class="primary" onclick="gerarRelatorioPDF()">📑 Gerar relatório (PDF)</button>
+  <button class="ghost" onclick="window.print()">Imprimir</button>
+  <span class="pdf-msg" id="globalPdfMsg"></span>
+  <label style="display:flex; align-items:center; gap:6px; margin:0; font-size:12.5px; color:var(--text);">Data-base:
+    <select id="baseSelect" onchange="setBase(this.value)" style="width:auto; padding:6px 8px;"></select>
+  </label>
+  <input type="file" id="importFile" accept="application/json" onchange="importJSON(event)">
+  <input type="file" id="globalPdfInput" accept="application/pdf" multiple onchange="handleGlobalPdfUpload(event)">
+</div>
+<p class="muted small" style="margin:10px 0 0">Envie o PDF do extrato de cada cota (Itaú "Demonstrativo de Parcelas Pagas" ou Sicoob "Extrato do Consorciado") e a ferramenta extrai pagamentos, saldo devedor, parcelas e contemplação, calcula a posição em cada fechamento e concilia com o saldo contábil. PDFs com senha: se o nome do arquivo tiver "Senha 12345", ela é usada automaticamente; senão o painel pergunta. Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</p>
+</div>
+
+<section class="panel" id="tab-processo">
+<div class="box"><h2>Objetivo</h2><p>Garantir todo mês que o saldo da conta de <b>consórcios</b> (total pago nas cotas) e, quando houver, o <b>passivo</b> das cotas contempladas sejam iguais à posição dos extratos das administradoras, identificando e justificando qualquer diferença antes do fechamento contábil.</p><p class="muted small">Quando executar: todo mês, no fechamento contábil. Os documentos são lidos neste navegador e nada é enviado para a internet.</p></div><div class="box"><h2>Arquivos necessários (todo mês)</h2><table><thead><tr><th>Arquivo</th><th>De onde vem</th><th>O que deve conter</th></tr></thead><tbody><tr><td><b>Demonstrativo de Parcelas Pagas</b> (PDF) — uma por cota</td><td>Itaú (app/internet banking ou gerente)</td><td>Grupo, cota, total pago, valor a pagar e últimos pagamentos com fundo comum, taxa de administração e fundo de reserva. PDF com senha: se o nome do arquivo tiver “Senha 12345”, ela é usada automaticamente.</td></tr><tr><td><b>Extrato do Consorciado</b> (PDF) — uma por cota</td><td>Sicoob (Sisbr / app)</td><td>Todos os movimentos (parcelas, lances, rendimentos), saldo devedor, parcelas pagas/a pagar e contemplação.</td></tr><tr><td><b>Balancete / razão do mês</b></td><td>Contabilidade</td><td>Saldo anterior, débitos, créditos e saldo final da conta de consórcios (ativo) e das contas de passivo de consórcio (CP e LP).</td></tr></tbody></table></div><div class="box"><h2>Passo a passo</h2><ol class="steps"><li><b>Baixar</b> o extrato atualizado de cada cota, emitido depois do último dia do mês.</li><li>Na etapa <b>2 · Conferência</b>, clicar em <b>Carregar PDF(s)</b> e selecionar todos os extratos. Cota já cadastrada é atualizada; extrato do Sicoob não traz grupo/cota — preencha no cartão da cota (etapa 3) na primeira vez.</li><li>Escolher a <b>data-base</b> = último dia do mês que está sendo fechado.</li><li>Conferir o <b>resumo consolidado</b>: total pago, saldo devedor, curto/longo prazo e situação (contemplada ou não) de cada cota.</li><li>Na <b>conciliação com a contabilidade</b>, digitar os saldos do balancete. A diferença do saldo final deve ficar <b>OK</b>.</li><li><b>Débitos do mês × pagamentos do mês</b>: diferença indica parcela não contabilizada, lançada em outra conta ou em outro mês. Créditos do mês precisam de justificativa (baixa, estorno, rendimento).</li><li><b>Cotas contempladas</b>: conferir o crédito disponível; ao usar o crédito, baixar o ativo contra o imobilizado e registrar o saldo devedor no passivo (CP/LP).</li><li>Gerar o <b>relatório (PDF)</b>, <b>exportar os dados (JSON)</b> e arquivar junto ao fechamento. Marcar o checklist abaixo.</li></ol></div><div class="box"><h2>Regras da conferência</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody><tr><td>R1</td><td><b>Total pago (ativo)</b> = parcelas + lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos creditados pela administradora ficam à parte.</td></tr><tr><td>R2</td><td><b>Saldo devedor</b> = valor a pagar do extrato. Para datas anteriores ao extrato = saldo do extrato + pagamentos feitos depois da data-base (sem reajuste do bem no período).</td></tr><tr><td>R3</td><td><b>Curto prazo</b> = próximas até 12 parcelas × parcela vigente; <b>longo prazo</b> = saldo devedor − curto prazo. Depois de lance, a parcela é recalculada (saldo ÷ parcelas restantes).</td></tr><tr><td>R4</td><td><b>Passivo esperado</b>: por padrão só das cotas contempladas (opção na conciliação: todas / só contempladas / nenhuma).</td></tr><tr><td>R5</td><td>O extrato do Itaú mostra só os últimos ~10 pagamentos. Para datas mais antigas, carregue extratos anteriores da cota (os históricos são somados).</td></tr></tbody></table><p class="muted small" style="margin-top:10px">Total pago (ativo) = soma das parcelas e lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos devolvidos pela administradora aparecem à parte.
+  Saldo devedor = valor a pagar informado no extrato; em fechamentos anteriores ao extrato = saldo do extrato + pagamentos feitos depois da data-base (sem reajuste do bem no período).
+  Curto prazo = próximas até 12 parcelas × valor da parcela vigente; longo prazo = saldo devedor − curto prazo.</p></div><div class="box"><h2>Checklist do fechamento</h2><ul class="cl"><li><label><input type="checkbox"> <span>Extratos de todas as cotas carregados (emitidos após o fim do mês)</span></label></li><li><label><input type="checkbox"> <span>Data-base = último dia do mês</span></label></li><li><label><input type="checkbox"> <span>Saldo do ativo de consórcios conciliado (diferença OK)</span></label></li><li><label><input type="checkbox"> <span>Débitos do mês = pagamentos do mês</span></label></li><li><label><input type="checkbox"> <span>Créditos do mês justificados</span></label></li><li><label><input type="checkbox"> <span>Cotas contempladas tratadas (imobilizado / passivo CP e LP)</span></label></li><li><label><input type="checkbox"> <span>Relatório PDF gerado e arquivado</span></label></li><li><label><input type="checkbox"> <span>Dados exportados (JSON) e arquivados</span></label></li></ul><button class="ghost" id="btnLimparChecklist" type="button">Limpar checklist (novo mês)</button></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+<div class="summary">
+  <h2>Resumo consolidado <span id="baseChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div id="baseInfo" style="font-size:12px; margin:0 0 10px; color:var(--muted);"></div>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead>
+      <tr>
+        <th>Cota</th>
+        <th>Situação</th>
+        <th>Crédito / bem</th>
+        <th>Total pago (ativo)</th>
+        <th>Saldo devedor (a pagar)</th>
+        <th>Curto prazo</th>
+        <th>Longo prazo</th>
+        <th>Parcelas pagas</th>
+        <th>Restantes</th>
+        <th>Valor da parcela</th>
+        <th>% pago</th>
+        <th>Pago no mês</th>
+      </tr>
+    </thead>
+    <tbody id="summaryBody"></tbody>
+    <tfoot id="summaryFoot"></tfoot>
+  </table>
+  </div>
+</div>
+
+<div class="summary" id="concPanel">
+  <h2>Conciliação com a contabilidade <span id="concChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div id="concBody"></div>
+</div>
+
+<div class="summary" id="movPanel" style="display:none;">
+  <h2>Movimentação no mês <span id="movChip" class="tag" style="font-weight:500; font-size:12px; color:var(--muted);"></span></h2>
+  <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Cota</th><th id="movIniTh">Pago acumulado anterior</th><th>(+) Parcelas do mês</th><th>(+) Lances do mês</th><th id="movFimTh">Pago acumulado na data-base</th><th id="movSdIniTh">Saldo devedor anterior</th><th id="movSdFimTh">Saldo devedor na data-base</th></tr></thead>
+      <tbody id="movBody"></tbody><tfoot id="movFoot"></tfoot>
+    </table>
+  </div>
+  <div style="font-size:12px; color:var(--muted); margin-top:8px;">Pago acumulado anterior + pagamentos do mês = pago acumulado na data-base (é o que deve estar no ativo de consórcios). O saldo devedor cai pelo mesmo valor pago.</div>
+</div>
+
+<div class="summary">
+  <h2>Composição anual — pago × a pagar
+    <select id="anoComposicaoSelect" onchange="setAnoComposicao(this.value)" style="width:auto; font-size:13px; padding:4px 8px; margin-left:8px;"></select>
+  </h2>
+  <div style="overflow-x:auto;">
+  <table>
+    <thead><tr><th>Mês</th><th>Pago</th><th>A pagar (projeção)</th><th>Total</th></tr></thead>
+    <tbody id="composicaoBody"></tbody>
+    <tfoot id="composicaoFoot"></tfoot>
+  </table>
+  </div>
+</div>
+</section>
+
+<section class="panel" id="tab-detalhe">
+<div id="cards"></div>
+</section>
+</main>
+
+<script>
+const STORAGE_KEY = 'audicon-consorcios-v1';
+const CONC_KEY = 'audicon-consorcios-conciliacao-v1';
+const BASE_KEY = 'audicon-consorcios-base';
+const THEME_KEY = 'audicon-consorcios-tema';
+let cards = [];
+let conc = {};          // { 'aaaa-mm-dd': {saldoAnterior, debitos, creditos, saldoFinal, passivoCP, passivoLP} }
+let concCfg = { contaAtivo: '1.2.02.1002 - CONSÓRCIOS', contaCP: '2.1.02.1003 - CONSÓRCIO (CP)', contaLP: '2.2.02.1003 - CONSÓRCIO (LP)', passivo: 'contempladas' };
+let anoComposicao = new Date().getFullYear();
+let competencia = '';
+
+// Saldos contábeis pré-preenchidos por data-base (vazio: os saldos ficam só no navegador de quem concilia)
+const CONC_SEMENTE = {};
+
+// ---------- tema ----------
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  if (btn) btn.textContent = theme === 'dark' ? '☀️ Modo claro' : '🌙 Modo noturno';
+  try { localStorage.setItem(THEME_KEY, theme); } catch(e){}
+}
+function toggleTheme(){ applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
+(function initTheme(){
+  let saved = null; try { saved = localStorage.getItem(THEME_KEY); } catch(e){}
+  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  applyTheme('light');
+})();
+
+function uid(){ return 'c' + Math.random().toString(36).slice(2, 9); }
+function blankCard(){
+  return {
+    id: uid(), admin: '', grupo: '', cota: '', apelido: '', bem: '', empresa: '',
+    valorBem: '', dataAdesao: '', dataExtrato: '', proxVenc: '', vencDia: '',
+    totalParcelas: '', parcelasPagas: '', restantes: '', valorParcela: '',
+    pagoTotal: '', saldoDevedor: '', dataContemplacao: '', creditoDisponivel: '',
+    fundoComum: '', fundoReserva: '', taxaAdm: '', percAmortizado: '',
+    pagamentos: [], obs: '', arquivo: '', open: true
+  };
+}
+
+// ---------- helpers ----------
+function toNum(v){
+  if (v === undefined || v === null || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  return parseFloat(String(v).replace(/\s/g, '').replace(/\./g, '').replace(',', '.'));
+}
+function fmtBRL(v){ return (v === undefined || v === null || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtPct(v){ return (v === undefined || v === null || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + '%'; }
+function parseBRDate(s){
+  if (!s) return null;
+  const m = String(s).match(/(\d{2})\/(\d{2})\/(\d{4})/);
+  return m ? new Date(+m[3], +m[2] - 1, +m[1]) : null;
+}
+const r2 = v => Math.round(v * 100) / 100;
+const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+function isoToLocal(iso){ const p = iso.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); }
+function localToBR(d){ return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); }
+function localToISO(d){ return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); }
+function esc(s){ return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+const ehPagto = p => p.tipo === 'PARCELA' || p.tipo === 'LANCE' || p.tipo === 'OUTRO';
+
+function nomeCota(c, idx){
+  const adm = c.admin || 'Consórcio';
+  if (c.grupo || c.cota) return adm + ' ' + (c.grupo || '?') + '/' + (c.cota || '?');
+  if (c.apelido) return adm + ' – ' + c.apelido;
+  return adm + (c.bem ? ' – ' + c.bem : (idx !== undefined ? ' ' + (idx + 1) : ''));
+}
+
+// ---------- parsers ----------
+function flatten(raw){ return raw.replace(/\r/g, ' ').replace(/\n/g, ' ').replace(/\s+/g, ' ').trim(); }
+
+function parseItau(flat){
+  const res = { admin: 'Itaú' }; let m;
+  const num = s => toNum(s);
+  m = flat.match(/grupo:\s*(\d+)/i); if (m) res.grupo = m[1];
+  m = flat.match(/cota:\s*(\d+)/i); if (m) res.cota = m[1];
+  // a ordem do texto muda conforme o leitor de PDF: a data de emissão pode vir logo após o rótulo ou após o título
+  m = flat.match(/emitido em:\s*(\d{2}\/\d{2}\/\d{4})/i) || flat.match(/emitido em:\s*(?:Demonstrativo de Parcelas Pagas\s*)?(\d{2}\/\d{2}\/\d{4})/i)
+   || flat.match(/Demonstrativo de Parcelas Pagas\s*(\d{2}\/\d{2}\/\d{4})/i);
+  if (m) res.dataExtrato = m[1];
+  m = flat.match(/\b([A-Z][A-Z0-9 .&\-]{3,}?\s(?:LTDA|S\/A|S\.A\.?|EIRELI|ME|EPP))\b/); if (m) res.empresa = m[1].trim();
+  m = flat.match(/bem objeto:\s*(.+?)\s+(?:pago:|prazo d|valor atual|parcela:|vencimento:|amortizado|a pagar|\(cr)/i);
+  if (m) res.bem = m[1].replace(/\s*-\s*$/, '').trim();  m = flat.match(/\bpago:\s*R\$\s*([\d.]+,\d{2})/); if (m) res.pagoTotal = num(m[1]);
+  m = flat.match(/\bamortizado:\s*([\d.,]+)\s*%/); if (m) res.percAmortizado = num(m[1]);
+  m = flat.match(/prazo da cota:\s*(\d+)/i); const prazoCota = m ? +m[1] : NaN;
+  m = flat.match(/prazo do grupo:\s*(\d+)/i); const prazoGrupo = m ? +m[1] : NaN;
+  m = flat.match(/vencimento:\s*(\d{2}\/\d{2}\/\d{4})/i); if (m){ res.proxVenc = m[1]; res.vencDia = +m[1].slice(0, 2); }
+  m = flat.match(/parcela:\s*(\d+)\s*\/\s*(\d+)/i); const parcAtual = m ? +m[1] : NaN;
+  m = flat.match(/valor atual do bem:\s*R\$\s*([\d.]+,\d{2})/i); if (m) res.valorBem = num(m[1]);
+  m = flat.match(/a pagar:\s*R\$\s*([\d.]+,\d{2})/i); if (m) res.saldoDevedor = num(m[1]);
+  m = flat.match(/R\$\s*([\d.]+,\d{2})\s+[\d.,]+\s*%\s+R\$\s*([\d.]+,\d{2})\s+[\d.,]+\s*%\s+R\$\s*([\d.]+,\d{2})\s+[\d.,]+\s*%\s*((?:\d{2}\/\d{2}\/\d{4}\s*)*)/);
+  if (m){
+    res.fundoComum = num(m[1]); res.fundoReserva = num(m[2]); res.taxaAdm = num(m[3]);
+    const ds = (m[4] || '').match(/\d{2}\/\d{2}\/\d{4}/g); if (ds) res.dataContemplacao = ds[0];
+  } else {
+    m = flat.match(/Fundo comum total\s*(?:Valor\s*)?R\$\s*([\d.]+,\d{2})/i); if (m) res.fundoComum = num(m[1]);
+    m = flat.match(/Fundo reserva total\s*(?:Valor\s*)?R\$\s*([\d.]+,\d{2})/i); if (m) res.fundoReserva = num(m[1]);
+    m = flat.match(/Taxa de administra\S*o paga\s*(?:Valor\s*)?R\$\s*([\d.]+,\d{2})/i); if (m) res.taxaAdm = num(m[1]);
+  }
+  if (!res.dataContemplacao){ m = flat.match(/Data de contempla\S*o\s+(?:Data de entrega do bem\s+)?(\d{2}\/\d{2}\/\d{4})/i); if (m) res.dataContemplacao = m[1]; }
+  if (!isNaN(prazoCota)) res.totalParcelas = prazoCota;
+  if (!isNaN(prazoGrupo) && !isNaN(parcAtual)) res.restantes = prazoGrupo - parcAtual + 1;
+  if (!isNaN(res.totalParcelas) && res.restantes !== undefined) res.parcelasPagas = res.totalParcelas - res.restantes;
+
+  // Extrato dos últimos pagamentos
+  const ini = flat.search(/Extrato dos \S+ltimos pagamentos/i);
+  const fim = flat.search(/Legendas/i);
+  const tab = ini >= 0 ? flat.slice(ini, fim > ini ? fim : undefined) : '';
+  const rowRe = /(\d{1,3})\s+(\d{2}\/\d{2}\/\d{4})\s+(\d{2}\/\d{2}\/\d{4})\s+(?:([A-Z]{2})\s+([\d.]+,\d{2})\s+)?([\d.]+,\d{2})\s+([\d.]+,\d{2})((?:\s+[\d.]+,\d{2})*)/g;
+  const pagamentos = []; let rm;
+  while ((rm = rowRe.exec(tab))){
+    const resto = (rm[8] || '').trim().split(/\s+/).filter(Boolean).map(num);
+    const p = { n: +rm[1], data: rm[3], venc: '', valor: num(rm[7]), devido: num(rm[6]), tipo: 'PARCELA', tp: rm[4] || '' };
+    if (rm[4] === 'AL') p.tipo = 'LANCE';
+    if (rm[4] && resto.length >= 4){
+      p.fr = resto[2]; p.ta = resto[3]; p.seg = resto[4] || 0;
+      p.fc = r2(p.devido - p.fr - p.ta - p.seg);
+    }
+    pagamentos.push(p);
+  }
+  if (pagamentos.length){
+    res.pagamentos = pagamentos;
+    res.valorParcela = pagamentos[0].devido;
+    res.dataAdesao = pagamentos.map(p => p.data).sort((a, b) => parseBRDate(a) - parseBRDate(b))[0];
+  }
+  return res;
+}
+
+function parseSicoob(flat){
+  const res = { admin: 'Sicoob' }; let m;
+  const num = s => toNum(s);
+  m = flat.match(/(\d{2}\/\d{2}\/\d{4})\s*EXTRATO DO CONSORCIADO/i); if (m) res.dataExtrato = m[1];
+  m = flat.match(/Bem:\s*(.+?)\s+Valor do Bem/i); if (m) res.bem = m[1].trim();
+  m = flat.match(/Valor do Bem:\s*\(R\$\)\s*([\d.]+,\d{2})/i); if (m) res.valorBem = num(m[1]);
+  m = flat.match(/Contempla\S*o:\s*(\d{2}\/\d{2}\/\d{4})/i); if (m) res.dataContemplacao = m[1];
+  m = flat.match(/Cr\S*dito dispon\S*vel:\s*\(R\$\)\s*([\d.]+,\d{2})/i); if (m) res.creditoDisponivel = num(m[1]);
+  m = flat.match(/Saldo devedor:\s*\(R\$\)\s*([\d.]+,\d{2})/i); if (m) res.saldoDevedor = num(m[1]);
+  m = flat.match(/Parcelas pagas:\s*(\d+)/i); if (m) res.parcelasPagas = +m[1];
+  m = flat.match(/Parcelas a pagar:\s*(\d+)/i); if (m) res.restantes = +m[1];
+  if (res.parcelasPagas !== undefined && res.restantes !== undefined) res.totalParcelas = res.parcelasPagas + res.restantes;
+  m = flat.match(/Parcela atual:\s*\(R\$\)\s*([\d.]+,\d{2})/i); if (m) res.valorParcela = num(m[1]);
+  m = flat.match(/Grupo:?\s*(\d{3,})/i); if (m) res.grupo = m[1];
+  m = flat.match(/Cota:?\s*(\d{1,6})/i); if (m) res.cota = m[1];
+
+  const ini = flat.search(/Registro de Movimentos/i);
+  const txt = ini >= 0 ? flat.slice(ini) : flat;
+  const mvRe = /Pagamento:\s*(\d{2}\/\d{2}\/\d{4})\s*Vencimento:\s*(\d{2}\/\d{2}\/\d{4})\s*Valor:\s*([\d.]+,\d{2})/g;
+  const pagamentos = []; let last = 0, mm, ultN = 0;
+  while ((mm = mvRe.exec(txt))){
+    // descrição do movimento = texto entre o movimento anterior e este (sem datas, horas e cabeçalhos)
+    const seg = txt.slice(last, mm.index).replace(/\d{2}\/\d{2}\/\d{4}/g, ' ').replace(/\d{2}:\d{2}:\d{2}/g, ' ')
+      .replace(/Registro de Movimentos|Parcela Movimento|SICOOB|SISTEMA DE COOPERATIVAS[^]*?SISBR|EXTRATO DO CONSORCIADO/gi, ' ');
+    last = mvRe.lastIndex;
+    let tipo = 'OUTRO';
+    if (/RENDIMENTO/i.test(seg)) tipo = 'RENDIMENTO';
+    else if (/LANCE/i.test(seg)) tipo = 'LANCE';
+    else if (/RECBTO|PARCELA/i.test(seg)) tipo = 'PARCELA';
+    const nm = seg.match(/\b(\d{1,3})\b/);
+    let n = nm ? +nm[1] : NaN;
+    if (tipo === 'PARCELA' && (isNaN(n) || n === 0)) n = ultN + 1;
+    if (tipo === 'PARCELA') ultN = n;
+    const desc = seg.replace(/\b\d{1,3}\b/g, ' ').replace(/\s+/g, ' ').trim();
+    pagamentos.push({ n: isNaN(n) ? 0 : n, data: mm[1], venc: mm[2], valor: num(mm[3]), tipo, desc });
+  }
+  if (pagamentos.length){
+    res.pagamentos = pagamentos;
+    const parc = pagamentos.filter(p => p.tipo === 'PARCELA');
+    res.dataAdesao = pagamentos[0].data;
+    if (parc.length){   // dia de vencimento mais frequente
+      const cont = {}; parc.forEach(p => { const d = +p.venc.slice(0, 2); cont[d] = (cont[d] || 0) + 1; });
+      res.vencDia = +Object.keys(cont).sort((a, b) => cont[b] - cont[a])[0];
+    }
+    res.pagoTotal = r2(pagamentos.filter(ehPagto).reduce((a, p) => a + p.valor, 0));
+  }
+  return res;
+}
+
+function parseExtrato(raw){
+  const flat = flatten(raw);
+  if (/Demonstrativo de Parcelas Pagas/i.test(flat)) return parseItau(flat);
+  if (/EXTRATO DO CONSORCIADO/i.test(flat)) return parseSicoob(flat);
+  throw new Error('layout não reconhecido (esperado Itaú "Demonstrativo de Parcelas Pagas" ou Sicoob "Extrato do Consorciado")');
+}
+
+// ---------- posição na data-base ----------
+// Na posição do extrato usa os números do PDF. Em fechamentos anteriores: pagamentos depois da data-base
+// saem do total pago e voltam para o saldo devedor e para as parcelas restantes.
+function viewCard(c){
+  const pays = (c.pagamentos || []).slice().sort((a, b) => parseBRDate(a.data) - parseBRDate(b.data));
+  const pagoTotal = !isNaN(toNum(c.pagoTotal)) ? toNum(c.pagoTotal) : pays.filter(ehPagto).reduce((a, p) => a + p.valor, 0);
+  const dE = parseBRDate(c.dataExtrato);
+  const base = {
+    c, pays, data: dE, reconstruido: false, naoExiste: false, semDados: false,
+    pago: pagoTotal, saldo: toNum(c.saldoDevedor),
+    pagas: toNum(c.parcelasPagas), restantes: toNum(c.restantes), total: toNum(c.totalParcelas),
+    valorParcela: toNum(c.valorParcela),
+    contemplada: !!parseBRDate(c.dataContemplacao) && (!dE || parseBRDate(c.dataContemplacao) <= dE),
+    fc: toNum(c.fundoComum), fr: toNum(c.fundoReserva), ta: toNum(c.taxaAdm),
+    rendimentos: pays.filter(p => p.tipo === 'RENDIMENTO').reduce((a, p) => a + p.valor, 0),
+    paysAte: pays, proxVenc: c.proxVenc
+  };
+  if (!competencia) return base;
+  const T = isoToLocal(competencia);
+  if (!dE || T >= dE) return Object.assign(base, { dataBase: T, depoisDoExtrato: !!dE && T > dE });
+
+  const apos = pays.filter(p => parseBRDate(p.data) > T);
+  const ate = pays.filter(p => parseBRDate(p.data) <= T);
+  const aposPg = apos.filter(ehPagto), somaApos = aposPg.reduce((a, p) => a + p.valor, 0);
+  const somaLista = pays.filter(ehPagto).reduce((a, p) => a + p.valor, 0);
+  const listaCompleta = Math.abs(somaLista - pagoTotal) < 0.5;
+  const primeiro = pays.length ? parseBRDate(pays[0].data) : null;
+  const v = Object.assign(base, { reconstruido: true, data: T, dataBase: T, paysAte: ate, proxVenc: '' });
+  if (primeiro && T < primeiro && listaCompleta){
+    return Object.assign(v, { naoExiste: true, pago: 0, saldo: 0, pagas: 0, restantes: 0, valorParcela: NaN, contemplada: false, fc: 0, fr: 0, ta: 0, rendimentos: 0 });
+  }
+  if (!pays.length || (primeiro && T < primeiro && !listaCompleta)) return Object.assign(base, { semDados: true });
+  const nParcApos = apos.filter(p => p.tipo === 'PARCELA').length;
+  const ultParc = ate.filter(p => p.tipo === 'PARCELA').slice(-1)[0];
+  const dC = parseBRDate(c.dataContemplacao);
+  const temQuebra = aposPg.every(p => typeof p.fc === 'number');
+  // lance pago depois da última parcela e antes da data-base: a parcela é recalculada (saldo ÷ parcelas restantes)
+  const lanceDepois = ultParc && ate.some(p => p.tipo === 'LANCE' && parseBRDate(p.data) > parseBRDate(ultParc.data));
+  const saldoT = toNum(c.saldoDevedor) + somaApos, restT = toNum(c.restantes) + nParcApos;
+  return Object.assign(v, {
+    pago: pagoTotal - somaApos,
+    saldo: toNum(c.saldoDevedor) + somaApos,
+    pagas: toNum(c.parcelasPagas) - nParcApos,
+    restantes: toNum(c.restantes) + nParcApos,
+    valorParcela: ultParc ? (ultParc.devido || ultParc.valor) : toNum(c.valorParcela),
+    contemplada: !!dC && dC <= T,
+    fc: temQuebra ? toNum(c.fundoComum) - aposPg.reduce((a, p) => a + p.fc, 0) : NaN,
+    fr: temQuebra ? toNum(c.fundoReserva) - aposPg.reduce((a, p) => a + p.fr, 0) : NaN,
+    ta: temQuebra ? toNum(c.taxaAdm) - aposPg.reduce((a, p) => a + p.ta, 0) : NaN,
+    rendimentos: ate.filter(p => p.tipo === 'RENDIMENTO').reduce((a, p) => a + p.valor, 0),
+    lanceApos: apos.some(p => p.tipo === 'LANCE')
+  }, lanceDepois && restT > 0 ? { valorParcela: saldoT / restT } : {});
+}
+
+function computeCard(v){
+  const saldo = v.saldo, rest = v.restantes, vp = v.valorParcela;
+  let cp = NaN, lp = NaN;
+  if (!isNaN(saldo)){
+    if (!isNaN(rest) && !isNaN(vp)) cp = Math.min(saldo, Math.min(12, rest) * vp);
+    else if (!isNaN(rest) && rest <= 12) cp = saldo;
+    if (!isNaN(cp)){ lp = saldo - cp; if (Math.abs(lp) < 0.5) lp = 0; }
+  }
+  const percPago = (!isNaN(v.pago) && !isNaN(saldo) && (v.pago + saldo) > 0) ? v.pago / (v.pago + saldo) * 100 : NaN;
+  // pagamentos no mês da data-base (ou do mês do extrato)
+  const ref = v.dataBase || v.data;
+  let pagoMes = NaN, parcMes = 0, lanceMes = 0;
+  if (ref){
+    const ini = new Date(ref.getFullYear(), ref.getMonth(), 1);
+    const doMes = v.paysAte.filter(p => { const d = parseBRDate(p.data); return d >= ini && d <= ref; });
+    parcMes = doMes.filter(p => p.tipo === 'PARCELA' || p.tipo === 'OUTRO').reduce((a, p) => a + p.valor, 0);
+    lanceMes = doMes.filter(p => p.tipo === 'LANCE').reduce((a, p) => a + p.valor, 0);
+    pagoMes = parcMes + lanceMes;
+  }
+  return { cp, lp, percPago, pagoMes, parcMes, lanceMes };
+}
+
+// projeção das parcelas a vencer a partir da data-base
+function projecao(v){
+  const c = v.c, out = [];
+  const rest = v.restantes, vp = v.valorParcela;
+  if (isNaN(rest) || isNaN(vp) || rest <= 0) return out;
+  const dia = +c.vencDia || 10;
+  let d;
+  const pv = parseBRDate(v.proxVenc);
+  if (pv) d = pv;
+  else {
+    const ult = v.paysAte.filter(p => p.tipo === 'PARCELA').slice(-1)[0];
+    const ref = ult ? (parseBRDate(ult.venc) || parseBRDate(ult.data)) : (v.dataBase || v.data || new Date());
+    d = new Date(ref.getFullYear(), ref.getMonth() + 1, dia);
+  }
+  for (let i = 0; i < rest; i++) out.push({ venc: new Date(d.getFullYear(), d.getMonth() + i, dia), valor: vp });
+  // a última parcela absorve o arredondamento para fechar no saldo devedor
+  if (!isNaN(v.saldo) && out.length){ const s = out.reduce((a, p) => a + p.valor, 0); out[out.length - 1].valor += v.saldo - s; if (out[out.length - 1].valor < 0) out[out.length - 1].valor = 0; }
+  return out;
+}
+
+function computeComposicaoAno(v, ano){
+  const pago = new Array(12).fill(0), aPagar = new Array(12).fill(0);
+  v.paysAte.filter(ehPagto).forEach(p => { const d = parseBRDate(p.data); if (d && d.getFullYear() === ano) pago[d.getMonth()] += p.valor; });
+  projecao(v).forEach(p => { if (p.venc.getFullYear() === ano) aPagar[p.venc.getMonth()] += p.valor; });
+  return { pago, aPagar };
+}
+function anosDisponiveis(vs){
+  const anos = new Set([new Date().getFullYear()]);
+  vs.forEach(v => {
+    v.paysAte.forEach(p => { const d = parseBRDate(p.data); if (d) anos.add(d.getFullYear()); });
+    projecao(v).slice(0, 24).forEach(p => anos.add(p.venc.getFullYear()));
+  });
+  return [...anos].sort((a, b) => a - b);
+}
+
+// ---------- render ----------
+function fieldRow(card, key, label, placeholder){
+  const val = card[key] ?? '';
+  return `<div><label>${label}</label><input type="text" value="${esc(val)}" onchange="updateField('${card.id}','${key}', this.value)" placeholder="${placeholder || ''}"></div>`;
+}
+function roRow(label, val){ return `<div><label>${label}</label><input type="text" readonly value="${esc(val)}"></div>`; }
+function situacao(v){
+  if (v.naoExiste) return 'Não aderida';
+  if (v.contemplada) return 'Contemplada';
+  return 'Não contemplada';
+}
+
+function render(){
+  const vs = cards.map(viewCard);
+  const rs = vs.map(computeCard);
+
+  // seletor de data-base
+  const hojeD = new Date(), fins = [];
+  for (let k = 1; k <= 24; k++){ fins.push(localToISO(new Date(hojeD.getFullYear(), hojeD.getMonth() - k + 1, 0))); }
+  const fimDe = iso => MESES[+iso.slice(5, 7) - 1] + '/' + iso.slice(0, 4) + ' (' + iso.slice(8) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) + ')';
+  const opts = [['', 'Posição do extrato (atual)']].concat(fins.map(f => [f, 'Fechamento ' + fimDe(f)]));
+  if (competencia && !fins.includes(competencia)) opts.push([competencia, 'Data ' + competencia]);
+  document.getElementById('baseSelect').innerHTML = opts.map(([v, t]) => `<option value="${v}" ${v === competencia ? 'selected' : ''}>${t}</option>`).join('');
+  document.getElementById('baseChip').textContent = competencia ? 'posição em ' + fimDe(competencia) : 'posição de cada extrato';
+
+  const nRec = vs.filter(v => v.reconstruido && !v.naoExiste).length, nSem = vs.filter(v => v.semDados).length, nDep = vs.filter(v => v.depoisDoExtrato).length;
+  document.getElementById('baseInfo').innerHTML = !competencia ? 'Valores conforme a data de cada extrato (' + [...new Set(cards.map(c => c.dataExtrato).filter(Boolean))].join(', ') + ').' :
+    `Posição em ${localToBR(isoToLocal(competencia))}: ${nRec} cota(s) reconstruída(s) pelo histórico de pagamentos` +
+    (nDep ? `, <b style="color:var(--warn)">${nDep} com extrato anterior à data-base (carregue um extrato mais recente)</b>` : '') +
+    (nSem ? `, <b style="color:var(--warn)">${nSem} sem histórico suficiente — mantida a posição do extrato</b>` : '') + '.';
+
+  // resumo
+  const T = { bem: 0, pago: 0, saldo: 0, cp: 0, lp: 0, pagas: 0, rest: 0, mes: 0 };
+  document.getElementById('summaryBody').innerHTML = vs.map((v, i) => {
+    const c = v.c, r = rs[i];
+    const bem = v.contemplada && !isNaN(toNum(c.creditoDisponivel)) ? toNum(c.creditoDisponivel) : toNum(c.valorBem);
+    T.bem += bem || 0; T.pago += v.pago || 0; T.saldo += v.saldo || 0; T.cp += r.cp || 0; T.lp += r.lp || 0;
+    T.pagas += v.pagas || 0; T.rest += v.restantes || 0; T.mes += r.pagoMes || 0;
+    const sit = situacao(v);
+    return `<tr><td>${esc(nomeCota(c, i))}</td>
+      <td><span class="badge ${v.contemplada ? 'ok' : ''}">${sit}${v.contemplada ? ' ' + c.dataContemplacao : ''}</span></td>
+      <td>${fmtBRL(bem)}</td><td>${fmtBRL(v.pago)}</td><td>${fmtBRL(v.saldo)}</td><td>${fmtBRL(r.cp)}</td><td>${fmtBRL(r.lp)}</td>
+      <td>${isNaN(v.pagas) ? '—' : v.pagas}</td><td>${isNaN(v.restantes) ? '—' : v.restantes}</td><td>${fmtBRL(v.valorParcela)}</td>
+      <td>${fmtPct(r.percPago)}</td><td>${fmtBRL(r.pagoMes)}</td></tr>`;
+  }).join('');
+  document.getElementById('summaryFoot').innerHTML = `<tr><td>TOTAL (${cards.length})</td><td></td><td>${fmtBRL(T.bem)}</td><td>${fmtBRL(T.pago)}</td><td>${fmtBRL(T.saldo)}</td><td>${fmtBRL(T.cp)}</td><td>${fmtBRL(T.lp)}</td><td>${T.pagas}</td><td>${T.rest}</td><td></td><td>${T.pago + T.saldo ? fmtPct(T.pago / (T.pago + T.saldo) * 100) : '—'}</td><td>${fmtBRL(T.mes)}</td></tr>`;
+
+  renderConciliacao(vs, rs);
+  renderMovimentacao();
+  renderComposicaoAnual(vs);
+  renderCards(vs, rs);
+  save();
+}
+
+function esperadoConc(vs, rs){
+  const e = { ativo: 0, cp: 0, lp: 0, pagoMes: 0, parcMes: 0, lanceMes: 0, rend: 0 };
+  vs.forEach((v, i) => {
+    e.ativo += v.pago || 0; e.pagoMes += rs[i].pagoMes || 0; e.parcMes += rs[i].parcMes || 0; e.lanceMes += rs[i].lanceMes || 0;
+    const entra = concCfg.passivo === 'todas' || (concCfg.passivo === 'contempladas' && v.contemplada);
+    if (entra){ e.cp += rs[i].cp || 0; e.lp += rs[i].lp || 0; }
+  });
+  return e;
+}
+function anteriorDe(iso){ const T = isoToLocal(iso); return localToISO(new Date(T.getFullYear(), T.getMonth(), 0)); }
+function ativoEsperadoEm(iso){ const old = competencia; competencia = iso; const x = cards.map(viewCard).reduce((a, v) => a + (v.pago || 0), 0); competencia = old; return x; }
+
+function difCell(d){ return isNaN(d) ? '—' : (Math.abs(d) < 0.5 ? '<span class="dif-ok">OK</span>' : `<span class="dif-bad">${fmtBRL(d)}</span>`); }
+
+// total pago (ativo) e saldo a pagar (passivo CP/LP) viram o "saldo do suporte" das contas no Book de conciliação.
+// Só envia quando todas as cotas têm extrato cobrindo a data-base.
+function enviarSuportesBook(vs, e){
+  let sup = {}; try { sup = JSON.parse(localStorage.getItem('aud-hub-suportes') || '{}'); } catch(x){}
+  Object.keys(sup).forEach(k => { if (sup[k].fonte === 'Consórcios') delete sup[k]; });
+  const completo = vs.some(v => v.c.dataExtrato) && !vs.some(v => v.depoisDoExtrato || v.semDados);
+  const cod = s => (String(s || '').match(/^\s*(\d(?:\.\d+)+)/) || [])[1];
+  if (completo){
+    const det = vs.length + ' cota(s)';
+    if (cod(concCfg.contaAtivo)) sup[cod(concCfg.contaAtivo)] = { fonte: 'Consórcios', saldo: r2(e.ativo), data: competencia, detalhe: det + ' · total pago' };
+    if (concCfg.passivo !== 'nenhuma'){
+      if (cod(concCfg.contaCP)) sup[cod(concCfg.contaCP)] = { fonte: 'Consórcios', saldo: -r2(e.cp), data: competencia, detalhe: det + ' · saldo a pagar CP (' + concCfg.passivo + ')' };
+      if (cod(concCfg.contaLP)) sup[cod(concCfg.contaLP)] = { fonte: 'Consórcios', saldo: -r2(e.lp), data: competencia, detalhe: det + ' · saldo a pagar LP (' + concCfg.passivo + ')' };
+    }
+  }
+  try { localStorage.setItem('aud-hub-suportes', JSON.stringify(sup)); } catch(x){}
+}
+function renderConciliacao(vs, rs){
+  const el = document.getElementById('concBody');
+  if (!competencia){
+    document.getElementById('concChip').textContent = '';
+    el.innerHTML = '<div style="font-size:12.5px; color:var(--muted);">Escolha uma data-base (fechamento) no topo para conciliar com o saldo do balancete — cada extrato tem uma data diferente, então a conciliação é feita sempre na mesma data para todas as cotas.</div>';
+    return;
+  }
+  const T = isoToLocal(competencia);
+  document.getElementById('concChip').textContent = MESES[T.getMonth()] + '/' + T.getFullYear();
+  const d = conc[competencia] || (CONC_SEMENTE[competencia] ? Object.assign({}, CONC_SEMENTE[competencia]) : {});
+  const e = esperadoConc(vs, rs);
+  const antIso = anteriorDe(competencia), eAnt = ativoEsperadoEm(antIso);
+  enviarSuportesBook(vs, e);
+  const inp = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(d[k] ?? '')}" placeholder="0,00" onchange="updateConc('${k}', this.value)"></div>`;
+  const cfg = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(concCfg[k])}" onchange="updateCfg('${k}', this.value)"></div>`;
+  const sAnt = toNum(d.saldoAnterior), deb = toNum(d.debitos), cred = toNum(d.creditos), sFin = toNum(d.saldoFinal);
+  const sFinCalc = !isNaN(sFin) ? sFin : (!isNaN(sAnt) && !isNaN(deb) ? sAnt + deb - (cred || 0) : NaN);
+  const pCP = toNum(d.passivoCP), pLP = toNum(d.passivoLP);
+  const consist = (!isNaN(sAnt) && !isNaN(deb) && !isNaN(sFin)) ? sFin - (sAnt + deb - (cred || 0)) : NaN;
+
+  el.innerHTML = `
+    <div class="conc-inputs">
+      ${cfg('contaAtivo', 'Conta do ativo (pagamentos)')}
+      ${inp('saldoAnterior', 'Saldo contábil anterior (' + localToBR(isoToLocal(antIso)) + ')')}
+      ${inp('debitos', 'Débitos do mês')}
+      ${inp('creditos', 'Créditos do mês')}
+      ${inp('saldoFinal', 'Saldo contábil em ' + localToBR(T))}
+    </div>
+    <div class="conc-inputs">
+      ${cfg('contaCP', 'Conta do passivo — curto prazo')}
+      ${inp('passivoCP', 'Saldo contábil passivo CP')}
+      ${cfg('contaLP', 'Conta do passivo — longo prazo')}
+      ${inp('passivoLP', 'Saldo contábil passivo LP')}
+      <div><label>Saldo a pagar que deve estar no passivo</label>
+        <select onchange="updateCfg('passivo', this.value)">
+          <option value="contempladas" ${concCfg.passivo === 'contempladas' ? 'selected' : ''}>Só cotas contempladas</option>
+          <option value="todas" ${concCfg.passivo === 'todas' ? 'selected' : ''}>Todas as cotas</option>
+          <option value="nenhuma" ${concCfg.passivo === 'nenhuma' ? 'selected' : ''}>Nenhuma (só controle)</option>
+        </select></div>
+    </div>
+    <div style="overflow-x:auto;">
+    <table>
+      <thead><tr><th>Item</th><th>Contabilidade</th><th>Extratos (esperado)</th><th>Diferença</th></tr></thead>
+      <tbody>
+        <tr><td>${esc(concCfg.contaAtivo)} — saldo anterior (${localToBR(isoToLocal(antIso))})</td><td>${fmtBRL(sAnt)}</td><td>${fmtBRL(eAnt)}</td><td>${difCell(sAnt - eAnt)}</td></tr>
+        <tr><td>(+) Débitos do mês × pagamentos do mês</td><td>${fmtBRL(deb)}</td><td>${fmtBRL(e.pagoMes)}${e.lanceMes ? ' <span class="badge">inclui lance ' + fmtBRL(e.lanceMes) + '</span>' : ''}</td><td>${difCell(deb - e.pagoMes)}</td></tr>
+        <tr><td>(−) Créditos do mês</td><td>${fmtBRL(cred)}</td><td>${fmtBRL(0)}</td><td>${difCell((cred || 0))}</td></tr>
+        <tr><td><b>${esc(concCfg.contaAtivo)} — saldo em ${localToBR(T)}</b></td><td><b>${fmtBRL(sFinCalc)}</b></td><td><b>${fmtBRL(e.ativo)}</b></td><td>${difCell(sFinCalc - e.ativo)}</td></tr>
+        <tr><td>${esc(concCfg.contaCP)}</td><td>${fmtBRL(pCP)}</td><td>${fmtBRL(e.cp)}</td><td>${difCell((isNaN(pCP) ? 0 : pCP) - e.cp)}</td></tr>
+        <tr><td>${esc(concCfg.contaLP)}</td><td>${fmtBRL(pLP)}</td><td>${fmtBRL(e.lp)}</td><td>${difCell((isNaN(pLP) ? 0 : pLP) - e.lp)}</td></tr>
+      </tbody>
+    </table>
+    </div>
+    ${!isNaN(consist) && Math.abs(consist) >= 0.5 ? `<div class="note">Os saldos informados não fecham entre si: saldo anterior + débitos − créditos difere do saldo final em R$ ${fmtBRL(consist)}.</div>` : ''}
+    <div class="note exact" style="color:var(--muted);">Diferença positiva = contabilidade maior que os extratos. Esperado do ativo = total pago (parcelas + lances) de todas as cotas até ${localToBR(T)}. Diferença no saldo anterior que se repete no saldo final indica resíduo de meses anteriores (ex.: cota já encerrada/quitada que não está no painel, rendimento ou devolução não baixados).${vs.some(v => v.rendimentos) ? ' Rendimentos creditados pelas administradoras até a data: R$ ' + fmtBRL(e.rend = vs.reduce((a, v) => a + (v.rendimentos || 0), 0)) + '.' : ''}</div>
+    ${vs.some(v => v.depoisDoExtrato) ? `<div class="note">Atenção: ${vs.filter(v => v.depoisDoExtrato).map(v => nomeCota(v.c)).join(', ')} tem extrato anterior a ${localToBR(T)} — pagamentos posteriores ao extrato não estão no esperado.</div>` : ''}
+  `;
+}
+
+function renderMovimentacao(){
+  const panel = document.getElementById('movPanel');
+  if (!competencia){ panel.style.display = 'none'; return; }
+  const T = isoToLocal(competencia), antIso = anteriorDe(competencia);
+  const old = competencia; competencia = antIso; const vAnt = cards.map(viewCard); competencia = old;
+  const vs = cards.map(viewCard), rs = vs.map(computeCard);
+  const t = { ia: 0, pm: 0, lm: 0, fa: 0, sa: 0, sf: 0 };
+  document.getElementById('movBody').innerHTML = vs.map((v, i) => {
+    const a = vAnt[i], r = rs[i];
+    const ia = a.pago || 0, fa = v.pago || 0, sa = a.saldo || 0, sf = v.saldo || 0;
+    t.ia += ia; t.pm += r.parcMes; t.lm += r.lanceMes; t.fa += fa; t.sa += sa; t.sf += sf;
+    return `<tr><td>${esc(nomeCota(v.c, i))}</td><td>${fmtBRL(ia)}</td><td>${fmtBRL(r.parcMes)}</td><td>${fmtBRL(r.lanceMes)}</td><td>${fmtBRL(fa)}</td><td>${fmtBRL(sa)}</td><td>${fmtBRL(sf)}</td></tr>`;
+  }).join('');
+  document.getElementById('movFoot').innerHTML = `<tr><td>TOTAL</td><td>${fmtBRL(t.ia)}</td><td>${fmtBRL(t.pm)}</td><td>${fmtBRL(t.lm)}</td><td>${fmtBRL(t.fa)}</td><td>${fmtBRL(t.sa)}</td><td>${fmtBRL(t.sf)}</td></tr>`;
+  const prevD = isoToLocal(antIso);
+  document.getElementById('movIniTh').textContent = 'Pago acumulado em ' + localToBR(prevD);
+  document.getElementById('movFimTh').textContent = 'Pago acumulado em ' + localToBR(T);
+  document.getElementById('movSdIniTh').textContent = 'Saldo devedor em ' + localToBR(prevD);
+  document.getElementById('movSdFimTh').textContent = 'Saldo devedor em ' + localToBR(T);
+  document.getElementById('movChip').textContent = MESES[T.getMonth()] + '/' + T.getFullYear();
+  panel.style.display = '';
+}
+
+function setAnoComposicao(v){ anoComposicao = parseInt(v, 10); render(); }
+function renderComposicaoAnual(vs){
+  const anos = anosDisponiveis(vs);
+  if (!anos.includes(anoComposicao)) anoComposicao = anos.includes(new Date().getFullYear()) ? new Date().getFullYear() : anos[anos.length - 1];
+  document.getElementById('anoComposicaoSelect').innerHTML = anos.map(a => `<option value="${a}" ${a === anoComposicao ? 'selected' : ''}>${a}</option>`).join('');
+  const pago = new Array(12).fill(0), aPagar = new Array(12).fill(0);
+  vs.forEach(v => { const comp = computeComposicaoAno(v, anoComposicao); comp.pago.forEach((x, i) => pago[i] += x); comp.aPagar.forEach((x, i) => aPagar[i] += x); });
+  document.getElementById('composicaoBody').innerHTML = MESES.map((m, i) => `<tr><td>${m}/${anoComposicao}</td><td>${fmtBRL(pago[i])}</td><td>${fmtBRL(aPagar[i])}</td><td>${fmtBRL(pago[i] + aPagar[i])}</td></tr>`).join('');
+  const sp = pago.reduce((a, b) => a + b, 0), sa = aPagar.reduce((a, b) => a + b, 0);
+  document.getElementById('composicaoFoot').innerHTML = `<tr><td>TOTAL ${anoComposicao}</td><td>${fmtBRL(sp)}</td><td>${fmtBRL(sa)}</td><td>${fmtBRL(sp + sa)}</td></tr>`;
+}
+
+function renderCards(vs, rs){
+  const el = document.getElementById('cards');
+  el.innerHTML = vs.map((v, idx) => {
+    const c = v.c, r = rs[idx];
+    const lista = v.paysAte.slice().reverse();
+    const tipoTxt = p => p.tipo === 'PARCELA' ? 'Parcela' + (p.tp && p.tp !== 'PN' ? ' (' + p.tp + ')' : '') : p.tipo === 'LANCE' ? 'Lance' + (p.desc ? ' – ' + p.desc.toLowerCase() : '') : p.tipo === 'RENDIMENTO' ? 'Rendimento (crédito)' : (p.desc || 'Outro');
+    const temQuebra = lista.some(p => typeof p.fc === 'number');
+    return `
+    <div class="card ${c.open ? 'open' : ''}">
+      <div class="card-head" onclick="toggleCard('${c.id}')">
+        <div class="title">${esc(nomeCota(c, idx))}
+          <span class="tag">${esc(c.bem || '')}</span>
+          <span class="badge ${v.contemplada ? 'ok' : ''}">${situacao(v)}</span>
+          ${v.semDados ? '<span class="badge warn">sem histórico para esta data-base</span>' : ''}
+          ${v.depoisDoExtrato ? '<span class="badge warn">extrato anterior à data-base</span>' : ''}
+        </div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <button class="danger" onclick="event.stopPropagation(); removeCard('${c.id}')">Remover</button>
+          <span class="chev">▶</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="paste-actions" style="margin:0 0 12px;">
+          <button class="primary" onclick="document.getElementById('pdfInput-${c.id}').click()">📄 Carregar/atualizar PDF desta cota</button>
+          <input type="file" id="pdfInput-${c.id}" accept="application/pdf" onchange="handleCardPdfUpload('${c.id}', event)">
+          <span class="parse-msg" id="msg-${c.id}">${c.arquivo ? 'Último PDF: ' + esc(c.arquivo) : ''}</span>
+        </div>
+
+        <fieldset>
+          <legend>Identificação</legend>
+          <div class="grid">
+            ${fieldRow(c, 'admin', 'Administradora')}
+            ${fieldRow(c, 'grupo', 'Grupo')}
+            ${fieldRow(c, 'cota', 'Cota')}
+            ${fieldRow(c, 'apelido', 'Apelido (quando não há grupo/cota)')}
+            ${fieldRow(c, 'bem', 'Bem / carta de crédito')}
+            ${fieldRow(c, 'dataAdesao', 'Adesão / 1º pagamento', 'dd/mm/aaaa')}
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Extrato (${esc(c.dataExtrato || 'sem data')})</legend>
+          <div class="grid">
+            ${fieldRow(c, 'dataExtrato', 'Data do extrato', 'dd/mm/aaaa')}
+            ${fieldRow(c, 'valorBem', 'Valor do bem / crédito (R$)')}
+            ${fieldRow(c, 'pagoTotal', 'Total pago até o extrato (R$)')}
+            ${fieldRow(c, 'saldoDevedor', 'Saldo devedor / a pagar (R$)')}
+            ${fieldRow(c, 'totalParcelas', 'Total de parcelas da cota')}
+            ${fieldRow(c, 'parcelasPagas', 'Parcelas pagas')}
+            ${fieldRow(c, 'restantes', 'Parcelas a pagar')}
+            ${fieldRow(c, 'valorParcela', 'Valor da parcela atual (R$)')}
+            ${fieldRow(c, 'proxVenc', 'Próximo vencimento', 'dd/mm/aaaa')}
+            ${fieldRow(c, 'dataContemplacao', 'Data da contemplação', 'dd/mm/aaaa')}
+            ${fieldRow(c, 'creditoDisponivel', 'Crédito disponível (R$)')}
+          </div>
+          ${(c.fundoComum || c.taxaAdm) ? `<div class="grid" style="margin-top:10px;">
+            ${fieldRow(c, 'fundoComum', 'Fundo comum pago (R$)')}
+            ${fieldRow(c, 'fundoReserva', 'Fundo de reserva pago (R$)')}
+            ${fieldRow(c, 'taxaAdm', 'Taxa de administração paga (R$)')}
+          </div>` : ''}
+        </fieldset>
+
+        ${v.reconstruido && !v.naoExiste ? `<fieldset><legend>Posição em ${localToBR(v.dataBase)} (reconstruída)</legend><div class="grid">
+          ${roRow('Total pago até a data-base', fmtBRL(v.pago))}
+          ${roRow('Saldo devedor na data-base', fmtBRL(v.saldo))}
+          ${roRow('Parcelas pagas', v.pagas)}
+          ${roRow('Parcelas a pagar', v.restantes)}
+          ${roRow('Valor da parcela vigente', fmtBRL(v.valorParcela))}
+          ${roRow('Situação', situacao(v))}
+        </div></fieldset>` : ''}
+
+        <fieldset><legend>Observações</legend>
+          <input type="text" value="${esc(c.obs)}" onchange="updateField('${c.id}','obs', this.value)" placeholder="ex.: número do contrato, conta contábil, destinação do crédito...">
+        </fieldset>
+
+        <div class="results">
+          <h3>Resultado — o que deve estar na contabilidade ${v.reconstruido ? 'em ' + localToBR(v.dataBase) : 'na data do extrato'}</h3>
+          <div class="rgrid">
+            <div class="item hi"><div class="lbl">Total pago (ativo – consórcios)</div><div class="val">R$ ${fmtBRL(v.pago)}</div></div>
+            <div class="item hi"><div class="lbl">Saldo devedor (a pagar)</div><div class="val">R$ ${fmtBRL(v.saldo)}</div></div>
+            <div class="item"><div class="lbl">Curto prazo (até 12 parcelas)</div><div class="val">R$ ${fmtBRL(r.cp)}</div></div>
+            <div class="item"><div class="lbl">Longo prazo</div><div class="val">R$ ${fmtBRL(r.lp)}</div></div>
+            <div class="item"><div class="lbl">Parcelas pagas / total</div><div class="val">${isNaN(v.pagas) ? '—' : v.pagas} / ${isNaN(v.total) ? '—' : v.total}</div></div>
+            <div class="item"><div class="lbl">Parcelas a pagar</div><div class="val">${isNaN(v.restantes) ? '—' : v.restantes}</div></div>
+            <div class="item"><div class="lbl">% pago (pago ÷ pago + a pagar)</div><div class="val">${fmtPct(r.percPago)}</div></div>
+            <div class="item"><div class="lbl">Pago no mês</div><div class="val">R$ ${fmtBRL(r.pagoMes)}</div></div>
+            ${!isNaN(v.fc) ? `<div class="item"><div class="lbl">↳ Fundo comum pago</div><div class="val">R$ ${fmtBRL(v.fc)}</div></div>
+            <div class="item"><div class="lbl">↳ Taxa de administração paga</div><div class="val">R$ ${fmtBRL(v.ta)}</div></div>
+            <div class="item"><div class="lbl">↳ Fundo de reserva pago</div><div class="val">R$ ${fmtBRL(v.fr)}</div></div>` : ''}
+            ${v.contemplada ? `<div class="item hi"><div class="lbl">Crédito disponível (contemplação ${esc(c.dataContemplacao)})</div><div class="val">R$ ${fmtBRL(toNum(c.creditoDisponivel))}</div></div>` : ''}
+            ${v.rendimentos ? `<div class="item"><div class="lbl">Rendimentos creditados</div><div class="val">R$ ${fmtBRL(v.rendimentos)}</div></div>` : ''}
+          </div>
+          ${v.contemplada ? `<div class="note">Cota contemplada: ao utilizar o crédito (aquisição do bem), baixar o total pago do ativo de consórcios contra o imobilizado e registrar o saldo devedor no passivo (curto prazo R$ ${fmtBRL(r.cp)} / longo prazo R$ ${fmtBRL(r.lp)}).</div>` : ''}
+          ${v.reconstruido && !v.naoExiste ? `<div class="note exact">Posição reconstruída: total pago do extrato (${c.dataExtrato}) menos os pagamentos feitos depois de ${localToBR(v.dataBase)}; esses pagamentos voltam para o saldo devedor. Não considera reajuste do valor do bem entre a data-base e o extrato.</div>` : ''}
+          ${v.semDados ? `<div class="note">O extrato só traz os últimos pagamentos e não cobre esta data-base. Carregue um extrato mais antigo desta cota (os históricos são somados) para reconstruir.</div>` : ''}
+        </div>
+
+        ${lista.length ? `<div class="results" style="margin-top:14px;">
+          <h3 style="color:var(--text);">Pagamentos ${v.reconstruido ? 'até ' + localToBR(v.dataBase) : 'do extrato'} (${lista.filter(ehPagto).length})</h3>
+          <div style="overflow-x:auto; max-height:320px; overflow-y:auto;">
+          <table>
+            <thead><tr><th>Nº</th><th class="left">Tipo</th><th>Pagamento</th><th>Vencimento</th><th>Valor pago</th>${temQuebra ? '<th>Fundo comum</th><th>Taxa adm.</th><th>Fundo reserva</th>' : ''}</tr></thead>
+            <tbody>${lista.map(p => `<tr><td>${p.n || '—'}</td><td class="left">${esc(tipoTxt(p))}</td><td>${p.data}</td><td>${p.venc || '—'}</td><td>${p.tipo === 'RENDIMENTO' ? '(' + fmtBRL(p.valor) + ')' : fmtBRL(p.valor)}</td>${temQuebra ? `<td>${fmtBRL(p.fc)}</td><td>${fmtBRL(p.ta)}</td><td>${fmtBRL(p.fr)}</td>` : ''}</tr>`).join('')}</tbody>
+            <tfoot><tr><td>TOTAL</td><td></td><td></td><td></td><td>${fmtBRL(lista.filter(ehPagto).reduce((a, p) => a + p.valor, 0))}</td>${temQuebra ? '<td></td><td></td><td></td>' : ''}</tr></tfoot>
+          </table></div>
+          ${Math.abs(lista.filter(ehPagto).reduce((a, p) => a + p.valor, 0) - v.pago) >= 0.5 ? `<div class="note">A lista soma R$ ${fmtBRL(lista.filter(ehPagto).reduce((a, p) => a + p.valor, 0))}, diferente do total pago (R$ ${fmtBRL(v.pago)}): o extrato não traz todos os pagamentos antigos.</div>` : ''}
+        </div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(id){ const c = cards.find(x => x.id === id); c.open = !c.open; render(); }
+function updateField(id, key, value){ const c = cards.find(x => x.id === id); c[key] = value; render(); }
+function updateConc(k, value){
+  if (!competencia) return;
+  conc[competencia] = conc[competencia] || Object.assign({}, CONC_SEMENTE[competencia] || {});
+  conc[competencia][k] = value; render();
+}
+function updateCfg(k, value){ concCfg[k] = value; render(); }
+function addCard(){ cards.push(blankCard()); render(); }
+function removeCard(id){ if (!confirm('Remover esta cota do painel?')) return; cards = cards.filter(c => c.id !== id); render(); }
+function setBase(v){ competencia = v || ''; try { localStorage.setItem(BASE_KEY, competencia); } catch(e){} render(); }
+
+// ---------- aplicar extrato ----------
+const MONEY_KEYS = ['valorBem', 'pagoTotal', 'saldoDevedor', 'valorParcela', 'creditoDisponivel', 'fundoComum', 'fundoReserva', 'taxaAdm'];
+const EXTRACT_KEYS = ['dataExtrato', 'valorBem', 'pagoTotal', 'saldoDevedor', 'totalParcelas', 'parcelasPagas', 'restantes', 'valorParcela',
+  'proxVenc', 'dataContemplacao', 'creditoDisponivel', 'fundoComum', 'fundoReserva', 'taxaAdm', 'percAmortizado'];
+const chavePg = p => p.tipo + '|' + p.data + '|' + r2(p.valor) + '|' + (p.n || 0);
+
+function applyParsedToCard(c, parsed){
+  // extrato mais antigo que o já carregado: só soma o histórico de pagamentos
+  const dNovo = parseBRDate(parsed.dataExtrato), dAtual = parseBRDate(c.dataExtrato);
+  const maisAntigo = dNovo && dAtual && dNovo < dAtual;
+  if (!maisAntigo){
+    EXTRACT_KEYS.forEach(k => { c[k] = ''; });
+    Object.keys(parsed).forEach(k => {
+      if (k === 'pagamentos' || parsed[k] === undefined || parsed[k] === '' || (typeof parsed[k] === 'number' && isNaN(parsed[k]))) return;
+      if ((k === 'grupo' || k === 'cota' || k === 'admin' || k === 'bem') && c[k]) return;
+      if (k === 'dataAdesao' && c.dataAdesao && parseBRDate(c.dataAdesao) <= parseBRDate(parsed.dataAdesao)) return;
+      c[k] = (MONEY_KEYS.includes(k) && typeof parsed[k] === 'number') ? fmtBRL(parsed[k]) : parsed[k];
+    });
+  } else if (parsed.dataAdesao && (!c.dataAdesao || parseBRDate(parsed.dataAdesao) < parseBRDate(c.dataAdesao))) c.dataAdesao = parsed.dataAdesao;
+  // une o histórico de pagamentos (Itaú só mostra os últimos ~10)
+  const mapa = {};
+  (c.pagamentos || []).concat(parsed.pagamentos || []).forEach(p => {
+    const k = chavePg(p);
+    if (!mapa[k] || (typeof p.fc === 'number' && typeof mapa[k].fc !== 'number')) mapa[k] = p;
+  });
+  c.pagamentos = Object.values(mapa).sort((a, b) => parseBRDate(a.data) - parseBRDate(b.data) || (a.n || 0) - (b.n || 0));
+  return { maisAntigo, n: (parsed.pagamentos || []).length };
+}
+
+function acharCard(parsed){
+  if (parsed.grupo && parsed.cota) {
+    const c = cards.find(x => x.grupo === parsed.grupo && x.cota === parsed.cota && (!x.admin || !parsed.admin || x.admin === parsed.admin));
+    if (c) return c;
+  }
+  // sem grupo/cota no PDF (Sicoob): mesma administradora e bem, mesma contemplação
+  // (ou cota ainda não contemplada que foi contemplada depois do extrato salvo)
+  if (!parsed.grupo){
+    const cand = cards.filter(x => x.admin === parsed.admin && (x.bem || '') === (parsed.bem || '') && x.pagamentos && x.pagamentos.length);
+    const mesma = cand.filter(x => (x.dataContemplacao || '') === (parsed.dataContemplacao || ''));
+    if (mesma.length === 1) return mesma[0];
+    if (mesma.length > 1) return null;
+    const nova = cand.filter(x => !x.dataContemplacao && parsed.dataContemplacao && parseBRDate(parsed.dataContemplacao) > parseBRDate(x.dataExtrato));
+    if (nova.length === 1) return nova[0];
+  }
+  return null;
+}
+
+// ---------- leitura de PDF (pdf.js, local) ----------
+if (window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc = 'vendor/pdfjs/pdf.worker.min.js';
+
+async function pdfToText(file){
+  if (!window.pdfjsLib) throw new Error('biblioteca de leitura de PDF não carregada — a pasta "vendor\\pdfjs" precisa estar na mesma pasta deste arquivo HTML');
+  const buf = await file.arrayBuffer();
+  const m = (file.name || '').match(/senha\s*[:\-_ ]?\s*([A-Za-z0-9]+)/i);
+  const task = pdfjsLib.getDocument({ data: buf, password: m ? m[1] : undefined });
+  task.onPassword = (update, reason) => {
+    const p = prompt((reason === 2 ? 'Senha incorreta. ' : '') + 'O PDF "' + file.name + '" é protegido. Informe a senha:', '');
+    if (p === null){ task.destroy(); return; }
+    update(p);
+  };
+  const pdf = await task.promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++){
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(it => it.str + (it.hasEOL ? '\n' : '')).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function loadPdfIntoCard(cardId, file, msgEl){
+  if (msgEl){ msgEl.className = 'parse-msg'; msgEl.textContent = 'Lendo PDF...'; }
+  try {
+    const text = await pdfToText(file);
+    const parsed = parseExtrato(text);
+    if (parsed.saldoDevedor === undefined && !(parsed.pagamentos || []).length) throw new Error('não encontrei saldo devedor nem pagamentos no extrato');
+    let c = cardId ? cards.find(x => x.id === cardId) : acharCard(parsed);
+    if (!c && cards.length === 1 && !cards[0].dataExtrato && !(cards[0].pagamentos || []).length) c = cards[0];
+    let isNew = false;
+    if (!c){
+      c = blankCard(); c.open = false; isNew = true;
+      // sem grupo/cota no PDF: numera as cotas do mesmo bem para diferenciá-las (editável no cartão)
+      if (!parsed.grupo && !parsed.cota){
+        const n = cards.filter(x => x.admin === parsed.admin && (x.bem || '') === (parsed.bem || '')).length + 1;
+        c.apelido = (parsed.bem || 'cota').split(/\s+/)[0] + ' – cota ' + n;
+      }
+      cards.push(c);
+    }
+    const r = applyParsedToCard(c, parsed);
+    c.arquivo = file.name;
+    render();
+    const el = document.getElementById('msg-' + c.id);
+    if (el){ el.className = 'parse-msg'; el.textContent = (isNew ? 'Nova cota criada' : (r.maisAntigo ? 'Extrato mais antigo: histórico somado' : 'Atualizado')) + ` a partir de "${file.name}" (${r.n} movimento(s)). Confira antes de usar.`; }
+    return { ok: true };
+  } catch(e){
+    const msg = 'Erro ao ler "' + file.name + '": ' + (e && e.message ? e.message : e);
+    if (msgEl){ msgEl.className = 'parse-msg err'; msgEl.textContent = msg; }
+    return { ok: false, error: msg };
+  }
+}
+async function handleCardPdfUpload(id, ev){
+  const file = ev.target.files[0]; ev.target.value = '';
+  if (file) await loadPdfIntoCard(id, file, document.getElementById('msg-' + id));
+}
+async function handleGlobalPdfUpload(ev){
+  const files = Array.from(ev.target.files || []); ev.target.value = '';
+  const g = document.getElementById('globalPdfMsg'); const erros = []; let ok = 0;
+  for (const f of files){
+    g.className = 'pdf-msg'; g.textContent = 'Lendo ' + f.name + '...';
+    const r = await loadPdfIntoCard(null, f, null);
+    if (r.ok) ok++; else erros.push(r.error);
+  }
+  g.className = 'pdf-msg parse-msg' + (erros.length ? ' err' : '');
+  g.textContent = erros.length ? `${ok} de ${files.length} PDF(s) lido(s). ${erros[0]}${erros.length > 1 ? ` (+${erros.length - 1})` : ''}` : `${ok} PDF(s) lido(s) com sucesso.`;
+}
+
+// ---------- persistência ----------
+function save(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+    localStorage.setItem(CONC_KEY, JSON.stringify({ conc, concCfg }));
+  } catch(e){}
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY); if (raw) cards = JSON.parse(raw);
+    const rc = localStorage.getItem(CONC_KEY);
+    if (rc){ const o = JSON.parse(rc); conc = o.conc || {}; concCfg = Object.assign(concCfg, o.concCfg || {}); }
+    competencia = localStorage.getItem(BASE_KEY);
+    if (competencia === null) competencia = '';
+  } catch(e){ competencia = competencia || ''; }
+}
+function baixar(nome, blob){ const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; a.click(); }
+function exportJSON(){ baixar('consorcios-audicon.json', new Blob([JSON.stringify({ cards, conc, concCfg }, null, 2)], { type: 'application/json' })); }
+function importJSON(ev){
+  const file = ev.target.files[0]; ev.target.value = ''; if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const d = JSON.parse(rd.result);
+      if (Array.isArray(d)) cards = d;
+      else { cards = d.cards || []; conc = d.conc || {}; concCfg = Object.assign(concCfg, d.concCfg || {}); }
+      render();
+    } catch(e){ alert('Arquivo inválido.'); }
+  };
+  rd.readAsText(file);
+}
+function exportCSV(){
+  const vs = cards.map(viewCard);
+  const head = ['Cota', 'Administradora', 'Bem', 'Situação', 'Data contemplação', 'Crédito/bem', 'Total pago', 'Saldo devedor', 'Curto prazo', 'Longo prazo', 'Parcelas pagas', 'Parcelas a pagar', 'Valor parcela', 'Pago no mês'];
+  const n = x => typeof x === 'number' ? (isNaN(x) ? '' : x.toFixed(2).replace('.', ',')) : '"' + String(x ?? '').replace(/"/g, '""') + '"';
+  const rows = vs.map((v, i) => { const r = computeCard(v), c = v.c;
+    return [nomeCota(c, i), c.admin, c.bem, situacao(v), v.contemplada ? c.dataContemplacao : '', toNum(v.contemplada && c.creditoDisponivel ? c.creditoDisponivel : c.valorBem), v.pago, v.saldo, r.cp, r.lp, String(v.pagas), String(v.restantes), v.valorParcela, r.pagoMes].map(n).join(';'); });
+  baixar('resumo-consorcios' + (competencia ? '-' + competencia.slice(0, 7) : '') + '.csv', new Blob(['\ufeff' + [head.join(';')].concat(rows).join('\n')], { type: 'text/csv;charset=utf-8' }));
+}
+
+// ---------- relatório PDF ----------
+const pdfN = v => (v === undefined || v === null || isNaN(v)) ? '-' : fmtBRL(v);
+function gerarRelatorioPDF(){
+  if (!window.jspdf || !window.jspdf.jsPDF){ alert('A biblioteca de PDF não foi carregada (pasta "vendor\\jspdf").'); return; }
+  const vs = cards.map(viewCard), rs = vs.map(computeCard);
+  const dados = vs.map((v, i) => ({ v, r: rs[i], c: v.c, i })).filter(d => d.c.dataExtrato || (d.c.pagamentos || []).length);
+  if (!dados.length){ alert('Nenhuma cota carregada.'); return; }
+  const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+  const W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight(), M = 36;
+  const AZUL = [18, 42, 79], CINZA = [90, 100, 115];
+  const dBase = competencia ? isoToLocal(competencia) : null;
+  let y = M;
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20, 30, 50);
+  doc.text('Relatório de composição dos consórcios', M, y + 12); y += 26;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...CINZA);
+  const emp = [...new Set(cards.map(c => c.empresa).filter(Boolean))].join(' / ');
+  if (emp){ doc.text('Empresa: ' + emp, M, y + 8); y += 13; }
+  doc.text((dBase ? 'Data-base: ' + localToBR(dBase) : 'Posição na data de cada extrato') + '   |   Extratos: ' + [...new Set(cards.map(c => c.dataExtrato).filter(Boolean))].join(', ') + '   |   Valores em R$', M, y + 8); y += 13;
+  doc.setDrawColor(...AZUL); doc.setLineWidth(1.2); doc.line(M, y + 4, W - M, y + 4); y += 16;
+  const secao = t => { if (y > H - 130){ doc.addPage(); y = M; } doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20, 30, 50); doc.text(t, M, y + 8); y += 14; };
+  const tabela = (head, body, foot, o) => {
+    o = o || {}; const cs = {}; head.forEach((_, i) => { cs[i] = { halign: i === 0 ? 'left' : 'right' }; });
+    doc.autoTable({ startY: y, head: [head], body, foot: foot ? [foot] : undefined, theme: 'grid', margin: { left: M, right: M, bottom: 44 },
+      styles: { font: 'helvetica', fontSize: 8.5, cellPadding: 3.2, lineColor: [205, 210, 220], lineWidth: 0.4, textColor: [25, 30, 45] },
+      headStyles: { fillColor: AZUL, textColor: 255, halign: 'center', fontStyle: 'bold' },
+      footStyles: { fillColor: [232, 237, 246], textColor: [15, 20, 35], fontStyle: 'bold' },
+      alternateRowStyles: { fillColor: [247, 249, 252] }, columnStyles: Object.assign(cs, o.columnStyles || {}), showFoot: 'lastPage' });
+    y = doc.lastAutoTable.finalY + 18;
+  };
+  const T = { pago: 0, saldo: 0, cp: 0, lp: 0, mes: 0 };
+  dados.forEach(d => { T.pago += d.v.pago || 0; T.saldo += d.v.saldo || 0; T.cp += d.r.cp || 0; T.lp += d.r.lp || 0; T.mes += d.r.pagoMes || 0; });
+
+  secao('1. Posição consolidada por cota');
+  tabela(['Cota', 'Bem', 'Situação', 'Total pago (ativo)', 'Saldo devedor', 'Curto prazo', 'Longo prazo', 'Parcelas pagas / total', 'A pagar', 'Parcela'],
+    dados.map(d => [nomeCota(d.c, d.i), d.c.bem || '', situacao(d.v) + (d.v.contemplada ? '\n' + d.c.dataContemplacao : ''), pdfN(d.v.pago), pdfN(d.v.saldo), pdfN(d.r.cp), pdfN(d.r.lp),
+      (isNaN(d.v.pagas) ? '-' : d.v.pagas) + ' / ' + (isNaN(d.v.total) ? '-' : d.v.total), isNaN(d.v.restantes) ? '-' : d.v.restantes, pdfN(d.v.valorParcela)]),
+    ['TOTAL (' + dados.length + ')', '', '', pdfN(T.pago), pdfN(T.saldo), pdfN(T.cp), pdfN(T.lp), '', '', ''],
+    { columnStyles: { 1: { halign: 'left', cellWidth: 150 }, 2: { halign: 'left' } } });
+
+  if (competencia){
+    const d = conc[competencia] || CONC_SEMENTE[competencia] || {};
+    const e = esperadoConc(vs, rs), antIso = anteriorDe(competencia), eAnt = ativoEsperadoEm(antIso);
+    const sAnt = toNum(d.saldoAnterior), deb = toNum(d.debitos), cred = toNum(d.creditos), sFin = toNum(d.saldoFinal);
+    const dif = x => isNaN(x) ? '-' : (Math.abs(x) < 0.5 ? 'OK' : pdfN(x));
+    secao('2. Conciliação contábil em ' + localToBR(dBase));
+    tabela(['Item', 'Contabilidade', 'Extratos', 'Diferença'], [
+      [concCfg.contaAtivo + ' - saldo anterior (' + localToBR(isoToLocal(antIso)) + ')', pdfN(sAnt), pdfN(eAnt), dif(sAnt - eAnt)],
+      ['(+) Débitos do mês x pagamentos do mês', pdfN(deb), pdfN(e.pagoMes), dif(deb - e.pagoMes)],
+      ['(-) Créditos do mês', pdfN(cred), pdfN(0), dif(cred || 0)],
+      [concCfg.contaAtivo + ' - saldo em ' + localToBR(dBase), pdfN(sFin), pdfN(e.ativo), dif(sFin - e.ativo)],
+      [concCfg.contaCP, pdfN(toNum(d.passivoCP)), pdfN(e.cp), dif((toNum(d.passivoCP) || 0) - e.cp)],
+      [concCfg.contaLP, pdfN(toNum(d.passivoLP)), pdfN(e.lp), dif((toNum(d.passivoLP) || 0) - e.lp)]
+    ], null, { columnStyles: { 0: { cellWidth: 330 } } });
+  }
+
+  // composição anual
+  const pago = new Array(12).fill(0), aPagar = new Array(12).fill(0);
+  vs.forEach(v => { const comp = computeComposicaoAno(v, anoComposicao); comp.pago.forEach((x, i) => pago[i] += x); comp.aPagar.forEach((x, i) => aPagar[i] += x); });
+  secao((competencia ? '3' : '2') + '. Composição mensal de ' + anoComposicao + ' - pago x a pagar');
+  const sp = pago.reduce((a, b) => a + b, 0), sa = aPagar.reduce((a, b) => a + b, 0);
+  tabela(['Mês', 'Pago', 'A pagar (projeção)', 'Total'], MESES.map((m, i) => [m + '/' + anoComposicao, pdfN(pago[i]), pdfN(aPagar[i]), pdfN(pago[i] + aPagar[i])]),
+    ['TOTAL ' + anoComposicao, pdfN(sp), pdfN(sa), pdfN(sp + sa)], { columnStyles: { 0: { cellWidth: 140 } } });
+
+  const notas = [
+    'Total pago (ativo) = parcelas e lances pagos até a data-base (fundo comum + taxa de administração + fundo de reserva). Rendimentos creditados pela administradora não estão somados.',
+    'Saldo devedor = valor a pagar informado no extrato. Para datas anteriores ao extrato, soma-se de volta os pagamentos feitos depois da data-base (sem reajuste do bem no período).',
+    'Curto prazo = próximas até 12 parcelas x valor da parcela vigente; longo prazo = saldo devedor - curto prazo.',
+    'Passivo esperado: ' + (concCfg.passivo === 'todas' ? 'saldo a pagar de todas as cotas.' : concCfg.passivo === 'contempladas' ? 'saldo a pagar apenas das cotas contempladas até a data-base.' : 'não considerado (controle extracontábil).')
+  ];
+  dados.filter(d => d.v.contemplada).forEach(d => notas.push(nomeCota(d.c, d.i) + ': contemplada em ' + d.c.dataContemplacao + ', crédito disponível R$ ' + fmtBRL(toNum(d.c.creditoDisponivel)) + '. Ao usar o crédito, baixar o ativo de consórcio contra o imobilizado e registrar o saldo devedor no passivo.'));
+  secao('Notas e premissas');
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(40, 45, 60);
+  notas.forEach(n => { const l = doc.splitTextToSize('- ' + n, W - 2 * M); if (y + l.length * 11 > H - 50){ doc.addPage(); y = M; } doc.text(l, M, y + 8); y += l.length * 11 + 3; });
+
+  const np = doc.getNumberOfPages(), gerado = new Date().toLocaleString('pt-BR');
+  for (let i = 1; i <= np; i++){
+    doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...CINZA);
+    doc.setDrawColor(200, 205, 215); doc.setLineWidth(0.5); doc.line(M, H - 34, W - M, H - 34);
+    doc.text('Painel de Consórcios Audicon - gerado em ' + gerado, M, H - 22);
+    doc.text('Página ' + i + ' de ' + np, W - M, H - 22, { align: 'right' });
+  }
+  if (window.__retornarPdf) return doc;
+  doc.save('relatorio-consorcios-' + (competencia ? competencia.slice(0, 7) : 'extratos') + '.pdf');
+}
+
+// ---------- init ----------
+load();
+if (!cards.length) cards = [blankCard()];
+render();
+</script>
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+</body>
+</html>
