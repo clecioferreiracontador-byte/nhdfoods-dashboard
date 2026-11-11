@@ -45,11 +45,41 @@ async function listarAcessos(){
   const q = await getDocs(collection(db, 'acessos'));
   return q.docs.map(d => Object.assign({ email: d.id }, d.data())).sort((a, b) => (a.papel === b.papel ? a.email.localeCompare(b.email) : a.papel === 'admin' ? -1 : 1));
 }
-async function salvarAcesso(email, papel, nome){
+async function salvarAcesso(email, papel, nome, book){
   email = String(email || '').trim().toLowerCase();
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Error('e-mail inválido');
   if (papel !== 'admin' && papel !== 'cliente') throw new Error('papel inválido');
-  await setDoc(doc(db, 'acessos', email), { papel, nome: String(nome || '').trim(), por: emailDe(USER), em: serverTimestamp() });
+  await setDoc(doc(db, 'acessos', email), { papel, nome: String(nome || '').trim(), book: !!book, por: emailDe(USER), em: serverTimestamp() });
+}
+
+/* ---------------- Book de conciliação (coleção "book", um documento por mês) ----------------
+   O pacote do mês vai compactado (gzip + base64) para caber no limite de 1 MB do documento.
+   Lê: admin ou quem tem book = true no acesso. Grava: só admin (regras do banco). */
+async function gz(txt){
+  const cs = new Blob([txt]).stream().pipeThrough(new CompressionStream('gzip'));
+  const buf = new Uint8Array(await new Response(cs).arrayBuffer());
+  let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+  return btoa(bin);
+}
+async function gunzip(b64){
+  const bin = atob(b64), buf = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+  return await new Response(new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+}
+const podeBook = () => !!ACESSO && (ACESSO.papel === 'admin' || ACESSO.book === true);
+async function gravarBook(mes, pac){
+  if (!ACESSO || ACESSO.papel !== 'admin') throw new Error('só o administrador salva o Book');
+  if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('mês inválido');
+  const z = await gz(JSON.stringify(pac));
+  if (z.length > 1000000) throw new Error('o Book de ' + mes + ' ficou grande demais para o Firebase (' + Math.round(z.length / 1024) + ' KB compactado; limite de ~1.000 KB)');
+  await setDoc(doc(db, 'book', mes), { gz: z, salvoEm: pac.salvoEm || new Date().toISOString(), por: emailDe(USER), em: serverTimestamp() });
+  return Math.round(z.length / 1024);
+}
+/* todos os meses salvos: {aaaa-mm: pacote} */
+async function lerBooks(){
+  const q = await getDocs(collection(db, 'book')), out = {};
+  for (const d of q.docs){ try { out[d.id] = JSON.parse(await gunzip(d.data().gz)); } catch (e) { console.warn('Book ' + d.id + ' ilegível', e); } }
+  return out;
 }
 async function removerAcesso(email){
   email = String(email || '').toLowerCase();
@@ -62,7 +92,8 @@ async function sair(){
   await signOut(auth);
   location.reload();
 }
-window.HubAuth = { lerDoc, gravarDoc, listarAcessos, salvarAcesso, removerAcesso, sair,
+window.HubAuth = { lerDoc, gravarDoc, listarAcessos, salvarAcesso, removerAcesso, sair, gravarBook, lerBooks,
+  get podeBook(){ return podeBook(); },
   get email(){ return emailDe(USER); }, get papel(){ return ACESSO && ACESSO.papel; }, get nome(){ return (ACESSO && ACESSO.nome) || ''; } };
 
 /* ---------------- mensagens de erro ---------------- */
@@ -236,7 +267,7 @@ async function verificar(forcar){
     if (liberado) return;
     liberado = true;
     raiz.hidden = true; document.body.classList.remove('hub-locked');
-    window.__hubPronto && window.__hubPronto({ email: emailDe(USER), papel: ACESSO.papel, nome: ACESSO.nome || '' });
+    window.__hubPronto && window.__hubPronto({ email: emailDe(USER), papel: ACESSO.papel, nome: ACESSO.nome || '', book: podeBook() });
   } catch (e) {
     tela(USER && USER.emailVerified ? 'semacesso' : 'entrar', { msg: erroMsg(e) });
   }

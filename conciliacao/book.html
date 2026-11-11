@@ -143,6 +143,12 @@ footer{display:none}
   body{background:#fff}.box,.summary,.card{box-shadow:none}
   section.panel{display:block!important}
 }
+/* modo visualização (usuário com permissão "Book: visualizar"): nada de importar, salvar ou editar */
+body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="lanc"],body.leitura nav.tabs button[data-tab="fontes"],
+body.leitura ul.cl,body.leitura #btnLimparChecklist,body.leitura .so-admin-box{display:none!important}
+body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select{pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
+.ro-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:#EAF2FB;color:#1A3A6B;font-size:.9rem;border:1px solid #BBD3EE}
+body.leitura .ro-aviso{display:block}
 </style>
 <style>
 .pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
@@ -242,7 +248,8 @@ tr.grp0 td .dsc{color:#CD9A56}
 <main class="wrap">
 
 <div class="box">
-  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+  <div class="ro-aviso" role="status">👁 <b>Modo visualização.</b> Você vê o Book dos meses fechados pela Audicon; nada pode ser alterado aqui.</div>
+  <div class="grid upl-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
     <div class="upl">
       <h3>📘 Balancete / Book do mês</h3>
       <div class="muted small">O Book (.xlsx, aba “Book”) traz saldos, observações e diferenças já apuradas; ou o balancete do Protheus (Conta | Descrição | Saldo anterior | Débito | Crédito | Saldo atual).</div>
@@ -259,8 +266,8 @@ tr.grp0 td .dsc{color:#CD9A56}
   <div class="toolbar" style="margin-top:12px">
     <label>Mês do Book:<select id="selMes" onchange="mesAtual=this.value;salvarPref();carregarMes()"></select></label>
     <button type="button" onclick="exportarBook()">📊 Exportar Book (Excel)</button>
-    <button type="button" onclick="salvarMesPortal()" title="Guarda o mês selecionado (balancete/Book, suportes, status e observações) no repositório privado da conciliação">☁ Salvar mês no portal</button>
-    <button type="button" onclick="carregarPortal()" title="Traz os meses salvos no portal para este navegador">☁ Carregar do portal</button>
+    <button type="button" class="so-admin" onclick="salvarMesPortal()" title="Guarda o mês selecionado (balancete/Book, suportes, status e observações) no repositório privado da conciliação">☁ Salvar mês no portal</button>
+    <button type="button" class="so-admin" onclick="carregarPortal()" title="Traz os meses salvos no portal para este navegador">☁ Carregar do portal</button>
     <span class="muted small" id="stTopo"></span>
     <span class="muted small" id="stPortal" style="flex-basis:100%"></span>
   </div>
@@ -357,6 +364,10 @@ tr.grp0 td .dsc{color:#CD9A56}
 <script>
 const LS_REV = 'aud-book-revisao-v1', LS_PREF = 'aud-book-pref-v1', LS_SUP = 'aud-hub-suportes';
 const $ = id => document.getElementById(id);
+// Modo visualização: o painel abre o Book com ?modo=leitura para quem tem só a permissão "Book: visualizar".
+// Os dados vêm do Firebase pelo painel (window.parent.HubAuth); as regras do banco impedem qualquer gravação.
+const LEITURA = new URLSearchParams(location.search).get('modo') === 'leitura';
+const HUB = (() => { try { return window.parent !== window && window.parent.HubAuth ? window.parent.HubAuth : null; } catch(e){ return null; } })();
 let mesAtual = '', bal = null, raz = null, rev = {}, lancCache = [];
 const r2 = v => Math.round(v * 100) / 100;
 const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -663,10 +674,11 @@ function renderBook(){
       <td><button class="lupa" type="button" title="Ver lançamentos do razão" onclick="verLanc('${l.conta}')">🔍</button></td></tr>`;
   });
   $('bkBody').innerHTML = h || '<tr><td colspan="12" class="muted">Nenhuma conta com esses filtros.</td></tr>';
+  if (LEITURA) $('bkBody').querySelectorAll('input,textarea,select').forEach(e => { e.disabled = true; e.tabIndex = -1; });
   renderFechamento();
   $('stTopo').textContent = bal ? 'Book de ' + mesLbl(mesAtual) + ' · origem: ' + (bal.origem || '') : '';
 }
-function setRev(k, campo, v){ rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
+function setRev(k, campo, v){ if (LEITURA) return; rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
 
 // ===================== lançamentos =====================
 function verLanc(conta){ $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc(); }
@@ -731,20 +743,31 @@ function pacoteMes(m){
   return { v: 1, mes: m, salvoEm: new Date().toISOString(), bal: Object.assign({}, bal, { suportes: supMes }), rev: revMes };
 }
 async function salvarMesPortal(){
+  if (LEITURA) return;
   if (!bal){ alert('Importe o Book ou o balancete do mês primeiro.'); return; }
-  const m = mesAtual, caminho = PORTAL_DIR + '/' + m + '.json';
-  setPortal('☁ Salvando ' + mesLbl(m) + ' no portal…');
-  try {
-    await confirmarAcessoPortal();
-    let sha;
-    const g = await ghPortal(caminho);
-    if (g.ok) sha = (await g.json()).sha; else if (g.status !== 404) throw await erroPortal(g, 'consultar o portal');
-    const pac = pacoteMes(m);
-    const r = await ghPortal(caminho, { method: 'PUT', body: JSON.stringify({ message: 'Book ' + mesLbl(m) + ' salvo pelo painel de conciliação', content: b64(JSON.stringify(pac)), branch: PORTAL_BRANCH, sha }) });
-    if (!r.ok) throw await erroPortal(r, 'salvar no portal');
-    setPortal('☁ ' + mesLbl(m) + ' salvo no portal em ' + new Date(pac.salvoEm).toLocaleString('pt-BR') + ' (repositório privado ' + PORTAL_REPO + ').', 'ok');
-    listarPortal(true);
-  } catch(e){ setPortal('⚠ ' + esc(e.message), 'err'); }
+  const m = mesAtual, caminho = PORTAL_DIR + '/' + m + '.json', pac = pacoteMes(m), ok = [], falhas = [];
+  setPortal('☁ Salvando ' + mesLbl(m) + '…');
+  // 1) Firebase: é de onde o Book é lido por quem tem a permissão "Book: visualizar"
+  if (HUB && HUB.papel === 'admin'){
+    try { const kb = await HUB.gravarBook(m, pac); ok.push('Firebase (' + kb + ' KB)'); }
+    catch(e){ falhas.push('Firebase: ' + (e && e.code === 'permission-denied' ? 'o seu acesso não permite salvar' : e.message)); }
+  } else falhas.push('Firebase: abra o Book pelo painel (Admin › Conciliação) para salvar no Firebase');
+  // 2) repositório privado no GitHub (cópia de segurança), quando houver token cadastrado
+  if (tokenGh()){
+    try {
+      await confirmarAcessoPortal();
+      let sha;
+      const g = await ghPortal(caminho);
+      if (g.ok) sha = (await g.json()).sha; else if (g.status !== 404) throw await erroPortal(g, 'consultar o portal');
+      const r = await ghPortal(caminho, { method: 'PUT', body: JSON.stringify({ message: 'Book ' + mesLbl(m) + ' salvo pelo painel de conciliação', content: b64(JSON.stringify(pac)), branch: PORTAL_BRANCH, sha }) });
+      if (!r.ok) throw await erroPortal(r, 'salvar no portal');
+      ok.push('repositório privado');
+      listarPortal('quieto');
+    } catch(e){ falhas.push('GitHub: ' + e.message); }
+  }
+  const quando = new Date(pac.salvoEm).toLocaleString('pt-BR');
+  if (ok.length) setPortal('☁ ' + mesLbl(m) + ' salvo em ' + quando + ' — ' + ok.join(' e ') + '.' + (falhas.length ? ' ⚠ ' + esc(falhas.join(' · ')) : ''), falhas.length ? '' : 'ok');
+  else setPortal('⚠ Não foi possível salvar: ' + esc(falhas.join(' · ')), 'err');
 }
 async function listarPortal(silencioso){
   try {
@@ -757,7 +780,34 @@ async function listarPortal(silencioso){
     return meses;
   } catch(e){ if (!silencioso) throw e; return null; }
 }
+// Traz os meses salvos no Firebase. No modo visualização substitui tudo o que houver neste navegador.
+async function carregarFirebase(){
+  if (!HUB) throw new Error('abra o Book pelo painel do Hub para ver os meses salvos');
+  const pacs = await HUB.lerBooks(), meses = Object.keys(pacs).sort();
+  if (LEITURA){
+    const locais = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0);
+    for (const k of locais) await HubDB.delMeta(k);
+    rev = {};
+  }
+  for (const m of meses){
+    await HubDB.setMeta('balancete:' + m, pacs[m].bal);
+    Object.keys(rev).filter(k => k.indexOf(m + '|') === 0).forEach(k => { delete rev[k]; });
+    Object.assign(rev, pacs[m].rev || {});
+  }
+  if (!LEITURA) lsSet(LS_REV, rev);
+  if (meses.length && meses.indexOf(mesAtual) < 0) mesAtual = meses[meses.length - 1];
+  await atualizarListas(); await carregarMes();
+  return meses;
+}
 async function carregarPortal(){
+  if (LEITURA) return;
+  if (!tokenGh() && HUB){
+    if (!confirm('Trazer do Firebase os meses salvos? Os meses que já estão neste navegador serão substituídos pelos do Firebase.')) return;
+    setPortal('☁ Buscando os meses salvos no Firebase…');
+    try { const ms = await carregarFirebase(); setPortal(ms.length ? '☁ ' + ms.length + ' mês(es) carregado(s) do Firebase: ' + ms.map(mesLbl).join(', ') + '.' : 'Nenhum mês salvo no Firebase ainda. Use “☁ Salvar mês no portal”.', ms.length ? 'ok' : ''); }
+    catch(e){ setPortal('⚠ ' + esc(e.message), 'err'); }
+    return;
+  }
   setPortal('☁ Buscando os meses salvos no portal…');
   try {
     const meses = await listarPortal(false);
@@ -865,6 +915,18 @@ async function exportarBook(){
 
 // ===================== início =====================
 (async function init(){
+  if (LEITURA){
+    document.body.classList.add('leitura');
+    mesAtual = (lsGet(LS_PREF, {}) || {}).mes || '';
+    if (!window.indexedDB){ msg('Este navegador não permite abrir o Book (IndexedDB indisponível).', 'err'); return; }
+    try {
+      $('bkVazio').textContent = 'Carregando o Book…';
+      const ms = await carregarFirebase();
+      if (!ms.length) $('bkVazio').textContent = 'A Audicon ainda não publicou nenhum mês do Book.';
+      setPortal(ms.length ? 'Meses disponíveis: ' + ms.map(mesLbl).join(', ') + '.' : '');
+    } catch(e){ $('bkVazio').textContent = 'Não foi possível abrir o Book: ' + (e && e.code === 'permission-denied' ? 'o seu acesso não inclui o Book de conciliação.' : e.message); }
+    return;
+  }
   rev = lsGet(LS_REV, {}); mesAtual = (lsGet(LS_PREF, {}) || {}).mes || '';
   if (!window.XLSX) msg('A biblioteca de planilhas não carregou (pasta vendor/sheetjs).', 'err');
   if (!window.indexedDB) { msg('Este navegador não permite guardar o razão (IndexedDB indisponível).', 'err'); return; }

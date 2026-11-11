@@ -1,0 +1,48 @@
+rules_version = '2';
+
+// Regras do banco do Hub Contábil (Firebase › Firestore › Regras).
+// Cópia de referência: o que vale é o que está publicado no console do Firebase.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function acesso() {
+      return get(/databases/$(database)/documents/acessos/$(request.auth.token.email)).data;
+    }
+    // Usuário logado, com e-mail confirmado e presente na lista de acessos
+    function liberado() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && exists(/databases/$(database)/documents/acessos/$(request.auth.token.email));
+    }
+    function admin() {
+      return liberado() && acesso().papel == 'admin';
+    }
+    // Book de conciliação: admin, ou quem tem "book: true" no acesso (só leitura)
+    function podeBook() {
+      return admin() || (liberado() && acesso().get('book', false) == true);
+    }
+
+    // Lista de quem pode entrar (o documento é o e-mail, em minúsculas)
+    match /acessos/{email} {
+      allow read: if request.auth != null && (request.auth.token.email == email || admin());
+      allow write: if admin();
+    }
+
+    // Dados do painel: base (DRE e balanço), agenda e mapa de vendas
+    match /dados/{doc} {
+      allow read: if liberado();
+      allow write: if admin();
+    }
+
+    // Book de conciliação, um documento por mês (aaaa-mm), compactado
+    match /book/{mes} {
+      allow read: if podeBook();
+      allow write: if admin();
+    }
+
+    // Qualquer outra coisa continua fechada
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

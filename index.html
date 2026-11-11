@@ -374,6 +374,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <div class="nav-item" onclick="setPage('mercado',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M2 13.5h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M3 10.5l3.2-3.2 2.6 2.4L13 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M10.2 5H13v2.8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>Mercado</div>
     <div class="nav-item" onclick="setPage('mapa',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M8 14.5s-4.5-4.2-4.5-7.8a4.5 4.5 0 0 1 9 0c0 3.6-4.5 7.8-4.5 7.8z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="8" cy="6.6" r="1.6" stroke="currentColor" stroke-width="1.3"/></svg>Mapa de vendas</div>
     <div class="nav-item" onclick="setPage('agenda',this)"><svg class="niv" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M2 6.5h12M5.5 1.5v3M10.5 1.5v3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M5.5 10l1.6 1.5 3.2-3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>Agenda</div>
+    <div class="nav-item" id="bookNav" style="display:none" onclick="setPage('bookv',this)" title="Book de conciliação dos meses fechados (somente visualização)"><svg class="niv" viewBox="0 0 16 16" fill="none"><path d="M3 2.5h7.5l2.5 2.5v8.5H3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M5.5 7.5l1.6 1.6 3.4-3.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Book de conciliação</div>
     <div id="adminNav" style="display:none">
       <hr class="sdiv">
       <div class="ssec"><span>Admin</span></div>
@@ -579,6 +580,11 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <a class="fs conc-open" id="concOpen" href="#" target="_blank" rel="noopener" title="Abrir o painel em uma aba separada do navegador">↗ Abrir em nova aba</a>
   </div>
   <div id="concFrames"></div>
+</section>
+
+<section id="page-bookv" class="page">
+  <div style="margin:0 0 14px"><div class="ptitle">Book de conciliação</div><div class="psub">Meses fechados pela Audicon · somente visualização</div></div>
+  <div id="bookvBox"></div>
 </section>
 
 <section id="page-bal" class="page">
@@ -2534,6 +2540,7 @@ function verComoCliente(on){
 function adminInit(){
   var adm=!!(window.HubAuth&&HubAuth.papel==='admin');
   document.getElementById('adminBtn').style.display=adm?'':'none';
+  document.getElementById('bookNav').style.display=(!adm&&window.HubAuth&&HubAuth.podeBook)?'':'none';
   // "Sair (primeiro nome)": usa o nome do cadastro; sem nome, a parte do e-mail antes do @. E-mail completo na dica.
   var sl=document.getElementById('sairLbl');
   if(sl&&window.HubAuth){
@@ -2554,14 +2561,17 @@ function adminLoginToggle(){
 // ---------- Usuários e acessos (admin) ----------
 function admEsc(x){return String(x==null?'':x).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function admMsg(id,t,tipo){var e=document.getElementById(id);if(!e)return;e.textContent=t||'';e.style.color=tipo==='ok'?'var(--green2)':tipo==='err'?'var(--red2)':'var(--gray2)';}
+var ADM_LISTA=null;
 function abrirAcessos(){
   var m=document.getElementById('admModal');
   var tk='';try{tk=localStorage.getItem('nhdGhToken')||'';}catch(e){}
   m.innerHTML='<div class="adm-box" role="dialog" aria-modal="true" aria-labelledby="admTit"><div class="adm-top"><h3 id="admTit">Usuários e acessos</h3><button class="fs" onclick="fecharAcessos()">✕ Fechar</button></div>'+
     '<p class="adm-note">Só entra no Hub quem está nesta lista. Depois de liberar, avise a pessoa para abrir o painel, clicar em <b>Primeiro acesso</b>, criar a senha e confirmar o e-mail.</p>'+
-    '<div class="adm-scroll"><table class="adm-t"><thead><tr><th>E-mail</th><th>Nome</th><th>Papel</th><th></th></tr></thead><tbody id="admLista"><tr><td colspan="4">Carregando…</td></tr></tbody></table></div>'+
+    '<div class="adm-scroll"><table class="adm-t"><thead><tr><th>E-mail</th><th>Nome</th><th>Papel</th><th title="Ver o Book de conciliação (só leitura)">Book</th><th></th></tr></thead><tbody id="admLista"><tr><td colspan="5">Carregando…</td></tr></tbody></table></div>'+
     '<form class="adm-add" onsubmit="admLiberar(event)"><input class="fs" id="admEmail" type="email" placeholder="e-mail" required aria-label="E-mail"><input class="fs" id="admNome" placeholder="nome" aria-label="Nome">'+
-    '<select class="fs" id="admPapel" aria-label="Papel"><option value="cliente">Cliente (NHD)</option><option value="admin">Admin (Audicon)</option></select><button class="fs adm-pri">Liberar acesso</button></form>'+
+    '<select class="fs" id="admPapel" aria-label="Papel"><option value="cliente">Cliente (NHD)</option><option value="admin">Admin (Audicon)</option></select>'+
+    '<label class="adm-ck"><input type="checkbox" id="admBook"> Book: visualizar</label><button class="fs adm-pri">Liberar acesso</button></form>'+
+    '<p class="adm-note">“Book: visualizar” deixa a pessoa abrir o Book de conciliação dos meses salvos, sem poder alterar nada. Admins já têm o Book completo.</p>'+
     '<div id="admMsgU" class="adm-note"></div>'+
     '<h4>Token do GitHub (portal do Book)</h4><p class="adm-note">Usado só para salvar e carregar os meses fechados no repositório privado da conciliação. Fica guardado apenas neste navegador.</p>'+
     '<div class="adm-add"><input class="fs" id="admTk" type="password" placeholder="cole o token" value="'+admEsc(tk)+'" aria-label="Token do GitHub"><button class="fs adm-pri" onclick="admSalvarToken()">Salvar token</button><button class="fs" onclick="admEsquecerToken()">Esquecer</button></div>'+
@@ -2573,17 +2583,26 @@ function fecharAcessos(){var m=document.getElementById('admModal');m.style.displ
 async function admListar(){
   var tb=document.getElementById('admLista');if(!tb)return;
   try{
-    var l=await HubAuth.listarAcessos();
-    tb.innerHTML=l.length?l.map(function(a){var eu=a.email===HubAuth.email;
-      return '<tr><td>'+admEsc(a.email)+(eu?' <span class="adm-eu">você</span>':'')+'</td><td>'+admEsc(a.nome)+'</td><td>'+(a.papel==='admin'?'Admin':'Cliente')+'</td><td>'+
-        (eu?'':'<button class="fs adm-del" data-email="'+admEsc(a.email)+'" onclick="admRemover(this.dataset.email)">Remover</button>')+'</td></tr>';}).join(''):'<tr><td colspan="4">Nenhum acesso.</td></tr>';
-  }catch(e){tb.innerHTML='<tr><td colspan="4">Não foi possível carregar: '+admEsc(e.message)+'</td></tr>';}
+    var l=await HubAuth.listarAcessos();ADM_LISTA=l;
+    tb.innerHTML=l.length?l.map(function(a){var eu=a.email===HubAuth.email,adm=a.papel==='admin';
+      return '<tr><td>'+admEsc(a.email)+(eu?' <span class="adm-eu">você</span>':'')+'</td><td>'+admEsc(a.nome)+'</td><td>'+(adm?'Admin':'Cliente')+'</td>'+
+        '<td>'+(adm?'<span title="Admins já têm o Book completo">✓</span>':'<input type="checkbox" aria-label="Book: visualizar para '+admEsc(a.email)+'" data-email="'+admEsc(a.email)+'"'+(a.book?' checked':'')+' onchange="admBook(this)">')+'</td><td>'+
+        (eu?'':'<button class="fs adm-del" data-email="'+admEsc(a.email)+'" onclick="admRemover(this.dataset.email)">Remover</button>')+'</td></tr>';}).join(''):'<tr><td colspan="5">Nenhum acesso.</td></tr>';
+  }catch(e){tb.innerHTML='<tr><td colspan="5">Não foi possível carregar: '+admEsc(e.message)+'</td></tr>';}
 }
 async function admLiberar(ev){
   ev.preventDefault();
-  var email=document.getElementById('admEmail').value,nome=document.getElementById('admNome').value,papel=document.getElementById('admPapel').value;
-  try{await HubAuth.salvarAcesso(email,papel,nome);admMsg('admMsgU','✓ Acesso liberado para '+email.trim().toLowerCase()+'.','ok');document.getElementById('admEmail').value='';document.getElementById('admNome').value='';admListar();}
+  var email=document.getElementById('admEmail').value,nome=document.getElementById('admNome').value,papel=document.getElementById('admPapel').value,book=document.getElementById('admBook').checked;
+  try{await HubAuth.salvarAcesso(email,papel,nome,book);document.getElementById('admBook').checked=false;admMsg('admMsgU','✓ Acesso liberado para '+email.trim().toLowerCase()+'.','ok');document.getElementById('admEmail').value='';document.getElementById('admNome').value='';admListar();}
   catch(e){admMsg('admMsgU','⚠ '+(e.code==='permission-denied'?'o seu acesso não permite liberar usuários':e.message),'err');}
+}
+// liga/desliga o "Book: visualizar" de um usuário já liberado (mantém papel e nome)
+async function admBook(ck){
+  var a=(ADM_LISTA||[]).filter(function(x){return x.email===ck.dataset.email;})[0];if(!a)return;
+  ck.disabled=true;
+  try{await HubAuth.salvarAcesso(a.email,a.papel,a.nome,ck.checked);a.book=ck.checked;admMsg('admMsgU',(ck.checked?'✓ Book liberado para ':'Book retirado de ')+a.email+'.','ok');}
+  catch(e){ck.checked=!ck.checked;admMsg('admMsgU','⚠ '+(e.code==='permission-denied'?'o seu acesso não permite alterar usuários':e.message),'err');}
+  ck.disabled=false;
 }
 async function admRemover(email){
   if(!confirm('Remover o acesso de '+email+'? A pessoa deixa de abrir o Hub na próxima vez que entrar.'))return;
@@ -2621,6 +2640,7 @@ function concTab(p){
 
 function setPage(n,el){
   if(n==='conc'&&!IS_ADMIN){alert('Área restrita ao administrador.');return;}
+  if(n==='bookv'&&!(window.HubAuth&&HubAuth.podeBook)){alert('O seu acesso não inclui o Book de conciliação.');return;}
   document.querySelectorAll('.nav-item').forEach(function(e){e.classList.remove('active');});
   document.querySelectorAll('.page').forEach(function(e){e.classList.remove('active');});
   if(el)el.classList.add('active');
@@ -2631,6 +2651,7 @@ function setPage(n,el){
   if(n==='mapa'&&window.Mapa)Mapa.render();
   if(n==='agenda'&&window.Agenda)Agenda.render();
   if(n==='conc'){var at=document.querySelector('.conc-tab.active');concTab(at?at.getAttribute('data-p'):'book');}
+  if(n==='bookv'){var bx=document.getElementById('bookvBox');if(!bx.firstChild)bx.innerHTML='<iframe class="conc-frame" title="Book de conciliação" src="conciliacao/book.html?modo=leitura&v='+Date.now()+'"></iframe>';}
 }
 
 function toggleSkpi(){
@@ -2675,7 +2696,9 @@ window.HubAuthPronto.then(async function(){
 .adm-t th{color:var(--gray);font-size:12px;text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;background:var(--n3)}
 .adm-t td:first-child{overflow-wrap:anywhere}
 .adm-eu{font-size:11px;color:var(--g2);border:1px solid rgba(201,168,76,.4);border-radius:99px;padding:0 6px;margin-left:4px}
-.adm-add{display:flex;flex-wrap:wrap;gap:8px}.adm-add input{flex:1;min-width:180px}
+.adm-add{display:flex;flex-wrap:wrap;gap:8px;align-items:center}.adm-add input:not([type=checkbox]){flex:1;min-width:180px}
+.adm-ck{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--gray2);white-space:nowrap}
+.adm-t input[type=checkbox],.adm-ck input{width:16px;height:16px;accent-color:#C9A84C;cursor:pointer}
 .adm-pri{border-color:var(--gold)!important;color:var(--g2)!important;font-weight:700!important;cursor:pointer}
 .adm-del{border-color:rgba(231,76,60,.6)!important;color:var(--red2)!important;cursor:pointer;padding:2px 9px!important}
 </style>
