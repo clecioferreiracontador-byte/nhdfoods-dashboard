@@ -223,6 +223,8 @@ tr.grp0 td{background:#0C182B;color:#fff;font-weight:700}
 tr.grp0 td .dsc{color:#CD9A56}
 /* diferença zerada: bolinha verde com check, como no Book original */
 td.c-ok{text-align:center}
+/* acima da tabela: só a linha dourada (o nome Book já aparece no topo) */
+#bkTit{padding:0;margin:0 0 10px;min-height:0}
 /* filtros do Book compactos */
 #bkTopo .filters{gap:10px;margin-bottom:8px}
 #bkTopo .filters label{font-size:.72rem;gap:2px}
@@ -370,7 +372,7 @@ table.bk td.mes-res{font-size:.62rem}
     <div class="box fech" id="fechBox"></div>
     <div class="box bkMain">
       <div class="bkTopo" id="bkTopo">
-      <h2 id="bkTit">Book</h2>
+      <h2 id="bkTit" aria-label="Book"></h2>
       <div class="filters">
         <label>Grupo<select id="fGrupo" onchange="renderBook()"><option value="">Todas (1, 2, 3 e 4)</option><option value="12">Só ativo, passivo e PL</option><option value="1">Ativo</option><option value="2.1">Passivo circulante</option><option value="2.2">Passivo não circulante</option><option value="2.3">Patrimônio líquido</option><option value="3">Resultado (3)</option><option value="4">Apuração do resultado (4)</option></select></label>
         <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option><option value="atencao">! Atenção (resultado fora da média)</option></select></label>
@@ -846,7 +848,6 @@ function renderBook(){
   KPIS_HTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
   if ($('kpis')) $('kpis').innerHTML = KPIS_HTML;
-  $('bkTit').textContent = 'Book';
   const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || (fs === 'atencao' ? !!l.alerta : l.st === fs)) && (!so || l.st !== 'zero' || l.alerta)
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
   let h = '', grpAtual = '', grp1 = '', grp0 = '', grp4 = '';
