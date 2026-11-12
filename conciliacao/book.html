@@ -220,10 +220,10 @@ tr.grp0 td .dsc{color:#CD9A56}
 .fech .fech-seta{display:inline-block;width:16px;color:var(--aud-secondary);transition:transform .15s}
 #fechBox:not(.min) .fech-seta{transform:rotate(90deg)}
 .fech .fech-resumo{font-size:.85rem;font-weight:600;color:var(--aud-gray-700);display:none;gap:8px;flex-wrap:wrap;align-items:center}
-#fechBox.min .fech-resumo{display:inline-flex}
+#fechBox.min .fech-resumo{display:none}
 #fechBox.min .fech-corpo{display:none}
-#fechBox.min{padding-top:12px;padding-bottom:12px}
-#fechBox.min h2{margin:0;padding:0;border-bottom:0}
+#fechBox.min{padding:7px 14px;margin-bottom:10px}
+#fechBox.min h2{margin:0;padding:0;border-bottom:0;font-size:.98rem}
 .fech h2{margin-bottom:4px}
 .fech .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:10px}
 .fech .card{border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:12px 14px;background:#fff}
@@ -554,10 +554,10 @@ const ST = { ok: ['ok', 'Conciliada'], div: ['bad', 'Divergente'], pend: ['warn'
 async function atualizarListas(){
   const ks = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort();
   raz = await HubDB.getMeta('razao');
-  const meses = [...new Set(ks.concat(raz ? Object.keys(raz.agg) : []))].sort();
+  const meses = [...new Set(ks.concat(raz ? Object.keys(raz.agg) : [], LEITURA ? [] : Object.keys(PACS_FB || {})))].sort();
   if (!mesAtual || meses.indexOf(mesAtual) < 0) mesAtual = ks.length ? ks[ks.length - 1] : (meses[meses.length - 1] || '');
-  $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}${ks.indexOf(m) < 0 ? ' (só razão)' : ''}</option>`).join('') || '<option value="">—</option>';
-  $('lMes').innerHTML = (LEITURA ? meses : raz ? Object.keys(raz.agg).sort() : []).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
+  $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}${ks.indexOf(m) >= 0 ? '' : PACS_FB && PACS_FB[m] ? ' (no portal)' : ' (só razão)'}</option>`).join('') || '<option value="">—</option>';
+  $('lMes').innerHTML = (LEITURA ? meses : [...new Set((raz ? Object.keys(raz.agg) : []).concat(Object.keys(PACS_FB || {})))].sort()).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
   $('fBal').innerHTML = await Promise.all(ks.map(async m => { const b = await HubDB.getMeta('balancete:' + m); return `<tr><td>${mesLbl(m)}</td><td class="wrap">${esc(b.origem || '')}</td><td>${Object.keys(b.contas).length}</td><td><button class="danger" type="button" onclick="apagarBal('${m}')">Remover</button></td></tr>`; })).then(a => a.join('')) || '<tr><td colspan="4" class="muted">Nenhum.</td></tr>';
   $('fRaz').innerHTML = raz ? raz.arquivos.map(a => `<tr><td class="wrap">${esc(a.nome)}</td><td>${a.meses.map(mesLbl).join(', ')}</td><td>${a.contas}</td><td>${a.linhas.toLocaleString('pt-BR')}</td><td>${new Date(a.em).toLocaleString('pt-BR')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">Nenhum razão importado.</td></tr>';
   const sup = suportes();
@@ -621,7 +621,35 @@ function alertaMov(c, desc){
     (tipo === 'sinal' ? ' — o sinal inverteu' : tipo === 'novo' ? ' — a conta costuma ficar quase zerada' : '') + '. Pode haver lançamento em conta errada, em duplicidade, fora do mês ou faltando.';
   return { tipo, mov, med: r2(med), pct, txt, curto: tipo === 'zerou' ? 'sem movimento · média ' + fmt(r2(med)) : 'média ' + fmt(r2(med)) + (tipo === 'acima' || tipo === 'abaixo' ? ' (' + (pct > 0 ? '+' : '') + pct.toFixed(0) + '%)' : tipo === 'sinal' ? ' · sinal invertido' : ' · costuma ser zero') };
 }
+// ---- meses salvos no portal (Firebase): o mês escolhido vem na versão mais atual
+// Se este navegador não tem o mês, ou tem uma versão sem alteração pendente (igual à última que ele salvou) e o
+// portal tem outra, o mês é trazido do portal. Alterações ainda não salvas aqui nunca são substituídas.
+let PACS_FB = null;
+async function lerFirebaseMeses(forcar){
+  if (LEITURA || !HUB || !HUB.lerBooks) return {};
+  if (PACS_FB && !forcar) return PACS_FB;
+  try { PACS_FB = await HUB.lerBooks(); } catch(e){ PACS_FB = PACS_FB || {}; }
+  return PACS_FB;
+}
+async function trazerDoPortal(m){
+  if (LEITURA || !m || !PACS_FB || !PACS_FB[m]) return false;
+  const pac = PACS_FB[m], local = await HubDB.getMeta('balancete:' + m);
+  if (local){
+    const salvoAqui = lsGet(LS_AUTO, {})[m];
+    const antes = bal; bal = local; const atual = assinaturaMes(m); bal = antes;
+    if (!salvoAqui || salvoAqui !== atual) return false;                      // tem alteração não salva neste navegador
+    const revPac = pac.rev || {}, revLoc = {}; Object.keys(rev).filter(k => k.indexOf(m + '|') === 0).forEach(k => { revLoc[k] = rev[k]; });
+    if (JSON.stringify(local.contas) === JSON.stringify((pac.bal || {}).contas) && JSON.stringify(revLoc) === JSON.stringify(revPac)) return false;   // já é a mesma versão
+  }
+  await HubDB.setMeta('balancete:' + m, pac.bal);
+  Object.keys(rev).filter(k => k.indexOf(m + '|') === 0).forEach(k => { delete rev[k]; });
+  Object.assign(rev, pac.rev || {}); lsSet(LS_REV, rev);
+  const antes = bal; bal = pac.bal; const a = lsGet(LS_AUTO, {}); a[m] = assinaturaMes(m); lsSet(LS_AUTO, a); bal = antes;
+  setPortal('☁ ' + mesLbl(m) + ' carregado do portal (salvo em ' + new Date(pac.salvoEm).toLocaleString('pt-BR') + ').', 'ok');
+  return true;
+}
 async function carregarMes(){
+  try { if (await trazerDoPortal(mesAtual)) await atualizarListas(); } catch(e){}
   bal = mesAtual ? await HubDB.getMeta('balancete:' + mesAtual) : null;
   raz = await HubDB.getMeta('razao');
   try { await carregarMovs(); } catch(e){ MOVS = {}; MESES_MOV = []; }
@@ -748,7 +776,7 @@ function renderBook(){
   anal.forEach(l => { if (l.res || l.st === 'zero') return; K.tot++; K[l.st]++; });
   $('kpis').innerHTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
-  $('bkTit').textContent = 'Book — ' + mesLbl(mesAtual) + (raz && raz.agg[mesAtual] ? '' : ' (sem razão deste mês: coluna Razão em branco)');
+  $('bkTit').textContent = 'Book';
   const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || (fs === 'atencao' ? !!l.alerta : l.st === fs)) && (!so || l.st !== 'zero' || l.alerta)
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
   let h = '', grpAtual = '', grp1 = '', grp0 = '', grp4 = '';
@@ -795,13 +823,14 @@ function setRev(k, campo, v){ if (LEITURA) return; rev[k] = rev[k] || {}; if (v 
 
 // ===================== lançamentos =====================
 async function verLanc(conta){
-  if (LEITURA){ $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); $('lVazio').style.display = ''; $('lBox').style.display = 'none'; $('lVazio').textContent = 'Carregando o razão de ' + mesLbl(mesAtual) + '…'; await garantirRazaoCli(mesAtual); }
+  if (LEITURA || !(raz && raz.agg[mesAtual])){ $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); $('lVazio').style.display = ''; $('lBox').style.display = 'none'; $('lVazio').textContent = 'Carregando o razão de ' + mesLbl(mesAtual) + '…'; await garantirRazaoCli(mesAtual); }
   $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc();
 }
 // quem só visualiza: o razão do mês vem do Firebase (publicado pelo admin junto com o Book) e fica neste navegador
 const razCliOk = {};
 async function garantirRazaoCli(m){
-  if (!LEITURA || !HUB || !m || razCliOk[m]) return;
+  if (!HUB || !m || razCliOk[m]) return;
+  if (!LEITURA && (!PACS_FB || !PACS_FB[m] || (raz && raz.agg[m]))) return;
   try {
     const local = await HubDB.getMeta('razaoCli:' + m);
     const r = await HUB.lerRazaoMes(m, local && local.assin);
@@ -810,6 +839,7 @@ async function garantirRazaoCli(m){
       const linhas = r.linhas.map(x => ({ conta: x[0], mes: m, data: x[1], hist: x[2], doc: x[3], cp: x[4], fil: x[5], deb: x[6] || 0, cred: x[7] || 0 }));
       await HubDB.gravarRazao(linhas, { [m]: r.cab.saldoAnt || {} }, r.cab.desc || {}, 'Razão ' + mesLbl(m) + ' (publicado pela Audicon)');
       await HubDB.setMeta('razaoCli:' + m, { assin: r.cab.assin, em: new Date().toISOString() });
+      if (!LEITURA){ raz = await HubDB.getMeta('razao'); const env = lsGet(LS_RAZ_ENV, {}); env[m] = assinRazao(m); lsSet(LS_RAZ_ENV, env); }   // já está no portal: não reenviar
     }
     razCliOk[m] = 'ok';
     raz = await HubDB.getMeta('razao');
@@ -817,7 +847,7 @@ async function garantirRazaoCli(m){
   } catch(e){ razCliOk[m] = ''; msg('Não foi possível carregar o razão de ' + mesLbl(m) + ': ' + esc((e && e.message) || e), 'err'); }
 }
 async function renderLanc(){
-  if (LEITURA && $('lMes').value && !razCliOk[$('lMes').value]) await garantirRazaoCli($('lMes').value);
+  if ($('lMes').value && !razCliOk[$('lMes').value] && (LEITURA || !(raz && raz.agg[$('lMes').value]))) await garantirRazaoCli($('lMes').value);
   const conta = $('lConta').value, mes = $('lMes').value;
   const tem = raz && Object.keys(raz.agg).length;
   $('lVazio').style.display = tem && conta ? 'none' : ''; $('lBox').style.display = tem && conta ? '' : 'none';
@@ -905,7 +935,7 @@ async function salvarMesPortal(auto){
   const quando = new Date(pac.salvoEm).toLocaleString('pt-BR');
   if (ok.length) setPortal('☁ ' + mesLbl(m) + ' salvo em ' + quando + (auto ? ' (automático)' : '') + ' — ' + ok.join(' e ') + '.' + (falhas.length ? ' ⚠ ' + esc(falhas.join(' · ')) : '') + proximoAuto(), falhas.length ? '' : 'ok');
   else setPortal('⚠ Não foi possível salvar' + (auto ? ' (automático)' : '') + ': ' + esc(falhas.join(' · ')) + proximoAuto(), 'err');
-  if (ok.length){ const a = lsGet(LS_AUTO, {}); a[m] = assinaturaMes(m); lsSet(LS_AUTO, a); }
+  if (ok.length){ const a = lsGet(LS_AUTO, {}); a[m] = assinaturaMes(m); lsSet(LS_AUTO, a); if (PACS_FB) PACS_FB[m] = pac; }
   return ok.length > 0;
 }
 // ---- salvamento automático: de hora em hora, enquanto o Hub estiver aberto com o admin logado.
@@ -1108,6 +1138,7 @@ async function exportarBook(){
   rev = lsGet(LS_REV, {}); mesAtual = (lsGet(LS_PREF, {}) || {}).mes || '';
   if (!window.XLSX) msg('A biblioteca de planilhas não carregou (pasta vendor/sheetjs).', 'err');
   if (!window.indexedDB) { msg('Este navegador não permite guardar o razão (IndexedDB indisponível).', 'err'); return; }
+  try { await lerFirebaseMeses(); } catch(e){}
   try { await atualizarListas(); await carregarMes(); } catch(e){ msg('Erro ao abrir a base local: ' + esc(e.message), 'err'); }
   // suportes enviados por outros painéis (outra aba/janela) atualizam o Book
   // Ao voltar para o Book, redesenha só se algum painel mandou suporte novo — e nunca no meio de um clique:
