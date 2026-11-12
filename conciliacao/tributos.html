@@ -235,6 +235,11 @@ tr.grp0 td .dsc{color:#CD9A56}
 <script src="hub-db.js?v=2"></script>
 <style>
 tr.depois td{opacity:.5}
+#lancBody tr.baixado td{background:#E6F4EA}
+#lancBody tr.baixado td.dbad,#lancBody tr.baixado td.dok{color:#2f6b3c}
+#lancBody td.ck{width:34px;text-align:center}
+#lancBody td.ck input{width:17px;height:17px;cursor:pointer;accent-color:var(--aud-success)}
+#lancBody tr.baixado.manual td.ck input{outline:2px dashed var(--aud-secondary);outline-offset:1px}
 td.small{font-size:.74rem;line-height:1.3}
 #confBody td.aberto{min-width:300px;max-width:420px;white-space:normal;text-align:left}
 #confBody td.wrap{max-width:220px}
@@ -326,9 +331,10 @@ table.pv tr.dif td{font-weight:600}
       <label>Conta<select id="fConta" onchange="renderLanc()"></select></label>
       <label>Período<select id="fPer" onchange="renderLanc()"><option value="">Todos</option><option value="mes">Só do mês da data-base</option><option value="ate">Até a data-base</option><option value="manual">Só lançados aqui</option></select></label>
       <label>Buscar<input type="text" id="fBusca" oninput="renderLanc()" placeholder="histórico, status"></label>
+      <label class="ck" title="Provisão já paga/compensada e os pagamentos dela"><input type="checkbox" id="fOcultar" onchange="lsSet('aud-trib-ocultar',this.checked);renderLanc()"> ocultar os já quitados</label>
     </div></div>
     <div class="tscroll"><table>
-      <thead><tr><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Saldo acumulado</th><th class="wrap">Status</th><th></th></tr></thead>
+      <thead><tr><th title="Quitado: provisão com pagamento/compensação">✓</th><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Saldo acumulado</th><th class="wrap">Status</th><th></th></tr></thead>
       <tbody id="lancBody"></tbody><tfoot id="lancFoot"></tfoot>
     </table></div>
   </div>
@@ -527,6 +533,7 @@ function gravarLanc(){
   if (isNaN(v) || !v){ alert('Informe o valor.'); return; }
   const valor = r2(e.tipo === 'prov' ? -Math.abs(v) : e.tipo === 'pgto' ? Math.abs(v) : v);
   const it = { id: e.id || uid(), data, desc: g('desc').trim(), valor, status: g('status').trim(), origem: e.origem === 'planilha' ? 'planilha' : 'manual' };
+  if (typeof e.conc === 'boolean') it.conc = e.conc;   // mantém o check marcado à mão
   dados.contas.forEach(c => { c.itens = c.itens.filter(x => x.id !== it.id); });
   const ct = contaDe(g('conta')); ct.itens.push(it); ct.itens.sort((a, b) => a.data.localeCompare(b.data));
   salvar(); editando = null; formLanc(); $('fConta').value = ct.conta; render();
@@ -537,21 +544,44 @@ function excluirLanc(conta, id){
   if (!confirm('Excluir “' + (i.desc || '') + '” (' + fmt(i.valor) + ') de ' + conta + '?')) return;
   ct.itens = ct.itens.filter(x => x.id !== id); salvar(); render();
 }
+// Quitados: os pagamentos/compensações abatem as provisões mais antigas primeiro (como o saldo vai sendo baixado).
+// Provisão quitada = totalmente abatida; pagamento quitado = usado inteiro e só em provisões já quitadas.
+// O check da linha permite marcar/desmarcar à mão (fica guardado no lançamento).
+function quitadosAuto(ct){
+  const prov = ct.itens.filter(i => i.valor < 0).map(i => ({ i, resto: -i.valor })), pg = ct.itens.filter(i => i.valor > 0).map(i => ({ i, resto: i.valor, usou: [] }));
+  let k = 0;
+  pg.forEach(p => { while (p.resto > 0.005 && k < prov.length){ const u = Math.min(p.resto, prov[k].resto); prov[k].resto -= u; p.resto -= u; p.usou.push(prov[k]); if (prov[k].resto <= 0.005) k++; } });
+  const ids = new Set();
+  prov.forEach(x => { if (x.resto <= 0.005) ids.add(x.i.id); });
+  pg.forEach(x => { if (x.resto <= 0.005 && x.usou.every(u => u.resto <= 0.005)) ids.add(x.i.id); });
+  return ids;
+}
+function quitado(i, auto){ return typeof i.conc === 'boolean' ? i.conc : auto.has(i.id); }
+function marcarQuitado(conta, id, v){
+  const ct = contaDe(conta), i = ct && ct.itens.find(x => x.id === id); if (!i) return;
+  if (v === quitadosAuto(ct).has(id)) delete i.conc; else i.conc = v;   // igual ao automático: volta a ser automático
+  salvar(); renderLanc();
+}
 function renderLanc(){
+  if ($('fOcultar') && !$('fOcultar').dataset.lido){ $('fOcultar').checked = !!lsGet('aud-trib-ocultar', false); $('fOcultar').dataset.lido = 1; }
   const sel = $('fConta'), atual = sel.value || (dados.contas[0] || {}).conta || '';
   sel.innerHTML = dados.contas.map(c => `<option value="${esc(c.conta)}" ${c.conta === atual ? 'selected' : ''}>${esc(c.conta)} · ${esc(c.nome)}</option>`).join('');
-  const ct = contaDe(sel.value); if (!ct){ $('lancBody').innerHTML = '<tr><td colspan="6" class="muted">Nenhuma conta.</td></tr>'; $('lancFoot').innerHTML = ''; return; }
+  const ct = contaDe(sel.value); if (!ct){ $('lancBody').innerHTML = '<tr><td colspan="7" class="muted">Nenhuma conta.</td></tr>'; $('lancFoot').innerHTML = ''; return; }
+  const auto = quitadosAuto(ct), ocultar = $('fOcultar').checked;
   const fim = fimMes(mesAtual), ini = mesAtual + '-01', fp = $('fPer').value, fb = norm($('fBusca').value);
   $('lancTitulo').textContent = '· ' + ct.conta + ' · ' + ct.nome + ' · saldo em ' + br(fim) + ': ' + fmt(saldoAte(ct, fim));
   let acc = 0;
-  const L = ct.itens.map(i => { acc = r2(acc + i.valor); return Object.assign({ acc }, i); })
+  const todos = ct.itens.map(i => { acc = r2(acc + i.valor); return Object.assign({ acc, q: quitado(i, auto) }, i); });
+  const nQ = todos.filter(i => i.q).length;
+  const L = todos.filter(i => !(ocultar && i.q))
     .filter(i => (!fp || (fp === 'mes' ? i.data >= ini && i.data <= fim : fp === 'ate' ? i.data <= fim : i.origem === 'manual')) && (!fb || norm(i.desc + ' ' + i.status).indexOf(fb) >= 0));
-  $('lancBody').innerHTML = L.map(i => `<tr class="${i.data > fim ? 'depois' : ''}"><td>${br(i.data)}</td><td class="wrap">${esc(i.desc)}${i.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : ''}</td>
+  $('lancBody').innerHTML = L.map(i => `<tr class="${i.data > fim ? 'depois' : ''}${i.q ? ' baixado' : ''}${typeof i.conc === 'boolean' ? ' manual' : ''}">
+    <td class="ck"><input type="checkbox" ${i.q ? 'checked' : ''} title="${typeof i.conc === 'boolean' ? 'Marcado à mão' : i.q ? 'Quitado (automático)' : 'Em aberto'}" onchange="marcarQuitado('${esc(ct.conta)}','${i.id}',this.checked)"></td><td>${br(i.data)}</td><td class="wrap">${esc(i.desc)}${i.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : ''}</td>
     <td class="${i.valor < 0 ? 'dbad' : 'dok'}">${fmt(i.valor)}</td><td>${fmt(i.acc)}</td><td class="wrap">${esc(i.status)}</td>
     <td style="white-space:nowrap"><button type="button" onclick="editarLanc('${esc(ct.conta)}','${i.id}')">Editar</button> <button type="button" class="danger" onclick="excluirLanc('${esc(ct.conta)}','${i.id}')">Excluir</button></td></tr>`).join('')
-    || '<tr><td colspan="6" class="muted">Nenhum lançamento com esses filtros.</td></tr>';
+    || '<tr><td colspan="7" class="muted">Nenhum lançamento com esses filtros.</td></tr>';
   const sv = r2(L.reduce((a, i) => a + i.valor, 0));
-  $('lancFoot').innerHTML = `<tr><td colspan="2">TOTAL (${L.length})</td><td>${fmt(sv)}</td><td colspan="3"></td></tr>`;
+  $('lancFoot').innerHTML = `<tr><td colspan="3">TOTAL (${L.length})${ocultar && nQ ? ' · ' + nQ + ' quitado(s) ocultos' : nQ ? ' · ' + nQ + ' quitado(s)' : ''}</td><td>${fmt(sv)}</td><td colspan="3"></td></tr>`;
 }
 
 // ===================== contas =====================
