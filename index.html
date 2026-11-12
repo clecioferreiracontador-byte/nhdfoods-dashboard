@@ -2641,6 +2641,14 @@ function concTab(p){
   box.querySelectorAll('.conc-frame').forEach(function(x){x.style.display=x===f?'':'none';});
   document.getElementById('concOpen').href=CONC_PAINEIS[p]+'?v='+Date.now();
 }
+/* Book de conciliação carregado em segundo plano para o admin: o salvamento automático no portal (de hora em hora)
+   roda enquanto o Hub estiver aberto, mesmo sem entrar na Conciliação */
+function precarregarBook(){
+  if(!IS_ADMIN||document.getElementById('concFrame-book'))return;
+  var box=document.getElementById('concFrames');if(!box)return;
+  var f=document.createElement('iframe');f.id='concFrame-book';f.className='conc-frame';f.src=CONC_PAINEIS['book']+'?v='+Date.now();f.title='book';f.style.display='none';
+  box.appendChild(f);
+}
 /* Book de conciliação: clicar numa conta abre o painel que concilia aquela conta (e, se o painel souber, já foca a conta) */
 window.abrirConciliacao=function(p,conta){
   if(!IS_ADMIN||!CONC_PAINEIS[p])return false;
@@ -2698,6 +2706,7 @@ window.HubAuthPronto.then(async function(){
   }finally{
     /* tira a tela de transição (o A da Audicon) quando o painel terminou de carregar */
     if(window.HubTransicao)HubTransicao.esconder();
+    setTimeout(precarregarBook,20000);
   }
 });
 </script>
