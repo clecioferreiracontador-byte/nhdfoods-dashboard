@@ -167,6 +167,11 @@ body.leitura .ro-aviso{display:block}
 .filters label.ck{flex-direction:row;align-items:center;gap:6px}
 .tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
 .tscroll thead th{position:sticky;top:0;z-index:2}
+/* Book: título, filtros e cabeçalho da tabela ficam congelados ao descer conta a conta */
+#bkBox .box.bkMain{overflow:visible}
+#bkBox .bkTopo{position:sticky;top:var(--navH,0px);z-index:6;background:var(--aud-white);margin:-20px -20px 0;padding:14px 20px 12px;border-radius:var(--aud-radius) var(--aud-radius) 0 0}
+#bkBox .bkMain .tscroll{overflow:visible;max-height:none}
+#bkBox .bkMain .tscroll thead th{top:calc(var(--navH,0px) + var(--topoH,0px))}
 td.wrap,th.wrap{white-space:normal;text-align:left}
 td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
 td input.obs{min-width:220px}
@@ -322,13 +327,15 @@ tr.grp0 td .dsc{color:#CD9A56}
   <div id="bkBox" style="display:none">
     <div class="kpis" id="kpis"></div>
     <div class="box fech" id="fechBox"></div>
-    <div class="box">
+    <div class="box bkMain">
+      <div class="bkTopo" id="bkTopo">
       <h2 id="bkTit">Book</h2>
       <div class="filters">
         <label>Grupo<select id="fGrupo" onchange="renderBook()"><option value="">Todas (1, 2, 3 e 4)</option><option value="12">Só ativo, passivo e PL</option><option value="1">Ativo</option><option value="2.1">Passivo circulante</option><option value="2.2">Passivo não circulante</option><option value="2.3">Patrimônio líquido</option><option value="3">Resultado (3)</option><option value="4">Apuração do resultado (4)</option></select></label>
         <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option></select></label>
         <label>Buscar<input type="text" id="fBusca" oninput="renderBook()" placeholder="conta, descrição, observação"></label>
         <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
+      </div>
       </div>
       <div class="tscroll"><table class="bk">
         <thead><tr><th>Conta</th><th class="wrap">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th title="Razão do mês bate com o balancete">Raz.</th><th>Saldo suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th></tr></thead>
@@ -1003,6 +1010,19 @@ async function exportarBook(){
   });
   var lim = document.getElementById('btnLimparChecklist');
   if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+<script>
+/* mede a barra de abas e o topo do Book para a parte congelada encaixar certinho */
+(function(){
+  function medir(){
+    var n=document.querySelector('nav.tabs'), t=document.getElementById('bkTopo'), r=document.documentElement.style;
+    r.setProperty('--navH',(n?n.offsetHeight:0)+'px');
+    if(t&&t.offsetHeight)r.setProperty('--topoH',t.offsetHeight+'px');
+  }
+  window.addEventListener('resize',medir); window.addEventListener('load',medir);
+  if(window.ResizeObserver){var ro=new ResizeObserver(medir);var t=document.getElementById('bkTopo');if(t)ro.observe(t);var n=document.querySelector('nav.tabs');if(n)ro.observe(n);}
+  medir();
 })();
 </script>
 </body>
