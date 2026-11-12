@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Imobilizado Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:10px 0 9px;border-bottom:3px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.05rem,.95rem + .45vw,1.3rem);line-height:1.25}
+header.top p{margin:2px 0 0;font-size:.78rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+/* modo visualização (usuário com permissão "Book: visualizar"): nada de importar, salvar ou editar */
+body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="lanc"],body.leitura nav.tabs button[data-tab="fontes"],
+body.leitura ul.cl,body.leitura #btnLimparChecklist,body.leitura .so-admin-box{display:none!important}
+body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select{pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
+.ro-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:#EAF2FB;color:#1A3A6B;font-size:.9rem;border:1px solid #BBD3EE}
+body.leitura .ro-aviso{display:block}
+</style>
+<style>
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--aud-success);color:#fff}
+.pill.bad{background:#FFE3E6;color:var(--aud-danger-text);border:1px solid #f5b5bb}
+.pill.warn{background:var(--aud-warning);color:var(--aud-text)}
+.pill.info{background:var(--aud-info);color:var(--aud-primary)}
+.pill.cinza{background:var(--aud-gray-100);color:var(--aud-gray-500)}
+.msg{padding:10px 14px;border-radius:var(--aud-radius);margin:8px 0;font-size:.9rem;background:#fff;border:1px solid #e1e4e8;border-left:5px solid var(--aud-primary)}
+.msg.err{border-left-color:var(--aud-danger);background:#FFF1F2;color:var(--aud-danger-text)}
+.msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
+.msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
+.filters select,.filters input[type=text]{width:auto}
+.filters label.ck{flex-direction:row;align-items:center;gap:6px}
+.tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
+.tscroll thead th{position:sticky;top:0;z-index:2}
+td.wrap,th.wrap{white-space:normal;text-align:left}
+td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
+td input.obs{min-width:220px}
+td select{padding:3px 4px;font-size:.8rem;width:auto}
+/* Book compacto: usa a largura toda e cabe sem rolagem lateral */
+.wrap{max-width:none!important;padding:0 8px}
+#tab-conferencia .box{padding:12px 10px}
+table.bk{font-size:.72rem;table-layout:auto}
+table.bk th,table.bk td{padding:4px 4px}
+table.bk thead th{font-size:.68rem;white-space:normal;line-height:1.15;text-align:center}
+table.bk .dsc{width:112px;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+table.bk td input[type=text]{min-width:0;width:68px;padding:2px 4px;font-size:.72rem}
+table.bk td.obs{width:30%;min-width:175px}
+table.bk td.c-raz{width:22px;text-align:center}
+table.bk textarea.obs{width:100%;min-height:30px;font:inherit;font-size:.76rem;line-height:1.25;padding:3px 6px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);resize:vertical;background:#fff;color:var(--aud-text)}
+table.bk textarea.obs:focus{outline:none;border-color:var(--aud-secondary)}
+table.bk .auto{font-size:.66rem;line-height:1.2}
+table.bk .lupa{font-size:.9rem;padding:0 2px}
+/* status: a própria etiqueta abre as opções */
+select.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;padding:3px 18px 3px 8px;border-radius:999px;font:inherit;font-size:.68rem;font-weight:600;width:auto;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23122A4F' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+select.stsel.ok{background-color:var(--aud-success);color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")}
+select.stsel.bad{background-color:#FFE3E6;color:var(--aud-danger-text);box-shadow:inset 0 0 0 1px #f5b5bb}
+select.stsel.warn{background-color:var(--aud-warning);color:var(--aud-text)}
+select.stsel.info{background-color:var(--aud-info);color:var(--aud-primary)}
+select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500)}
+select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
+select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
+tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
+tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
+tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
+tr.grp0 td .dsc{color:#CD9A56}
+.fech{margin-bottom:14px}
+.fech h2{margin-bottom:4px}
+.fech .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:10px}
+.fech .card{border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:12px 14px;background:#fff}
+.fech .card h3{font-size:.85rem;margin:0 0 8px;color:var(--aud-primary)}
+.fech .card table{width:100%;border-collapse:collapse;font-size:.85rem}
+.fech .card td{padding:3px 0;border-bottom:1px dashed #eceff3}
+.fech .card td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fech .card tr.tot td{font-weight:700;border-bottom:0;padding-top:6px}
+.fech .res{font-size:1.25rem;font-weight:700}
+.fech .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700}
+.fech .pill.ok{background:#E3F4E7;color:var(--aud-success)}
+.fech .pill.bad{background:#FDE7E9;color:var(--aud-danger-text)}
+.fech .pill.info{background:#EEF2F8;color:var(--aud-primary)}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
+.kpi{border-radius:var(--aud-radius);padding:12px 14px;background:#fff;border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
+.kpi .t{font-size:.78rem;font-weight:600;color:var(--aud-gray-500)}
+.kpi .v{font-size:1.15rem;font-weight:700;color:var(--aud-primary)}
+.upl{border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:14px;background:#fff}
+.upl h3{margin:0 0 4px;font-size:1rem}
+.empty{padding:24px;text-align:center;color:var(--aud-gray-500)}
+.dbad{color:var(--aud-danger-text);font-weight:600}
+.dok{color:var(--aud-success);font-weight:600}
+.lupa{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:2px 4px}
+.lupa:hover{background:var(--aud-gray-100);color:inherit}
+.auto{font-size:.72rem;color:var(--aud-gray-500)}
+</style>
+<script src="vendor/sheetjs/xlsx.full.min.js"></script>
+<script src="hub-db.js?v=2"></script>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Imobilizado — Controle Patrimonial x Contabilidade</h1>
+  <p>NHD Foods · Controle patrimonial (aba “Controle Patrimonial” do Book) conferido com as contas 1.2.05 (imobilizado e depreciação acumulada) e 1.2.10 (intangível) do balancete</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Imobilizado</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="bens">3 · Bens</button>
+  </div>
+</div></nav>
+<main class="wrap">
+
+<div class="box">
+  <div class="upl">
+    <h3>🏗️ Controle patrimonial do mês</h3>
+    <div class="muted small">Book NHD do mês (.xlsx) com a aba “Controle Patrimonial” (resumo por classe e lista de bens). Os saldos contábeis vêm do balancete importado no Book de conciliação; se não houver, da aba “Balancete” do próprio arquivo.</div>
+    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial</button></div>
+    <input type="file" id="inImob" accept=".xlsx,.xls" onchange="importarImob(this.files[0]);this.value=''">
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <label>Mês:<select id="selMes" onchange="mesAtual=this.value;render()"></select></label>
+    <button type="button" class="danger" onclick="apagarMes()">Remover mês</button>
+    <span class="muted small" id="stTopo"></span>
+  </div>
+  <div id="msgs"></div>
+</div>
+
+<section class="panel" id="tab-processo">
+  <div class="box"><h2>Objetivo</h2><p>Garantir todo mês que o <b>imobilizado</b> da contabilidade (custo e depreciação acumulada de cada conta 1.2.05) seja igual ao <b>controle patrimonial</b>, que as <b>aquisições e baixas</b> do mês estejam lançadas e que a <b>depreciação do mês</b> calculada no controle tenha sido contabilizada.</p></div>
+  <div class="box"><h2>Passo a passo</h2><ol class="steps">
+    <li>Importar o balancete do mês no <b>Book de conciliação</b>.</li>
+    <li>Importar aqui o <b>Book NHD do mês</b> (aba “Controle Patrimonial”), já com as aquisições, baixas e a depreciação do mês.</li>
+    <li>Na etapa <b>2 · Conferência</b>, conferir cada classe: custo, depreciação acumulada e depreciação do mês contra o balancete. As contas sem classe no controle aparecem separadas.</li>
+    <li>Conferir a <b>movimentação do mês</b>: aquisições × débitos, baixas × créditos e depreciação × créditos da depreciação acumulada.</li>
+    <li>Os saldos do controle vão sozinhos para o <b>Book de conciliação</b> como suporte das contas 1.2.05.</li>
+  </ol></div>
+  <div class="box"><h2>Regras</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
+    <tr><td>R1</td><td>Cada classe do controle é ligada às contas pelo <b>código reduzido</b> da conta de aquisição e da conta de depreciação (coluna RED. do Book).</td></tr>
+    <tr><td>R2</td><td>Custo = valor de aquisição do controle; depreciação acumulada = depreciação do controle (credora na contabilidade).</td></tr>
+    <tr><td>R3</td><td>Aquisições do mês = bens com data no mês e valor positivo; baixas = valores negativos (com a data de aquisição do bem baixado).</td></tr>
+    <tr><td>R4</td><td>Diferença até R$ 1,00 é tratada como arredondamento.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+  <div id="vazio" class="box empty">Importe o Book NHD do mês (aba “Controle Patrimonial”) para montar a conferência do imobilizado.</div>
+  <div id="conteudo" style="display:none">
+    <div class="kpis" id="kpis"></div>
+    <div class="box">
+      <h2>Conferência por classe <span class="muted small" id="tituloConf"></span></h2>
+      <div class="tscroll"><table class="bk">
+        <thead><tr><th>Classe</th><th>Conta custo</th><th>Custo controle</th><th>Custo contábil</th><th>Dif.</th><th>Conta depreciação</th><th>Deprec. acum. controle</th><th>Deprec. acum. contábil</th><th>Dif.</th><th>Deprec. do mês controle</th><th>Deprec. lançada no mês</th><th>Dif.</th></tr></thead>
+        <tbody id="confBody"></tbody><tfoot id="confFoot"></tfoot>
+      </table></div>
+      <div id="semClasse"></div>
+      <div class="muted small" id="confInfo" style="margin-top:8px"></div>
+    </div>
+    <div class="box">
+      <h2>Movimentação do mês</h2>
+      <div class="tscroll"><table>
+        <thead><tr><th>Item</th><th>Controle patrimonial</th><th>Contabilidade</th><th>Diferença</th></tr></thead>
+        <tbody id="movBody"></tbody>
+      </table></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="tab-bens">
+  <div class="box">
+    <h2>Bens do controle patrimonial</h2>
+    <div class="filters">
+      <label>Classe<select id="fClasse" onchange="renderBens()"><option value="">Todas</option></select></label>
+      <label>Período<select id="fPer" onchange="renderBens()"><option value="">Todos</option><option value="mes">Só do mês</option><option value="baixa">Só baixas</option></select></label>
+      <label>Buscar<input type="text" id="fBusca" oninput="renderBens()" placeholder="descrição, fornecedor, nota"></label>
+    </div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Data</th><th>Classe</th><th>Nota</th><th>Fornecedor</th><th class="wrap">Descrição</th><th>Valor aquisição/(baixa)</th><th>Vida útil (meses)</th><th>Deprec. acumulada</th><th>Valor contábil</th></tr></thead>
+      <tbody id="bensBody"></tbody><tfoot id="bensFoot"></tfoot>
+    </table></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ===================== utilitários =====================
+const $ = id => document.getElementById(id);
+const LS_IMOB = 'aud-imob-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Imobilizado';
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const mesLbl = m => m ? MES[+m.slice(5, 7) - 1] + '/' + m.slice(0, 4) : '';
+const fimMes = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 0); return y + '-' + String(mm).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 8000); }
+function num(v){
+  if (v === null || v === undefined || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim(); const dc = s.match(/([CD])\s*$/i);
+  s = s.replace(/[CD]\s*$/i, '').replace(/\s|R\$/g, '');
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  let n = parseFloat(s); if (isNaN(n)) return NaN;
+  if (dc) n = dc[1].toUpperCase() === 'C' ? -Math.abs(n) : Math.abs(n);
+  return n;
+}
+function isoData(v){
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  const m = String(v ?? '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0') : '';
+}
+function fmtConta(c){ const d = String(c ?? '').replace(/\D/g, ''); if (d.length === 8 && /^\d+$/.test(String(c).trim())) return d[0] + '.' + d[1] + '.' + d.slice(2, 4) + '.' + d.slice(4); return String(c ?? '').trim(); }
+const difTd = d => isNaN(d) ? '<td>—</td>' : `<td class="${Math.abs(d) < 1 ? 'dok' : 'dbad'}">${Math.abs(d) < 1 ? 'OK' : fmt(d)}</td>`;
+
+// ===================== leitura do Book / controle patrimonial =====================
+let dados = lsGet(LS_IMOB, {}), mesAtual = '', balMes = null;
+function linhas(wb, sn){ return XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null }); }
+function lerControle(wb){
+  const sn = wb.SheetNames.find(s => /CONTROLE PATRIMONIAL/.test(norm(s)));
+  if (!sn) throw new Error('não encontrei a aba “Controle Patrimonial”');
+  const R = linhas(wb, sn);
+  let ref = '';
+  R.slice(0, 12).forEach(r => r.forEach((c, i) => { if (/DATA REFER/.test(norm(c))) for (let j = i + 1; j < r.length; j++){ const d = isoData(r[j]); if (d){ ref = d; break; } } }));
+  // resumo por classe
+  const hr = R.findIndex(r => r && /CONTA CONTABIL/.test(norm(r[0])) && /CLASSIFICA/.test(norm(r[1])));
+  if (hr < 0) throw new Error('não encontrei o resumo por classe (Conta Contábil Aquisição | Classificação Contábil | Conta Contábil Depreciação…)');
+  const H = R[hr].map(norm), col = re => H.findIndex(h => re.test(h));
+  const cAq = 0, cCl = 1, cDp = 2, cVa = col(/VALOR AQUISI/), cDa = col(/DEPRECIACAO ACUMULADA/), cVr = col(/VALOR RESIDUAL/), cVu = col(/VIDA UTIL/), cAnt = col(/SALDO CONTABIL MES ANTERIOR/), cMes = col(/DEPRECIACAO DO MES/);
+  const classes = [];
+  for (let i = hr + 1; i < R.length; i++){
+    const r = R[i]; if (!r) continue;
+    if (/^TOTAL/.test(norm(r[0]))) break;
+    const nome = String(r[cCl] ?? '').trim(); if (!nome) continue;
+    classes.push({ classe: nome, redAq: r[cAq] === null || r[cAq] === '' ? null : String(r[cAq]).trim(), redDp: r[cDp] === null || r[cDp] === '' ? null : String(r[cDp]).trim(),
+      custo: num(r[cVa]) || 0, da: num(r[cDa]) || 0, residual: num(r[cVr]) || 0, vida: num(r[cVu]), daAnterior: num(r[cAnt]) || 0, daMes: num(r[cMes]) || 0 });
+  }
+  // lista de bens
+  const hb = R.findIndex((r, i) => i > hr && r && /DATA AQUISI/.test(norm(r[0])) && /CLASSIFICA/.test(norm(r[1])));
+  const bens = [];
+  if (hb >= 0){
+    const B = R[hb].map(norm), bc = re => B.findIndex(h => re.test(h));
+    const cNf = bc(/NOTA/), cFo = bc(/FORNECEDOR/), cDe = bc(/^DESCRICAO/), cV = bc(/VALOR AQUISI/), cPe = bc(/PERIODO DEPRECIA/), cDA = bc(/DEPRECIACAO ACUM/), cVC = bc(/VALOR CONTABIL/), cDB = bc(/BEM BAIXADO/);
+    for (let i = hb + 1; i < R.length; i++){
+      const r = R[i]; if (!r) continue;
+      const d = isoData(r[0]); if (!d) continue;
+      bens.push({ data: d, classe: String(r[1] ?? '').trim(), nf: r[cNf] ?? '', fornecedor: String(r[cFo] ?? '').trim(), desc: String(r[cDe] ?? '').trim(),
+        valor: num(r[cV]) || 0, vida: num(r[cPe]), da: num(r[cDA]) || 0, vc: num(r[cVC]) || 0, aqBaixado: cDB >= 0 ? isoData(r[cDB]) : '' });
+    }
+  }
+  return { ref, classes, bens };
+}
+// código reduzido → conta (coluna RED. da aba Book)
+function lerReduzidos(wb){
+  const sn = wb.SheetNames.find(s => norm(s) === 'BOOK'); if (!sn) return {};
+  const R = linhas(wb, sn), hi = R.findIndex(r => r && /ANALITICA/.test(norm(r[0])) && /DESCRI/.test(norm(r[2])));
+  const m = {}; if (hi < 0) return m;
+  for (let i = hi + 1; i < R.length; i++){ const r = R[i]; if (r && r[0] && r[1] !== null && r[1] !== '') m[String(r[1]).trim()] = String(r[0]).trim(); }
+  return m;
+}
+// balancete da aba "Balancete" do próprio arquivo (quando o Book de conciliação não tem o mês)
+function lerBalanceteArquivo(wb){
+  for (const sn of wb.SheetNames){
+    const R = linhas(wb, sn), hi = R.findIndex(r => r && norm(r[0]) === 'CONTA' && /DESCRI/.test(norm(r[1])));
+    if (hi < 0) continue;
+    const H = R[hi].map(norm), col = (re, d) => { const i = H.findIndex(h => re.test(h)); return i >= 0 ? i : d; };
+    const cSA = col(/^SALDO ANT/, 2), cD = col(/^DEBITO/, 3), cC = col(/^CREDITO/, 4), cSF = col(/^SALDO (ATUAL|FINAL)/, 5);
+    const contas = {};
+    for (let i = hi + 1; i < R.length; i++){
+      const r = R[i]; if (!r || r[0] === null) continue;
+      const conta = fmtConta(r[0]); if (!/^\d(\.\d+)*$/.test(conta)) continue;
+      contas[conta] = { desc: String(r[1] ?? '').trim(), sa: num(r[cSA]) || 0, d: num(r[cD]) || 0, c: num(r[cC]) || 0, sf: num(r[cSF]) || 0 };
+    }
+    return { contas };
+  }
+  return null;
+}
+async function importarImob(f){
+  if (!f) return;
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const ctl = lerControle(wb);
+    if (!ctl.ref) throw new Error('não encontrei a “Data referência” do controle patrimonial');
+    let red = lerReduzidos(wb);
+    if (!Object.keys(red).length){ const r2c = lsGet('aud-book-red', {}); Object.keys(r2c).forEach(c => { red[String(r2c[c])] = c; }); }
+    const m = ctl.ref.slice(0, 7);
+    dados[m] = { ref: ctl.ref, origem: f.name, em: new Date().toISOString(), classes: ctl.classes, bens: ctl.bens, red, balArquivo: lerBalanceteArquivo(wb) };
+    if (!lsSet(LS_IMOB, dados)) msg('O controle é grande demais para ficar salvo neste navegador: a conferência funciona agora, mas será preciso importar de novo depois.', 'warn');
+    mesAtual = m;
+    msg(`“${esc(f.name)}”: controle patrimonial de ${mesLbl(m)} — ${ctl.classes.length} classes e ${ctl.bens.length} lançamentos de bens.`, 'ok');
+    await render();
+  } catch(e){ msg('Erro ao importar “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+}
+function apagarMes(){ if (!mesAtual || !confirm('Remover o controle patrimonial de ' + mesLbl(mesAtual) + ' deste navegador?')) return; delete dados[mesAtual]; lsSet(LS_IMOB, dados); mesAtual = ''; render(); }
+
+// ===================== conferência =====================
+async function carregarBal(m){
+  balMes = null;
+  try { if (window.HubDB) balMes = await HubDB.getMeta('balancete:' + m); } catch(e){}
+  if (balMes) balMes.__fonte = 'do balancete do Book de conciliação';
+  else if (dados[m] && dados[m].balArquivo){ balMes = dados[m].balArquivo; balMes.__fonte = 'da aba Balancete do arquivo importado'; }
+}
+async function render(){
+  const meses = Object.keys(dados).sort();
+  if (!mesAtual || !dados[mesAtual]) mesAtual = meses[meses.length - 1] || '';
+  $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('') || '<option value="">—</option>';
+  const D = dados[mesAtual];
+  $('vazio').style.display = D ? 'none' : ''; $('conteudo').style.display = D ? '' : 'none';
+  $('stTopo').textContent = D ? 'Controle de ' + br(D.ref) + ' · ' + D.origem : '';
+  if (!D){ renderBens(); return; }
+  await carregarBal(mesAtual);
+  const cb = c => balMes && balMes.contas ? balMes.contas[c] : null;
+  const contaDe = red => red ? (D.red[String(red)] || null) : null;
+  const usadas = new Set(), T = { cC: 0, cB: 0, dC: 0, dB: 0, mC: 0, mB: 0 }, sup = {};
+  let ok = 0, div = 0;
+  const html = D.classes.map(k => {
+    const cc = contaDe(k.redAq), cd = contaDe(k.redDp), bcC = cc && cb(cc), bcD = cd && cb(cd);
+    if (cc) usadas.add(cc); if (cd) usadas.add(cd);
+    const custoB = bcC ? bcC.sf : NaN, daB = bcD ? -bcD.sf : NaN, mesB = bcD ? r2(bcD.c - bcD.d) : NaN;
+    if (!k.custo && !k.da && !(bcC && bcC.sf) && !(bcD && bcD.sf)) return '';
+    const dC = isNaN(custoB) ? NaN : r2(custoB - k.custo), dD = isNaN(daB) ? NaN : r2(daB - k.da), dM = isNaN(mesB) ? NaN : r2(mesB - k.daMes);
+    [dC, dD].forEach(d => { if (!isNaN(d)) (Math.abs(d) < 1 ? ok++ : div++); });
+    T.cC += k.custo; T.dC += k.da; T.mC += k.daMes;
+    if (cc) sup[cc] = { fonte: FONTE, saldo: r2(k.custo), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classe + ' · custo' };
+    if (cd) sup[cd] = { fonte: FONTE, saldo: -r2(k.da), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classe + ' · depreciação acumulada' };
+    return `<tr><td><b>${esc(k.classe)}</b></td><td>${cc ? esc(cc) : '<span class="muted">sem conta</span>'}</td><td>${fmt(k.custo)}</td><td>${fmt(custoB)}</td>${difTd(dC)}
+      <td>${cd ? esc(cd) : '<span class="muted">—</span>'}</td><td>${fmt(k.da)}</td><td>${fmt(daB)}</td>${difTd(dD)}<td>${fmt(k.daMes)}</td><td>${fmt(mesB)}</td>${difTd(dM)}</tr>`;
+  }).join('');
+  $('confBody').innerHTML = html;
+  // totais pelo balancete inteiro (1.2.05 e 1.2.10): custo = grupos .1 e .3; depreciação/amortização = grupos .2
+  const contasImob = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^1\.2\.(05|10)\.\d\d\d\d$/.test(c)) : [];
+  const ehDA = c => /^1\.2\.(05|10)\.2/.test(c);
+  contasImob.forEach(c => { const x = balMes.contas[c]; if (ehDA(c)){ T.dB += -x.sf; T.mB += x.c - x.d; } else T.cB += x.sf; });
+  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL do controle × contas 1.2.05 / 1.2.10</td><td>${fmt(T.cC)}</td><td>${balMes ? fmt(T.cB) : '—'}</td>${balMes ? difTd(r2(T.cB - T.cC)) : '<td>—</td>'}<td></td><td>${fmt(T.dC)}</td><td>${balMes ? fmt(T.dB) : '—'}</td>${balMes ? difTd(r2(T.dB - T.dC)) : '<td>—</td>'}<td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
+  // contas com saldo/movimento que nenhuma classe do controle cobre
+  const sem = contasImob.filter(c => !usadas.has(c) && (Math.abs(balMes.contas[c].sf) >= 0.005 || Math.abs(balMes.contas[c].d) >= 0.005 || Math.abs(balMes.contas[c].c) >= 0.005));
+  $('semClasse').innerHTML = sem.length ? `<div class="msg warn" style="margin-top:10px"><b>${sem.length} conta(s) com saldo sem classe no controle patrimonial</b> (entram só no total): ${sem.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
+  $('tituloConf').textContent = '· ' + mesLbl(mesAtual) + (balMes ? ' · saldos ' + balMes.__fonte : ' · sem balancete deste mês');
+  $('confInfo').textContent = balMes ? 'Os saldos do controle foram enviados ao Book de conciliação como suporte automático das contas ligadas.' : 'Importe o balancete de ' + mesLbl(mesAtual) + ' no Book de conciliação para comparar.';
+  // KPIs
+  const residual = T.cC - T.dC;
+  $('kpis').innerHTML = [['Custo do imobilizado', fmt(T.cC)], ['Depreciação acumulada', fmt(T.dC)], ['Valor residual', fmt(residual)], ['Depreciação do mês', fmt(T.mC)], ['Contas conferidas', ok + ' OK · ' + div + ' com diferença']]
+    .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  // movimentação do mês
+  const ini = mesAtual + '-01', fim = fimMes(mesAtual);
+  const doMes = D.bens.filter(b => b.data >= ini && b.data <= fim);
+  const aq = doMes.filter(b => b.valor > 0).reduce((a, b) => a + b.valor, 0), bx = Math.abs(doMes.filter(b => b.valor < 0).reduce((a, b) => a + b.valor, 0));
+  const custoContas = contasImob.filter(c => !ehDA(c));
+  const debC = balMes ? custoContas.reduce((a, c) => a + balMes.contas[c].d, 0) : NaN, credC = balMes ? custoContas.reduce((a, c) => a + balMes.contas[c].c, 0) : NaN;
+  $('movBody').innerHTML = `<tr><td>Aquisições do mês (${doMes.filter(b => b.valor > 0).length} lançamento(s)) × débitos nas contas de custo</td><td>${fmt(aq)}</td><td>${fmt(debC)}</td>${difTd(r2(debC - aq))}</tr>
+    <tr><td>Baixas do mês (${doMes.filter(b => b.valor < 0).length}) × créditos nas contas de custo</td><td>${fmt(bx)}</td><td>${fmt(credC)}</td>${difTd(r2(credC - bx))}</tr>
+    <tr><td>Depreciação do mês × créditos líquidos na depreciação acumulada</td><td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
+  // suporte automático no Book
+  const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE) delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
+  // filtros dos bens
+  const cls = [...new Set(D.bens.map(b => b.classe))].sort();
+  const atual = $('fClasse').value;
+  $('fClasse').innerHTML = '<option value="">Todas</option>' + cls.map(c => `<option ${c === atual ? 'selected' : ''}>${esc(c)}</option>`).join('');
+  renderBens();
+}
+function renderBens(){
+  const D = dados[mesAtual];
+  if (!D){ $('bensBody').innerHTML = '<tr><td colspan="9" class="muted">Importe o controle patrimonial.</td></tr>'; $('bensFoot').innerHTML = ''; return; }
+  const fc = $('fClasse').value, fp = $('fPer').value, fb = norm($('fBusca').value), ini = mesAtual + '-01', fim = fimMes(mesAtual);
+  const L = D.bens.filter(b => (!fc || b.classe === fc) && (!fp || (fp === 'mes' ? b.data >= ini && b.data <= fim : b.valor < 0)) && (!fb || norm(b.desc + ' ' + b.fornecedor + ' ' + b.nf).indexOf(fb) >= 0));
+  $('bensBody').innerHTML = L.map(b => `<tr><td>${br(b.data)}</td><td>${esc(b.classe)}</td><td>${esc(b.nf)}</td><td class="wrap">${esc(b.fornecedor)}</td><td class="wrap">${esc(b.desc)}${b.aqBaixado ? '<div class="muted small">bem adquirido em ' + br(b.aqBaixado) + '</div>' : ''}</td>
+    <td class="${b.valor < 0 ? 'dbad' : ''}">${fmt(b.valor)}</td><td>${isNaN(b.vida) ? '—' : b.vida}</td><td>${fmt(b.da)}</td><td>${fmt(b.vc)}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">Nenhum bem com esses filtros.</td></tr>';
+  const s = k => L.reduce((a, b) => a + (b[k] || 0), 0);
+  $('bensFoot').innerHTML = `<tr><td colspan="5">TOTAL (${L.length})</td><td>${fmt(s('valor'))}</td><td></td><td>${fmt(s('da'))}</td><td>${fmt(s('vc'))}</td></tr>`;
+}
+// aberto a partir do Book (clique na conta): mostra a conferência
+window.focoConta = function(){ window.abrirEtapa && abrirEtapa('conferencia'); };
+render();
+</script>
+
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+</body>
+</html>

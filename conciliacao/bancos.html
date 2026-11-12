@@ -995,6 +995,8 @@ function render(){
   renderDiv();
 }
 function verConta(c){ $('fConta').value = c; $('fTipo').value = ''; renderDiv(); window.abrirEtapa && abrirEtapa('divergencias'); }
+// aberto a partir do Book (clique na conta): mostra as divergências da conta, se ela estiver carregada
+window.focoConta = function(c){ if (res && res.linhas.some(l => l.conta === c)) verConta(c); else window.abrirEtapa && abrirEtapa('conferencia'); };
 const chaveItem = i => (i.data + '|' + Math.round(i.valor * 100) + '|' + norm(i.hist).slice(0, 40));
 function setRev(k, campo, v){ rev[k] = rev[k] || {}; rev[k][campo] = v; lsSet(LS_REV, rev); }
 

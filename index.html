@@ -576,6 +576,7 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="fs conc-tab" data-p="consorcios" onclick="concTab('consorcios')">Consórcios</button>
     <button class="fs conc-tab" data-p="parcelamentos-federais" onclick="concTab('parcelamentos-federais')">Parcelamentos federais</button>
     <button class="fs conc-tab" data-p="parcelamentos-estaduais" onclick="concTab('parcelamentos-estaduais')">Parcelamentos estaduais</button>
+    <button class="fs conc-tab" data-p="imobilizado" onclick="concTab('imobilizado')">Imobilizado</button>
     <button class="fs conc-tab" data-p="faturamento" onclick="concTab('faturamento')">Conferência de faturamento</button>
     <a class="fs conc-open" id="concOpen" href="#" target="_blank" rel="noopener" title="Abrir o painel em uma aba separada do navegador">↗ Abrir em nova aba</a>
   </div>
@@ -2437,7 +2438,7 @@ async function exportDREXlsx(){
 // Admin = quem está na lista de acessos do Firebase com papel "admin" (auth/hub-auth.js).
 // O token do GitHub ficou só para o portal do Book (repositório privado nhdfoods-conciliacao).
 var IS_ADMIN=false;
-var CONC_PAINEIS={'book':'conciliacao/book.html','bancos':'conciliacao/bancos.html','consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html','faturamento':'conciliacao/faturamento.html'};
+var CONC_PAINEIS={'book':'conciliacao/book.html','imobilizado':'conciliacao/imobilizado.html','bancos':'conciliacao/bancos.html','consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html','faturamento':'conciliacao/faturamento.html'};
 // valida o token do portal do Book: precisa de escrita no repositório privado da conciliação
 var PORTAL_REPO_BOOK='clecioferreiracontador-byte/nhdfoods-conciliacao';
 async function adminCheckToken(token){
@@ -2637,6 +2638,15 @@ function concTab(p){
   box.querySelectorAll('.conc-frame').forEach(function(x){x.style.display=x===f?'':'none';});
   document.getElementById('concOpen').href=CONC_PAINEIS[p]+'?v='+Date.now();
 }
+/* Book de conciliação: clicar numa conta abre o painel que concilia aquela conta (e, se o painel souber, já foca a conta) */
+window.abrirConciliacao=function(p,conta){
+  if(!IS_ADMIN||!CONC_PAINEIS[p])return false;
+  concTab(p);
+  var f=document.getElementById('concFrame-'+p);
+  var foco=function(){try{var w=f.contentWindow;if(w&&typeof w.focoConta==='function')w.focoConta(conta);}catch(e){}};
+  try{if(f.contentWindow&&f.contentWindow.document.readyState==='complete'&&typeof f.contentWindow.focoConta==='function'){foco();}else f.addEventListener('load',function(){setTimeout(foco,300);},{once:true});}catch(e){}
+  return true;
+};
 
 function setPage(n,el){
   if(n==='conc'&&!IS_ADMIN){alert('Área restrita ao administrador.');return;}

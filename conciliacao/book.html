@@ -197,6 +197,8 @@ select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
 select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
 tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
 tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
+a.lnk-conc{color:var(--aud-primary);font-weight:700;text-decoration:underline dotted;text-underline-offset:3px}
+a.lnk-conc:hover{color:var(--aud-secondary)}
 tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
 tr.grp0 td .dsc{color:#CD9A56}
 .fech{margin-bottom:14px}
@@ -622,6 +624,23 @@ async function renderFechamento(){
     </div>`;
 }
 
+// ===================== conta → painel de conciliação =====================
+// Clicar na conta abre o painel que concilia aquela conta (dentro do dash; fora dele, em nova aba).
+const PAINEL_FONTE = { 'Conciliação bancária': 'bancos', 'Consórcios': 'consorcios', 'Parcelamentos federais': 'parcelamentos-federais', 'Imobilizado': 'imobilizado' };
+const PAINEL_REGRA = [[/^1\.1\.01\.[23]/, 'bancos'], [/^1\.2\.02\.1002$|^2\.[12]\.02\.1003$/, 'consorcios'], [/^2\.1\.15\.101[23]$|^2\.2\.03\.100[24]$/, 'parcelamentos-federais'],
+  [/^2\.2\.03\.100[35]$/, 'parcelamentos-estaduais'], [/^1\.2\.(05|10)\./, 'imobilizado']];
+const NOME_PAINEL = { bancos: 'Conciliação bancária', consorcios: 'Consórcios', 'parcelamentos-federais': 'Parcelamentos federais', 'parcelamentos-estaduais': 'Parcelamentos estaduais', imobilizado: 'Imobilizado' };
+function painelDaConta(c){ const s = suportes()[c]; if (s && PAINEL_FONTE[s.fonte]) return PAINEL_FONTE[s.fonte]; const r = PAINEL_REGRA.find(x => x[0].test(c)); return r ? r[1] : ''; }
+function abrirPainelConta(c){
+  const p = painelDaConta(c); if (!p) return;
+  let ok = false; try { ok = window.parent !== window && typeof parent.abrirConciliacao === 'function' && parent.abrirConciliacao(p, c); } catch(e){}
+  if (!ok) window.open(p + '.html', '_blank');
+}
+function celConta(c){
+  const p = LEITURA ? '' : painelDaConta(c);
+  return p ? `<td><a href="#" class="lnk-conc" title="Abrir a conciliação: ${NOME_PAINEL[p]}" onclick="abrirPainelConta('${c}');return false">${esc(c)}</a></td>` : `<td>${esc(c)}</td>`;
+}
+
 // ===================== Book =====================
 function renderBook(){
   if (!bal) return;
@@ -650,7 +669,7 @@ function renderBook(){
     if (g !== grpAtual){ grpAtual = g; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
     const k = mesAtual + '|' + l.conta;
     if (l.res){
-      h += `<tr class="res"><td>${esc(l.conta)}</td><td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+      h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td class="muted small" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
@@ -665,7 +684,7 @@ function renderBook(){
       .concat(Object.keys(ST).filter(s => s !== 'zero' && s !== l.st).map(s => [s, ST[s][1]]))
       .concat(manual ? [['', '↺ Automático (' + ST[l.stAuto][1] + ')']] : []);
     const stSel = `<select class="stsel ${st[0]}${manual ? ' manual' : ''}" title="${manual ? 'Definido manualmente — clique para mudar' : 'Automático — clique para mudar'}" onchange="setRev('${k}','st',this.value)">${opcoes.map((o, i) => `<option value="${o[0]}" ${i === 0 ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
-    h += `<tr><td>${esc(l.conta)}</td><td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+    h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
       <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
