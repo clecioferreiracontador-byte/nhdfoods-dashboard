@@ -242,6 +242,7 @@ tr.grp0 td .dsc{color:#CD9A56}
     <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
     <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
     <button type="button" role="tab" aria-selected="false" data-tab="bens">3 · Bens</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="classes">4 · Classes e contas</button>
   </div>
 </div></nav>
 <main class="wrap">
@@ -249,8 +250,8 @@ tr.grp0 td .dsc{color:#CD9A56}
 <div class="box">
   <div class="upl">
     <h3>🏗️ Controle patrimonial do mês</h3>
-    <div class="muted small">Book NHD do mês (.xlsx) com a aba “Controle Patrimonial” (resumo por classe e lista de bens). Os saldos contábeis vêm do balancete importado no Book de conciliação; se não houver, da aba “Balancete” do próprio arquivo.</div>
-    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial</button></div>
+    <div class="muted small">Importe o Book NHD (.xlsx, aba “Controle Patrimonial”) <b>ou</b> crie o mês aqui e lance as aquisições e baixas à mão — o mês novo parte dos bens do mês anterior e a depreciação é recalculada. Os saldos contábeis vêm do balancete importado no Book de conciliação.</div>
+    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial</button> <button type="button" onclick="novoMes()">+ Novo mês</button></div>
     <input type="file" id="inImob" accept=".xlsx,.xls" onchange="importarImob(this.files[0]);this.value=''">
   </div>
   <div class="toolbar" style="margin-top:12px">
@@ -265,13 +266,14 @@ tr.grp0 td .dsc{color:#CD9A56}
   <div class="box"><h2>Objetivo</h2><p>Garantir todo mês que o <b>imobilizado</b> da contabilidade (custo e depreciação acumulada de cada conta 1.2.05) seja igual ao <b>controle patrimonial</b>, que as <b>aquisições e baixas</b> do mês estejam lançadas e que a <b>depreciação do mês</b> calculada no controle tenha sido contabilizada.</p></div>
   <div class="box"><h2>Passo a passo</h2><ol class="steps">
     <li>Importar o balancete do mês no <b>Book de conciliação</b>.</li>
-    <li>Importar aqui o <b>Book NHD do mês</b> (aba “Controle Patrimonial”), já com as aquisições, baixas e a depreciação do mês.</li>
+    <li>Importar aqui o <b>Book NHD do mês</b> (aba “Controle Patrimonial”) <b>ou</b> clicar em <b>+ Novo mês</b> (parte dos bens do mês anterior) e lançar as <b>aquisições e baixas</b> do mês na etapa 3 · Bens.</li>
     <li>Na etapa <b>2 · Conferência</b>, conferir cada classe: custo, depreciação acumulada e depreciação do mês contra o balancete. As contas sem classe no controle aparecem separadas.</li>
     <li>Conferir a <b>movimentação do mês</b>: aquisições × débitos, baixas × créditos e depreciação × créditos da depreciação acumulada.</li>
     <li>Os saldos do controle vão sozinhos para o <b>Book de conciliação</b> como suporte das contas 1.2.05.</li>
   </ol></div>
   <div class="box"><h2>Regras</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
-    <tr><td>R1</td><td>Cada classe do controle é ligada às contas pelo <b>código reduzido</b> da conta de aquisição e da conta de depreciação (coluna RED. do Book).</td></tr>
+    <tr><td>R1</td><td>Cada classe do controle é ligada à conta de custo e à conta de depreciação (etapa 4). Na importação, a ligação vem do <b>código reduzido</b> (coluna RED. do Book).</td></tr>
+    <tr><td>R5</td><td>Depreciação igual à planilha: <b>tempo de uso = dias ÷ 30</b> desde a aquisição; <b>depreciação acumulada = valor ÷ vida útil × tempo de uso</b> (sem passar do valor); depreciação do mês = acumulada no fim do mês − acumulada no fim do mês anterior.</td></tr>
     <tr><td>R2</td><td>Custo = valor de aquisição do controle; depreciação acumulada = depreciação do controle (credora na contabilidade).</td></tr>
     <tr><td>R3</td><td>Aquisições do mês = bens com data no mês e valor positivo; baixas = valores negativos (com a data de aquisição do bem baixado).</td></tr>
     <tr><td>R4</td><td>Diferença até R$ 1,00 é tratada como arredondamento.</td></tr>
@@ -279,7 +281,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 </section>
 
 <section class="panel active" id="tab-conferencia">
-  <div id="vazio" class="box empty">Importe o Book NHD do mês (aba “Controle Patrimonial”) para montar a conferência do imobilizado.</div>
+  <div id="vazio" class="box empty">Importe o Book NHD do mês (aba “Controle Patrimonial”) ou clique em “+ Novo mês” para lançar os bens à mão.</div>
   <div id="conteudo" style="display:none">
     <div class="kpis" id="kpis"></div>
     <div class="box">
@@ -303,16 +305,34 @@ tr.grp0 td .dsc{color:#CD9A56}
 
 <section class="panel" id="tab-bens">
   <div class="box">
-    <h2>Bens do controle patrimonial</h2>
+    <h2>Bens do controle patrimonial <span class="muted small" id="bensTitulo"></span></h2>
+    <div class="toolbar" style="margin-bottom:10px">
+      <button type="button" class="primary" onclick="novoBem(false)">+ Lançar aquisição</button>
+      <button type="button" onclick="novoBem(true)">− Lançar baixa</button>
+      <span class="muted small">Depreciação calculada como na planilha: valor ÷ vida útil × tempo de uso (dias ÷ 30) até a data-base.</span>
+    </div>
+    <div id="formBem"></div>
     <div class="filters">
       <label>Classe<select id="fClasse" onchange="renderBens()"><option value="">Todas</option></select></label>
-      <label>Período<select id="fPer" onchange="renderBens()"><option value="">Todos</option><option value="mes">Só do mês</option><option value="baixa">Só baixas</option></select></label>
+      <label>Período<select id="fPer" onchange="renderBens()"><option value="">Todos</option><option value="mes">Só do mês</option><option value="baixa">Só baixas</option><option value="manual">Só lançados aqui</option></select></label>
       <label>Buscar<input type="text" id="fBusca" oninput="renderBens()" placeholder="descrição, fornecedor, nota"></label>
     </div>
     <div class="tscroll"><table>
-      <thead><tr><th>Data</th><th>Classe</th><th>Nota</th><th>Fornecedor</th><th class="wrap">Descrição</th><th>Valor aquisição/(baixa)</th><th>Vida útil (meses)</th><th>Deprec. acumulada</th><th>Valor contábil</th></tr></thead>
+      <thead><tr><th>Data</th><th>Classe</th><th>Nota</th><th>Fornecedor</th><th class="wrap">Descrição</th><th>Valor aquisição/(baixa)</th><th>Vida útil (meses)</th><th>Tempo de uso (meses)</th><th>Deprec. acumulada</th><th>Valor contábil</th><th></th></tr></thead>
       <tbody id="bensBody"></tbody><tfoot id="bensFoot"></tfoot>
     </table></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-classes">
+  <div class="box">
+    <h2>Classes e contas</h2>
+    <div class="muted small" style="margin-bottom:10px">Cada classe do controle é ligada à conta de custo e à conta de depreciação acumulada do balancete. A vida útil é o padrão sugerido ao lançar um bem da classe (pode ser trocada no bem). Vale para todos os meses.</div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Classe</th><th>Conta de custo</th><th>Conta de depreciação acumulada</th><th>Vida útil padrão (meses)</th><th></th></tr></thead>
+      <tbody id="clsBody"></tbody>
+    </table></div>
+    <div class="toolbar" style="margin-top:10px"><button type="button" onclick="novaClasse()">+ Nova classe</button></div>
   </div>
 </section>
 
@@ -321,7 +341,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 <script>
 // ===================== utilitários =====================
 const $ = id => document.getElementById(id);
-const LS_IMOB = 'aud-imob-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Patrimonial';
+const LS_IMOB = 'aud-imob-v1', LS_CFG = 'aud-imob-cfg-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Patrimonial';
 const r2 = v => Math.round(v * 100) / 100;
 const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -329,7 +349,9 @@ const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpp
 const MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const mesLbl = m => m ? MES[+m.slice(5, 7) - 1] + '/' + m.slice(0, 4) : '';
 const fimMes = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 0); return y + '-' + String(mm).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const mesAnt = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm - 2, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
 const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const uid = () => 'b' + Math.random().toString(36).slice(2, 10);
 function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
 function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 8000); }
@@ -346,13 +368,41 @@ function num(v){
 function isoData(v){
   if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
   if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
-  const m = String(v ?? '').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0') : '';
+  const s = String(v ?? '').trim(); let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : '';
 }
 function fmtConta(c){ const d = String(c ?? '').replace(/\D/g, ''); if (d.length === 8 && /^\d+$/.test(String(c).trim())) return d[0] + '.' + d[1] + '.' + d.slice(2, 4) + '.' + d.slice(4); return String(c ?? '').trim(); }
 const difTd = d => isNaN(d) ? '<td>—</td>' : `<td class="${Math.abs(d) < 1 ? 'dok' : 'dbad'}">${Math.abs(d) < 1 ? 'OK' : fmt(d)}</td>`;
 
-// ===================== leitura do Book / controle patrimonial =====================
-let dados = lsGet(LS_IMOB, {}), mesAtual = '', balMes = null;
+// ===================== depreciação (mesma regra da planilha "Controle Patrimonial") =====================
+// Tempo de uso = dias ÷ 30 desde a aquisição; depreciação acumulada = valor ÷ vida útil × tempo de uso, sem passar do valor.
+// Bens vindos da planilha guardam a depreciação já acumulada na data da planilha (daBase em refBase), que inclui o
+// saldo de implantação; a partir dela a depreciação continua na mesma taxa. Baixa = valor negativo que deprecia desde a
+// aquisição do bem baixado: anula a depreciação do bem a partir dali.
+const dias = (a, b) => Math.round((new Date(b + 'T00:00:00') - new Date(a + 'T00:00:00')) / 864e5);
+function inicioBem(b){ return b.valor < 0 && b.aqBaixado ? b.aqBaixado : b.data; }
+function tempoUso(b, ate){ const ini = inicioBem(b); return ate < ini ? 0 : dias(ini, ate) / 30; }
+function deprEm(b, ate){
+  if (ate < b.data && !(b.valor < 0)) return 0;
+  if (ate < inicioBem(b)) return 0;
+  const vida = +b.vida;
+  if (!vida || vida <= 0) return b.daBase && b.refBase && ate >= b.refBase ? b.daBase : 0;
+  const taxa = b.valor / vida;
+  const da = (b.refBase && typeof b.daBase === 'number') ? b.daBase + taxa * dias(b.refBase, ate) / 30 : taxa * dias(inicioBem(b), ate) / 30;
+  return Math.abs(da) > Math.abs(b.valor) ? b.valor : (Math.sign(da) && Math.sign(da) !== Math.sign(b.valor) ? 0 : da);
+}
+
+// ===================== dados =====================
+// dados[aaaa-mm] = { ref, origem, bens:[...], balArquivo }   ·   cfg = { classes:[{classe, contaAq, contaDp, vida}] }
+let dados = lsGet(LS_IMOB, {}), cfg = lsGet(LS_CFG, { classes: [] }), mesAtual = '', balMes = null;
+// migração da primeira versão (classes com código reduzido por mês)
+Object.values(dados).forEach(D => {
+  (D.bens || []).forEach(b => { if (!b.id) b.id = uid(); if (b.daBase === undefined && b.da !== undefined && D.ref){ b.daBase = b.da; b.refBase = D.ref; } });
+  if (D.classes && D.red) D.classes.forEach(k => { if (!cfg.classes.some(c => c.classe === k.classe)) cfg.classes.push({ classe: k.classe, contaAq: k.redAq ? (D.red[k.redAq] || '') : '', contaDp: k.redDp ? (D.red[k.redDp] || '') : '', vida: isNaN(+k.vida) ? '' : k.vida }); });
+});
+function salvar(){ if (!lsSet(LS_IMOB, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err'); lsSet(LS_CFG, cfg); }
+const classeCfg = nome => cfg.classes.find(c => c.classe === nome);
+
 function linhas(wb, sn){ return XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null }); }
 function lerControle(wb){
   const sn = wb.SheetNames.find(s => /CONTROLE PATRIMONIAL/.test(norm(s)));
@@ -360,35 +410,30 @@ function lerControle(wb){
   const R = linhas(wb, sn);
   let ref = '';
   R.slice(0, 12).forEach(r => r.forEach((c, i) => { if (/DATA REFER/.test(norm(c))) for (let j = i + 1; j < r.length; j++){ const d = isoData(r[j]); if (d){ ref = d; break; } } }));
-  // resumo por classe
   const hr = R.findIndex(r => r && /CONTA CONTABIL/.test(norm(r[0])) && /CLASSIFICA/.test(norm(r[1])));
   if (hr < 0) throw new Error('não encontrei o resumo por classe (Conta Contábil Aquisição | Classificação Contábil | Conta Contábil Depreciação…)');
-  const H = R[hr].map(norm), col = re => H.findIndex(h => re.test(h));
-  const cAq = 0, cCl = 1, cDp = 2, cVa = col(/VALOR AQUISI/), cDa = col(/DEPRECIACAO ACUMULADA/), cVr = col(/VALOR RESIDUAL/), cVu = col(/VIDA UTIL/), cAnt = col(/SALDO CONTABIL MES ANTERIOR/), cMes = col(/DEPRECIACAO DO MES/);
+  const H = R[hr].map(norm), cVu = H.findIndex(h => /VIDA UTIL/.test(h));
   const classes = [];
   for (let i = hr + 1; i < R.length; i++){
     const r = R[i]; if (!r) continue;
     if (/^TOTAL/.test(norm(r[0]))) break;
-    const nome = String(r[cCl] ?? '').trim(); if (!nome) continue;
-    classes.push({ classe: nome, redAq: r[cAq] === null || r[cAq] === '' ? null : String(r[cAq]).trim(), redDp: r[cDp] === null || r[cDp] === '' ? null : String(r[cDp]).trim(),
-      custo: num(r[cVa]) || 0, da: num(r[cDa]) || 0, residual: num(r[cVr]) || 0, vida: num(r[cVu]), daAnterior: num(r[cAnt]) || 0, daMes: num(r[cMes]) || 0 });
+    const nome = String(r[1] ?? '').trim(); if (!nome) continue;
+    classes.push({ classe: nome, redAq: r[0] === null || r[0] === '' ? null : String(r[0]).trim(), redDp: r[2] === null || r[2] === '' ? null : String(r[2]).trim(), vida: num(r[cVu]) });
   }
-  // lista de bens
   const hb = R.findIndex((r, i) => i > hr && r && /DATA AQUISI/.test(norm(r[0])) && /CLASSIFICA/.test(norm(r[1])));
   const bens = [];
   if (hb >= 0){
     const B = R[hb].map(norm), bc = re => B.findIndex(h => re.test(h));
-    const cNf = bc(/NOTA/), cFo = bc(/FORNECEDOR/), cDe = bc(/^DESCRICAO/), cV = bc(/VALOR AQUISI/), cPe = bc(/PERIODO DEPRECIA/), cDA = bc(/DEPRECIACAO ACUM/), cVC = bc(/VALOR CONTABIL/), cDB = bc(/BEM BAIXADO/);
+    const cNf = bc(/NOTA/), cFo = bc(/FORNECEDOR/), cDe = bc(/^DESCRICAO/), cV = bc(/VALOR AQUISI/), cPe = bc(/PERIODO DEPRECIA/), cDA = bc(/DEPRECIACAO ACUM/), cDB = bc(/BEM BAIXADO/);
     for (let i = hb + 1; i < R.length; i++){
       const r = R[i]; if (!r) continue;
       const d = isoData(r[0]); if (!d) continue;
-      bens.push({ data: d, classe: String(r[1] ?? '').trim(), nf: r[cNf] ?? '', fornecedor: String(r[cFo] ?? '').trim(), desc: String(r[cDe] ?? '').trim(),
-        valor: num(r[cV]) || 0, vida: num(r[cPe]), da: num(r[cDA]) || 0, vc: num(r[cVC]) || 0, aqBaixado: cDB >= 0 ? isoData(r[cDB]) : '' });
+      bens.push({ id: uid(), data: d, classe: String(r[1] ?? '').trim(), nf: r[cNf] ?? '', fornecedor: String(r[cFo] ?? '').trim(), desc: String(r[cDe] ?? '').trim(),
+        valor: num(r[cV]) || 0, vida: num(r[cPe]), daBase: num(r[cDA]) || 0, refBase: ref, aqBaixado: cDB >= 0 ? isoData(r[cDB]) : '', origem: 'planilha' });
     }
   }
   return { ref, classes, bens };
 }
-// código reduzido → conta (coluna RED. da aba Book)
 function lerReduzidos(wb){
   const sn = wb.SheetNames.find(s => norm(s) === 'BOOK'); if (!sn) return {};
   const R = linhas(wb, sn), hi = R.findIndex(r => r && /ANALITICA/.test(norm(r[0])) && /DESCRI/.test(norm(r[2])));
@@ -396,7 +441,6 @@ function lerReduzidos(wb){
   for (let i = hi + 1; i < R.length; i++){ const r = R[i]; if (r && r[0] && r[1] !== null && r[1] !== '') m[String(r[1]).trim()] = String(r[0]).trim(); }
   return m;
 }
-// balancete da aba "Balancete" do próprio arquivo (quando o Book de conciliação não tem o mês)
 function lerBalanceteArquivo(wb){
   for (const sn of wb.SheetNames){
     const R = linhas(wb, sn), hi = R.findIndex(r => r && norm(r[0]) === 'CONTA' && /DESCRI/.test(norm(r[1])));
@@ -407,6 +451,8 @@ function lerBalanceteArquivo(wb){
     for (let i = hi + 1; i < R.length; i++){
       const r = R[i]; if (!r || r[0] === null) continue;
       const conta = fmtConta(r[0]); if (!/^\d(\.\d+)*$/.test(conta)) continue;
+      // só o imobilizado/intangível: o resto do balancete fica no Book de conciliação
+      if (!/^1\.2\.(05|10)/.test(conta)) continue;
       contas[conta] = { desc: String(r[1] ?? '').trim(), sa: num(r[cSA]) || 0, d: num(r[cD]) || 0, c: num(r[cC]) || 0, sf: num(r[cSF]) || 0 };
     }
     return { contas };
@@ -421,15 +467,102 @@ async function importarImob(f){
     if (!ctl.ref) throw new Error('não encontrei a “Data referência” do controle patrimonial');
     let red = lerReduzidos(wb);
     if (!Object.keys(red).length){ const r2c = lsGet('aud-book-red', {}); Object.keys(r2c).forEach(c => { red[String(r2c[c])] = c; }); }
+    ctl.classes.forEach(k => {
+      const c = classeCfg(k.classe), aq = k.redAq ? (red[k.redAq] || '') : '', dp = k.redDp ? (red[k.redDp] || '') : '';
+      if (!c) cfg.classes.push({ classe: k.classe, contaAq: aq, contaDp: dp, vida: isNaN(k.vida) ? '' : k.vida });
+      else { if (!c.contaAq && aq) c.contaAq = aq; if (!c.contaDp && dp) c.contaDp = dp; if ((c.vida === '' || c.vida === undefined) && !isNaN(k.vida)) c.vida = k.vida; }
+    });
     const m = ctl.ref.slice(0, 7);
-    dados[m] = { ref: ctl.ref, origem: f.name, em: new Date().toISOString(), classes: ctl.classes, bens: ctl.bens, red, balArquivo: lerBalanceteArquivo(wb) };
-    if (!lsSet(LS_IMOB, dados)) msg('O controle é grande demais para ficar salvo neste navegador: a conferência funciona agora, mas será preciso importar de novo depois.', 'warn');
-    mesAtual = m;
+    if (dados[m] && (dados[m].bens || []).some(b => b.origem === 'manual') && !confirm('O mês ' + mesLbl(m) + ' tem bens lançados aqui. Substituir pelo controle da planilha?')) return;
+    dados[m] = { ref: ctl.ref, origem: f.name, em: new Date().toISOString(), bens: ctl.bens, balArquivo: lerBalanceteArquivo(wb) };
+    salvar(); mesAtual = m;
     msg(`“${esc(f.name)}”: controle patrimonial de ${mesLbl(m)} — ${ctl.classes.length} classes e ${ctl.bens.length} lançamentos de bens.`, 'ok');
     await render();
   } catch(e){ msg('Erro ao importar “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
 }
-function apagarMes(){ if (!mesAtual || !confirm('Remover o controle patrimonial de ' + mesLbl(mesAtual) + ' deste navegador?')) return; delete dados[mesAtual]; lsSet(LS_IMOB, dados); mesAtual = ''; render(); }
+function apagarMes(){ if (!mesAtual || !confirm('Remover o controle patrimonial de ' + mesLbl(mesAtual) + ' deste navegador?')) return; delete dados[mesAtual]; salvar(); mesAtual = ''; render(); }
+// mês novo: parte dos bens do último mês fechado; a depreciação é recalculada para a nova data-base
+function novoMes(){
+  const meses = Object.keys(dados).sort(), ult = meses[meses.length - 1];
+  const sug = ult ? (() => { const [y, m] = ult.split('-').map(Number); const d = new Date(y, m, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); })() : new Date().toISOString().slice(0, 7);
+  const m = (prompt('Mês do novo controle (aaaa-mm)' + (ult ? ' — parte dos bens de ' + mesLbl(ult) : ''), sug) || '').trim();
+  if (!/^\d{4}-\d{2}$/.test(m)) return;
+  if (dados[m] && !confirm(mesLbl(m) + ' já existe. Substituir?')) return;
+  const base = ult && ult < m ? dados[ult] : null;
+  dados[m] = { ref: fimMes(m), origem: base ? 'a partir de ' + mesLbl(ult) : 'lançado aqui', em: new Date().toISOString(), bens: base ? JSON.parse(JSON.stringify(base.bens)) : [], balArquivo: null };
+  salvar(); mesAtual = m; render();
+  msg(mesLbl(m) + ' criado' + (base ? ' com os ' + base.bens.length + ' bens de ' + mesLbl(ult) : '') + '. Lance as aquisições e baixas do mês na etapa 3 · Bens.', 'ok');
+}
+
+// ===================== lançamento manual de bens =====================
+let editando = null;
+function opcoesClasse(sel){ return cfg.classes.map(c => `<option ${c.classe === sel ? 'selected' : ''}>${esc(c.classe)}</option>`).join(''); }
+function novoBem(baixa){
+  if (!dados[mesAtual]){ alert('Crie ou importe o mês primeiro (botão “+ Novo mês”).'); return; }
+  editando = { id: '', data: fimMes(mesAtual), classe: (cfg.classes[0] || {}).classe || '', nf: '', fornecedor: '', desc: baixa ? 'BAIXA - ' : '', valor: '', vida: '', aqBaixado: '', baixa };
+  const c = classeCfg(editando.classe); if (c) editando.vida = c.vida;
+  formBem();
+}
+function editarBem(id){ const b = dados[mesAtual].bens.find(x => x.id === id); if (!b) return; editando = Object.assign({}, b, { baixa: b.valor < 0, valor: Math.abs(b.valor) }); formBem(); }
+function formBem(){
+  const e = editando; if (!e){ $('formBem').innerHTML = ''; return; }
+  const i = (id, lbl, val, tipo, extra) => `<label>${lbl}<input type="${tipo || 'text'}" id="fb_${id}" value="${esc(val ?? '')}" ${extra || ''}></label>`;
+  $('formBem').innerHTML = `<div class="box" style="background:#F7F8FA;margin:0 0 12px">
+    <h3 style="margin-top:0">${e.id ? 'Editar' : 'Lançar'} ${e.baixa ? 'baixa' : 'aquisição'}</h3>
+    <div class="filters">
+      ${i('data', e.baixa ? 'Data da baixa' : 'Data da aquisição', e.data, 'date')}
+      <label>Classe<select id="fb_classe" onchange="const c=classeCfg(this.value);if(c&&c.vida!==''&&!document.getElementById('fb_vida').dataset.mexeu)document.getElementById('fb_vida').value=c.vida">${opcoesClasse(e.classe)}</select></label>
+      ${i('nf', 'Nota fiscal', e.nf)}
+      ${i('fornecedor', 'Fornecedor', e.fornecedor)}
+      ${i('desc', 'Descrição', e.desc, 'text', 'style="min-width:260px"')}
+      ${i('valor', e.baixa ? 'Valor do bem baixado' : 'Valor de aquisição', e.valor === '' ? '' : fmt(+e.valor), 'text', 'inputmode="decimal" placeholder="0,00"')}
+      ${i('vida', 'Vida útil (meses)', e.vida, 'number', 'min="0" oninput="this.dataset.mexeu=1"')}
+      ${e.baixa ? i('aqBaixado', 'Data de aquisição do bem baixado', e.aqBaixado, 'date') : ''}
+    </div>
+    <div class="toolbar"><button type="button" class="primary" onclick="gravarBem()">Gravar</button><button type="button" onclick="editando=null;formBem()">Cancelar</button>
+      <span class="muted small">${e.baixa ? 'A baixa entra com valor negativo e tira a depreciação do bem a partir da data de aquisição informada.' : 'A depreciação começa na data de aquisição.'}</span></div>
+  </div>`;
+  $('fb_desc').focus();
+}
+function gravarBem(){
+  const e = editando, g = id => ($('fb_' + id) || {}).value;
+  const data = g('data'), valor = Math.abs(num(g('valor'))), vida = num(g('vida'));
+  if (!data || !g('classe')){ alert('Informe a data e a classe.'); return; }
+  if (!(valor > 0)){ alert('Informe o valor.'); return; }
+  if (e.baixa && !g('aqBaixado')){ alert('Informe a data de aquisição do bem baixado (para tirar a depreciação certa).'); return; }
+  const b = { id: e.id || uid(), data, classe: g('classe'), nf: g('nf').trim(), fornecedor: g('fornecedor').trim(), desc: g('desc').trim(), valor: e.baixa ? -valor : valor, vida: isNaN(vida) ? 0 : vida, aqBaixado: e.baixa ? g('aqBaixado') : '', origem: 'manual' };
+  const L = dados[mesAtual].bens, k = L.findIndex(x => x.id === b.id);
+  if (k >= 0){ const ant = L[k]; if (ant.origem === 'planilha' && ant.valor === b.valor && ant.data === b.data && ant.vida === b.vida){ b.daBase = ant.daBase; b.refBase = ant.refBase; b.origem = 'planilha'; } L[k] = b; } else L.push(b);
+  L.sort((a, b2) => a.data.localeCompare(b2.data));
+  salvar(); editando = null; formBem(); render();
+  msg((e.id ? 'Bem atualizado' : (e.baixa ? 'Baixa lançada' : 'Aquisição lançada')) + ' em ' + mesLbl(mesAtual) + '. Para que valha nos meses seguintes já criados, lance também neles (ou recrie o mês a partir deste).', 'ok');
+}
+function excluirBem(id){
+  const L = dados[mesAtual].bens, b = L.find(x => x.id === id); if (!b) return;
+  if (!confirm('Excluir “' + (b.desc || b.classe) + '” (' + fmt(b.valor) + ') do controle de ' + mesLbl(mesAtual) + '?')) return;
+  dados[mesAtual].bens = L.filter(x => x.id !== id); salvar(); render();
+}
+
+// ===================== classes e contas =====================
+function renderClasses(){
+  $('clsBody').innerHTML = cfg.classes.map((c, i) => `<tr><td><input type="text" value="${esc(c.classe)}" onchange="setClasse(${i},'classe',this.value)"></td>
+    <td><input type="text" value="${esc(c.contaAq)}" placeholder="1.2.05.1xxx" onchange="setClasse(${i},'contaAq',this.value)"></td>
+    <td><input type="text" value="${esc(c.contaDp)}" placeholder="1.2.05.2xxx" onchange="setClasse(${i},'contaDp',this.value)"></td>
+    <td><input type="number" min="0" value="${esc(c.vida)}" onchange="setClasse(${i},'vida',this.value)"></td>
+    <td><button type="button" class="danger" onclick="tirarClasse(${i})">Remover</button></td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nenhuma classe. Importe a planilha ou crie as classes.</td></tr>';
+}
+function setClasse(i, k, v){
+  const c = cfg.classes[i]; if (!c) return;
+  if (k === 'classe'){ const novo = v.trim(); if (!novo) return; Object.values(dados).forEach(D => D.bens.forEach(b => { if (b.classe === c.classe) b.classe = novo; })); c.classe = novo; }
+  else if (k === 'vida') c.vida = v === '' ? '' : +v; else c[k] = v.trim();
+  salvar(); render();
+}
+function novaClasse(){ const n = (prompt('Nome da classe (ex.: Equipamentos de Informática)') || '').trim(); if (!n || classeCfg(n)) return; cfg.classes.push({ classe: n, contaAq: '', contaDp: '', vida: '' }); salvar(); render(); }
+function tirarClasse(i){
+  const c = cfg.classes[i]; const usada = Object.values(dados).some(D => D.bens.some(b => b.classe === c.classe));
+  if (usada){ alert('A classe “' + c.classe + '” tem bens lançados; troque a classe deles antes de remover.'); return; }
+  cfg.classes.splice(i, 1); salvar(); render();
+}
 
 // ===================== conferência =====================
 async function carregarBal(m){
@@ -438,48 +571,56 @@ async function carregarBal(m){
   if (balMes) balMes.__fonte = 'do balancete do Book de conciliação';
   else if (dados[m] && dados[m].balArquivo){ balMes = dados[m].balArquivo; balMes.__fonte = 'da aba Balancete do arquivo importado'; }
 }
+// resumo por classe calculado dos bens na data-base (custo, depreciação acumulada e do mês)
+function resumo(D, m){
+  const fim = fimMes(m), fimAnt = fimMes(mesAnt(m)), por = {};
+  D.bens.forEach(b => {
+    const k = por[b.classe] = por[b.classe] || { classe: b.classe, custo: 0, da: 0, daMes: 0, n: 0 };
+    if (b.data > fim) return;
+    const da = deprEm(b, fim), daAnt = b.data > fimAnt && !(b.valor < 0 && b.data <= fimAnt) ? 0 : deprEm(b, fimAnt);
+    k.custo += b.valor; k.da += da; k.daMes += da - daAnt; k.n++;
+  });
+  cfg.classes.forEach(c => { if (!por[c.classe]) por[c.classe] = { classe: c.classe, custo: 0, da: 0, daMes: 0, n: 0 }; });
+  return Object.values(por).map(k => Object.assign(k, { custo: r2(k.custo), da: r2(k.da), daMes: r2(k.daMes) }));
+}
 async function render(){
   const meses = Object.keys(dados).sort();
   if (!mesAtual || !dados[mesAtual]) mesAtual = meses[meses.length - 1] || '';
   $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('') || '<option value="">—</option>';
+  renderClasses();
   const D = dados[mesAtual];
   $('vazio').style.display = D ? 'none' : ''; $('conteudo').style.display = D ? '' : 'none';
-  $('stTopo').textContent = D ? 'Controle de ' + br(D.ref) + ' · ' + D.origem : '';
+  $('stTopo').textContent = D ? 'Data-base ' + br(fimMes(mesAtual)) + ' · ' + D.origem : '';
   if (!D){ renderBens(); return; }
   await carregarBal(mesAtual);
-  const cb = c => balMes && balMes.contas ? balMes.contas[c] : null;
-  const contaDe = red => red ? (D.red[String(red)] || null) : null;
+  const cb = c => balMes && balMes.contas && c ? balMes.contas[c] : null;
   const usadas = new Set(), T = { cC: 0, cB: 0, dC: 0, dB: 0, mC: 0, mB: 0 }, sup = {};
   let ok = 0, div = 0;
-  const html = D.classes.map(k => {
-    const cc = contaDe(k.redAq), cd = contaDe(k.redDp), bcC = cc && cb(cc), bcD = cd && cb(cd);
+  const RES = resumo(D, mesAtual);
+  const html = RES.map(k => {
+    const cf = classeCfg(k.classe) || {}, cc = cf.contaAq || '', cd = cf.contaDp || '', bcC = cb(cc), bcD = cb(cd);
     if (cc) usadas.add(cc); if (cd) usadas.add(cd);
     const custoB = bcC ? bcC.sf : NaN, daB = bcD ? -bcD.sf : NaN, mesB = bcD ? r2(bcD.c - bcD.d) : NaN;
+    T.cC += k.custo; T.dC += k.da; T.mC += k.daMes;
     if (!k.custo && !k.da && !(bcC && bcC.sf) && !(bcD && bcD.sf)) return '';
     const dC = isNaN(custoB) ? NaN : r2(custoB - k.custo), dD = isNaN(daB) ? NaN : r2(daB - k.da), dM = isNaN(mesB) ? NaN : r2(mesB - k.daMes);
     [dC, dD].forEach(d => { if (!isNaN(d)) (Math.abs(d) < 1 ? ok++ : div++); });
-    T.cC += k.custo; T.dC += k.da; T.mC += k.daMes;
     if (cc) sup[cc] = { fonte: FONTE, saldo: r2(k.custo), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classe + ' · custo' };
     if (cd) sup[cd] = { fonte: FONTE, saldo: -r2(k.da), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classe + ' · depreciação acumulada' };
     return `<tr><td><b>${esc(k.classe)}</b></td><td>${cc ? esc(cc) : '<span class="muted">sem conta</span>'}</td><td>${fmt(k.custo)}</td><td>${fmt(custoB)}</td>${difTd(dC)}
       <td>${cd ? esc(cd) : '<span class="muted">—</span>'}</td><td>${fmt(k.da)}</td><td>${fmt(daB)}</td>${difTd(dD)}<td>${fmt(k.daMes)}</td><td>${fmt(mesB)}</td>${difTd(dM)}</tr>`;
   }).join('');
   $('confBody').innerHTML = html;
-  // totais pelo balancete inteiro (1.2.05 e 1.2.10): custo = grupos .1 e .3; depreciação/amortização = grupos .2
   const contasImob = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^1\.2\.(05|10)\.\d\d\d\d$/.test(c)) : [];
   const ehDA = c => /^1\.2\.(05|10)\.2/.test(c);
   contasImob.forEach(c => { const x = balMes.contas[c]; if (ehDA(c)){ T.dB += -x.sf; T.mB += x.c - x.d; } else T.cB += x.sf; });
   $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL do controle × contas 1.2.05 / 1.2.10</td><td>${fmt(T.cC)}</td><td>${balMes ? fmt(T.cB) : '—'}</td>${balMes ? difTd(r2(T.cB - T.cC)) : '<td>—</td>'}<td></td><td>${fmt(T.dC)}</td><td>${balMes ? fmt(T.dB) : '—'}</td>${balMes ? difTd(r2(T.dB - T.dC)) : '<td>—</td>'}<td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
-  // contas com saldo/movimento que nenhuma classe do controle cobre
   const sem = contasImob.filter(c => !usadas.has(c) && (Math.abs(balMes.contas[c].sf) >= 0.005 || Math.abs(balMes.contas[c].d) >= 0.005 || Math.abs(balMes.contas[c].c) >= 0.005));
-  $('semClasse').innerHTML = sem.length ? `<div class="msg warn" style="margin-top:10px"><b>${sem.length} conta(s) com saldo sem classe no controle patrimonial</b> (entram só no total): ${sem.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
+  $('semClasse').innerHTML = sem.length ? `<div class="msg warn" style="margin-top:10px"><b>${sem.length} conta(s) com saldo sem classe no controle patrimonial</b> (entram só no total; ligue a conta a uma classe na etapa 4 · Classes e contas): ${sem.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
   $('tituloConf').textContent = '· ' + mesLbl(mesAtual) + (balMes ? ' · saldos ' + balMes.__fonte : ' · sem balancete deste mês');
   $('confInfo').textContent = balMes ? 'Os saldos do controle foram enviados ao Book de conciliação como suporte automático das contas ligadas.' : 'Importe o balancete de ' + mesLbl(mesAtual) + ' no Book de conciliação para comparar.';
-  // KPIs
-  const residual = T.cC - T.dC;
-  $('kpis').innerHTML = [['Custo do imobilizado', fmt(T.cC)], ['Depreciação acumulada', fmt(T.dC)], ['Valor residual', fmt(residual)], ['Depreciação do mês', fmt(T.mC)], ['Contas conferidas', ok + ' OK · ' + div + ' com diferença']]
+  $('kpis').innerHTML = [['Custo do imobilizado', fmt(T.cC)], ['Depreciação acumulada', fmt(T.dC)], ['Valor residual', fmt(T.cC - T.dC)], ['Depreciação do mês', fmt(T.mC)], ['Contas conferidas', ok + ' OK · ' + div + ' com diferença']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
-  // movimentação do mês
   const ini = mesAtual + '-01', fim = fimMes(mesAtual);
   const doMes = D.bens.filter(b => b.data >= ini && b.data <= fim);
   const aq = doMes.filter(b => b.valor > 0).reduce((a, b) => a + b.valor, 0), bx = Math.abs(doMes.filter(b => b.valor < 0).reduce((a, b) => a + b.valor, 0));
@@ -488,26 +629,28 @@ async function render(){
   $('movBody').innerHTML = `<tr><td>Aquisições do mês (${doMes.filter(b => b.valor > 0).length} lançamento(s)) × débitos nas contas de custo</td><td>${fmt(aq)}</td><td>${fmt(debC)}</td>${difTd(r2(debC - aq))}</tr>
     <tr><td>Baixas do mês (${doMes.filter(b => b.valor < 0).length}) × créditos nas contas de custo</td><td>${fmt(bx)}</td><td>${fmt(credC)}</td>${difTd(r2(credC - bx))}</tr>
     <tr><td>Depreciação do mês × créditos líquidos na depreciação acumulada</td><td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
-  // suporte automático no Book
   const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE || s[k].fonte === 'Imobilizado') delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
-  // filtros dos bens
-  const cls = [...new Set(D.bens.map(b => b.classe))].sort();
+  const cls = [...new Set(D.bens.map(b => b.classe).concat(cfg.classes.map(c => c.classe)))].sort();
   const atual = $('fClasse').value;
   $('fClasse').innerHTML = '<option value="">Todas</option>' + cls.map(c => `<option ${c === atual ? 'selected' : ''}>${esc(c)}</option>`).join('');
   renderBens();
 }
 function renderBens(){
   const D = dados[mesAtual];
-  if (!D){ $('bensBody').innerHTML = '<tr><td colspan="9" class="muted">Importe o controle patrimonial.</td></tr>'; $('bensFoot').innerHTML = ''; return; }
+  $('bensTitulo').textContent = D ? '· posição em ' + br(fimMes(mesAtual)) : '';
+  if (!D){ $('bensBody').innerHTML = '<tr><td colspan="11" class="muted">Importe a planilha ou crie o mês (“+ Novo mês”).</td></tr>'; $('bensFoot').innerHTML = ''; return; }
   const fc = $('fClasse').value, fp = $('fPer').value, fb = norm($('fBusca').value), ini = mesAtual + '-01', fim = fimMes(mesAtual);
-  const L = D.bens.filter(b => (!fc || b.classe === fc) && (!fp || (fp === 'mes' ? b.data >= ini && b.data <= fim : b.valor < 0)) && (!fb || norm(b.desc + ' ' + b.fornecedor + ' ' + b.nf).indexOf(fb) >= 0));
-  $('bensBody').innerHTML = L.map(b => `<tr><td>${br(b.data)}</td><td>${esc(b.classe)}</td><td>${esc(b.nf)}</td><td class="wrap">${esc(b.fornecedor)}</td><td class="wrap">${esc(b.desc)}${b.aqBaixado ? '<div class="muted small">bem adquirido em ' + br(b.aqBaixado) + '</div>' : ''}</td>
-    <td class="${b.valor < 0 ? 'dbad' : ''}">${fmt(b.valor)}</td><td>${isNaN(b.vida) ? '—' : b.vida}</td><td>${fmt(b.da)}</td><td>${fmt(b.vc)}</td></tr>`).join('') || '<tr><td colspan="9" class="muted">Nenhum bem com esses filtros.</td></tr>';
-  const s = k => L.reduce((a, b) => a + (b[k] || 0), 0);
-  $('bensFoot').innerHTML = `<tr><td colspan="5">TOTAL (${L.length})</td><td>${fmt(s('valor'))}</td><td></td><td>${fmt(s('da'))}</td><td>${fmt(s('vc'))}</td></tr>`;
+  const L = D.bens.filter(b => (!fc || b.classe === fc) && (!fp || (fp === 'mes' ? b.data >= ini && b.data <= fim : fp === 'baixa' ? b.valor < 0 : b.origem === 'manual')) && (!fb || norm(b.desc + ' ' + b.fornecedor + ' ' + b.nf).indexOf(fb) >= 0));
+  const linha = b => { const da = b.data > fim ? 0 : deprEm(b, fim);
+    return `<tr><td>${br(b.data)}</td><td>${esc(b.classe)}</td><td>${esc(b.nf)}</td><td class="wrap">${esc(b.fornecedor)}</td><td class="wrap">${esc(b.desc)}${b.aqBaixado ? '<div class="muted small">bem adquirido em ' + br(b.aqBaixado) + '</div>' : ''}${b.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : ''}</td>
+    <td class="${b.valor < 0 ? 'dbad' : ''}">${fmt(b.valor)}</td><td>${b.vida || '—'}</td><td>${tempoUso(b, fim).toFixed(2).replace('.', ',')}</td><td>${fmt(da)}</td><td>${fmt(b.valor - da)}</td>
+    <td style="white-space:nowrap"><button type="button" onclick="editarBem('${b.id}')">Editar</button> <button type="button" class="danger" onclick="excluirBem('${b.id}')">Excluir</button></td></tr>`; };
+  $('bensBody').innerHTML = L.map(linha).join('') || '<tr><td colspan="11" class="muted">Nenhum bem com esses filtros.</td></tr>';
+  const sv = L.reduce((a, b) => a + b.valor, 0), sd = L.reduce((a, b) => a + (b.data > fim ? 0 : deprEm(b, fim)), 0);
+  $('bensFoot').innerHTML = `<tr><td colspan="5">TOTAL (${L.length})</td><td>${fmt(sv)}</td><td></td><td></td><td>${fmt(sd)}</td><td>${fmt(sv - sd)}</td><td></td></tr>`;
 }
-// aberto a partir do Book (clique na conta): mostra a conferência
 window.focoConta = function(){ window.abrirEtapa && abrirEtapa('conferencia'); };
+salvar();
 render();
 </script>
 
