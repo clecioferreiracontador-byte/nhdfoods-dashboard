@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tributos a pagar Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:10px 0 9px;border-bottom:3px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.05rem,.95rem + .45vw,1.3rem);line-height:1.25}
+header.top p{margin:2px 0 0;font-size:.78rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+/* modo visualização (usuário com permissão "Book: visualizar"): nada de importar, salvar ou editar */
+body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="lanc"],body.leitura nav.tabs button[data-tab="fontes"],
+body.leitura ul.cl,body.leitura #btnLimparChecklist,body.leitura .so-admin-box{display:none!important}
+body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select{pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
+.ro-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:#EAF2FB;color:#1A3A6B;font-size:.9rem;border:1px solid #BBD3EE}
+body.leitura .ro-aviso{display:block}
+</style>
+<style>
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--aud-success);color:#fff}
+.pill.bad{background:#FFE3E6;color:var(--aud-danger-text);border:1px solid #f5b5bb}
+.pill.warn{background:var(--aud-warning);color:var(--aud-text)}
+.pill.info{background:var(--aud-info);color:var(--aud-primary)}
+.pill.cinza{background:var(--aud-gray-100);color:var(--aud-gray-500)}
+.msg{padding:10px 14px;border-radius:var(--aud-radius);margin:8px 0;font-size:.9rem;background:#fff;border:1px solid #e1e4e8;border-left:5px solid var(--aud-primary)}
+.msg.err{border-left-color:var(--aud-danger);background:#FFF1F2;color:var(--aud-danger-text)}
+.msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
+.msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
+.filters select,.filters input[type=text]{width:auto}
+.filters label.ck{flex-direction:row;align-items:center;gap:6px}
+.tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
+.tscroll thead th{position:sticky;top:0;z-index:2}
+/* Bens: filtros e cabeçalho da tabela ficam congelados ao descer pelos lançamentos */
+.box.bensMain{overflow:visible}
+.bensTopo{position:sticky;top:var(--navH,0px);z-index:6;background:var(--aud-white);margin:0 -20px;padding:8px 20px 10px}
+.bensMain .tscroll{overflow:visible;max-height:none}
+.bensMain .tscroll thead th{top:calc(var(--navH,0px) + var(--topoH,0px))}
+td.wrap,th.wrap{white-space:normal;text-align:left}
+td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
+td input.obs{min-width:220px}
+td select{padding:3px 4px;font-size:.8rem;width:auto}
+/* Book compacto: usa a largura toda e cabe sem rolagem lateral */
+.wrap{max-width:none!important;padding:0 8px}
+#tab-conferencia .box{padding:12px 10px}
+table.bk{font-size:.72rem;table-layout:auto}
+table.bk th,table.bk td{padding:4px 4px}
+table.bk thead th{font-size:.68rem;white-space:normal;line-height:1.15;text-align:center}
+table.bk .dsc{width:112px;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+table.bk td input[type=text]{min-width:0;width:68px;padding:2px 4px;font-size:.72rem}
+table.bk td.obs{width:30%;min-width:175px}
+table.bk td.c-raz{width:22px;text-align:center}
+table.bk textarea.obs{width:100%;min-height:30px;font:inherit;font-size:.76rem;line-height:1.25;padding:3px 6px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);resize:vertical;background:#fff;color:var(--aud-text)}
+table.bk textarea.obs:focus{outline:none;border-color:var(--aud-secondary)}
+table.bk .auto{font-size:.66rem;line-height:1.2}
+table.bk .lupa{font-size:.9rem;padding:0 2px}
+/* status: a própria etiqueta abre as opções */
+select.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;padding:3px 18px 3px 8px;border-radius:999px;font:inherit;font-size:.68rem;font-weight:600;width:auto;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23122A4F' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+select.stsel.ok{background-color:var(--aud-success);color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")}
+select.stsel.bad{background-color:#FFE3E6;color:var(--aud-danger-text);box-shadow:inset 0 0 0 1px #f5b5bb}
+select.stsel.warn{background-color:var(--aud-warning);color:var(--aud-text)}
+select.stsel.info{background-color:var(--aud-info);color:var(--aud-primary)}
+select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500)}
+select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
+select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
+tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
+tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
+tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
+tr.grp0 td .dsc{color:#CD9A56}
+.fech{margin-bottom:14px}
+.fech h2{margin-bottom:4px}
+.fech .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:10px}
+.fech .card{border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:12px 14px;background:#fff}
+.fech .card h3{font-size:.85rem;margin:0 0 8px;color:var(--aud-primary)}
+.fech .card table{width:100%;border-collapse:collapse;font-size:.85rem}
+.fech .card td{padding:3px 0;border-bottom:1px dashed #eceff3}
+.fech .card td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fech .card tr.tot td{font-weight:700;border-bottom:0;padding-top:6px}
+.fech .res{font-size:1.25rem;font-weight:700}
+.fech .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700}
+.fech .pill.ok{background:#E3F4E7;color:var(--aud-success)}
+.fech .pill.bad{background:#FDE7E9;color:var(--aud-danger-text)}
+.fech .pill.info{background:#EEF2F8;color:var(--aud-primary)}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
+.kpi{border-radius:var(--aud-radius);padding:12px 14px;background:#fff;border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
+.kpi .t{font-size:.78rem;font-weight:600;color:var(--aud-gray-500)}
+.kpi .v{font-size:1.15rem;font-weight:700;color:var(--aud-primary)}
+.upl{border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:14px;background:#fff}
+.upl h3{margin:0 0 4px;font-size:1rem}
+.empty{padding:24px;text-align:center;color:var(--aud-gray-500)}
+.dbad{color:var(--aud-danger-text);font-weight:600}
+.dok{color:var(--aud-success);font-weight:600}
+.lupa{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:2px 4px}
+.lupa:hover{background:var(--aud-gray-100);color:inherit}
+.auto{font-size:.72rem;color:var(--aud-gray-500)}
+</style>
+<script src="vendor/sheetjs/xlsx.full.min.js"></script>
+<script src="hub-db.js?v=2"></script>
+<style>
+tr.depois td{opacity:.5}
+td.small{font-size:.74rem;line-height:1.3}
+#confBody td.aberto{min-width:300px;max-width:420px;white-space:normal;text-align:left}
+#confBody td.wrap{max-width:220px}
+table.pv{font-size:.78rem}
+table.pv th,table.pv td{padding:4px 5px;text-align:right;white-space:nowrap}
+table.pv th:first-child,table.pv td:first-child{text-align:left;white-space:normal;min-width:170px}
+table.pv td:nth-child(2){text-align:left;color:var(--aud-gray-500);font-size:.72rem}
+table.pv input.cel{width:96px;min-width:0;padding:3px 5px;font-size:.78rem;text-align:right}
+table.pv .base{background:#FFF8E6}
+table.pv thead th.base{background:var(--aud-secondary);color:var(--aud-primary)}
+table.pv tr.tot td{font-weight:700;border-top:1px solid #c5cbd3}
+table.pv tr.dif td{font-weight:600}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Tributos a pagar — Controle x Contabilidade</h1>
+  <p>NHD Foods · Controle dos tributos a recolher (aba “Trib Pagar” do Book): provisões e pagamentos por conta, com o saldo na data-base conferido com o balancete</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Tributos a pagar</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="lanc">3 · Lançamentos</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="contas">4 · Contas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+
+<div class="box">
+  <div class="upl">
+    <h3>🧾 Controle de tributos a pagar</h3>
+    <div class="muted small">Importe o Book NHD (.xlsx, aba “Trib Pagar”) <b>ou</b> lance as provisões e os pagamentos aqui (etapa 3). Provisão entra negativa e pagamento/compensação positivo, como na planilha; o saldo de cada conta é a soma dos lançamentos até a data-base. Os saldos contábeis vêm do balancete importado no Book de conciliação.</div>
+    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inTrib').click()">Importar Book (aba Trib Pagar)</button>
+      <button type="button" onclick="exportJSON()">Exportar dados (JSON)</button> <button type="button" onclick="document.getElementById('inJson').click()">Importar dados (JSON)</button></div>
+    <input type="file" id="inTrib" accept=".xlsx,.xls" onchange="importarBook(this.files[0]);this.value=''">
+    <input type="file" id="inJson" accept="application/json" onchange="importJSON(this.files[0]);this.value=''">
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <label>Data-base:<select id="selMes" onchange="mesAtual=this.value;render()"></select></label>
+    <span class="muted small" id="stTopo"></span>
+  </div>
+  <div id="msgs"></div>
+</div>
+
+<section class="panel" id="tab-processo">
+  <div class="box"><h2>Objetivo</h2><p>Garantir todo mês que o saldo de cada conta de <b>tributos a recolher</b> do balancete seja igual ao controle: provisões do mês menos pagamentos e compensações, com os tributos em aberto identificados (vencimento) na data-base.</p></div>
+  <div class="box"><h2>Passo a passo</h2><ol class="steps">
+    <li>Importar o balancete do mês no <b>Book de conciliação</b>.</li>
+    <li>Na etapa <b>3 · Lançamentos</b>, lançar as <b>provisões do mês</b> (apuração de cada tributo) e os <b>pagamentos/compensações</b> feitos — ou importar o Book NHD (aba “Trib Pagar”).</li>
+    <li>Escolher a <b>data-base</b> = último dia do mês que está sendo fechado.</li>
+    <li>Na etapa <b>2 · Conferência</b>, cada conta mostra o saldo do controle, o saldo contábil e a diferença. Também confere as provisões do mês com os créditos e os pagamentos com os débitos da conta.</li>
+    <li>Os saldos do controle vão sozinhos para o <b>Book de conciliação</b> como suporte das contas.</li>
+  </ol></div>
+  <div class="box"><h2>Regras</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
+    <tr><td>R1</td><td>Mapeamento igual ao Book NHD: cada bloco da aba “Trib Pagar” é uma conta (DCTFWeb 2.1.15.1011, PIS 2.1.15.1002, COFINS 2.1.15.1003, CSLL 2.1.15.1008, IRPJ 2.1.15.1009, ICMS 2.1.15.2001 e ISS 2.1.15.3001). Outras contas podem ser incluídas na etapa 4.</td></tr>
+    <tr><td>R2</td><td>Saldo do controle = soma dos lançamentos com data até a data-base (provisão negativa, pagamento positivo), igual à fórmula “Saldo findo dia” da planilha.</td></tr>
+    <tr><td>R3</td><td>Diferença até R$ 0,01 é tratada como arredondamento.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+  <div class="kpis" id="kpis"></div>
+  <div class="box">
+    <h2>Conferência por conta <span class="muted small" id="tituloConf"></span></h2>
+    <div class="tscroll"><table class="bk">
+      <thead><tr><th>Conta</th><th class="wrap">Tributo</th><th>Saldo controle</th><th>Saldo contábil</th><th>Diferença</th><th>Status</th><th>Provisões do mês</th><th>Créditos no mês</th><th>Pagamentos do mês</th><th>Débitos no mês</th><th class="wrap">Em aberto na data-base</th></tr></thead>
+      <tbody id="confBody"></tbody><tfoot id="confFoot"></tfoot>
+    </table></div>
+    <div id="outrasContas"></div>
+    <div class="muted small" id="confInfo" style="margin-top:8px"></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-lanc">
+  <div class="box bensMain">
+    <h2>Lançamentos <span class="muted small" id="lancTitulo"></span></h2>
+    <div class="toolbar" style="margin-bottom:10px">
+      <button type="button" class="primary" onclick="novoLanc('prov')">+ Provisão</button>
+      <button type="button" onclick="novoLanc('pgto')">+ Pagamento / compensação</button>
+      <button type="button" onclick="novoLanc('ajuste')">+ Ajuste</button>
+      <span class="muted small">Provisão entra negativa; pagamento e compensação positivos. O status (ex.: “venc. 10/08”, “compensado”) fica como na planilha.</span>
+    </div>
+    <div id="formLanc"></div>
+    <div class="bensTopo" id="bensTopo"><div class="filters">
+      <label>Conta<select id="fConta" onchange="renderLanc()"></select></label>
+      <label>Período<select id="fPer" onchange="renderLanc()"><option value="">Todos</option><option value="mes">Só do mês da data-base</option><option value="ate">Até a data-base</option><option value="manual">Só lançados aqui</option></select></label>
+      <label>Buscar<input type="text" id="fBusca" oninput="renderLanc()" placeholder="histórico, status"></label>
+    </div></div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Saldo acumulado</th><th class="wrap">Status</th><th></th></tr></thead>
+      <tbody id="lancBody"></tbody><tfoot id="lancFoot"></tfoot>
+    </table></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-contas">
+  <div class="box">
+    <h2>Contas</h2>
+    <div class="muted small" style="margin-bottom:10px">Contas de tributos controladas aqui (padrão igual ao Book NHD). Vale para todos os meses.</div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Conta</th><th>Tributo</th><th>Lançamentos</th><th></th></tr></thead>
+      <tbody id="ctBody"></tbody>
+    </table></div>
+    <div class="toolbar" style="margin-top:10px"><button type="button" onclick="novaConta()">+ Nova conta</button></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ===================== utilitários =====================
+const $ = id => document.getElementById(id);
+const LS = 'aud-trib-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Tributos a pagar';
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : (v + 0 === 0 ? 0 : v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const mesLbl = m => m ? MES[+m.slice(5, 7) - 1] + '/' + m.slice(0, 4) : '';
+const fimMes = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 0); return y + '-' + String(mm).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+const uid = () => 't' + Math.random().toString(36).slice(2, 10);
+function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 8000); }
+function num(v){
+  if (v === null || v === undefined || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim().replace(/\s|R\$/g, '');
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  return parseFloat(s);
+}
+function isoData(v){
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  const s = String(v ?? '').trim(); let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : '';
+}
+const ok = d => Math.abs(d) < 0.015;
+const difTd = d => isNaN(d) ? '<td>—</td>' : `<td class="${ok(d) ? 'dok' : 'dbad'}">${ok(d) ? 'OK' : fmt(d)}</td>`;
+
+// ===================== dados =====================
+// contas = [{ conta, nome, itens:[{ id, data, desc, valor, status, origem }] }]
+const PADRAO = [['2.1.15.1011', 'Tributos federais unificados (DCTFWeb)'], ['2.1.15.1002', 'PIS a recolher'], ['2.1.15.1003', 'COFINS a recolher'],
+  ['2.1.15.1008', 'CSLL a recolher'], ['2.1.15.1009', 'IRPJ a recolher'], ['2.1.15.2001', 'ICMS a recolher'], ['2.1.15.3001', 'ISS retido a recolher']];
+let dados = lsGet(LS, null);
+if (!dados || !Array.isArray(dados.contas)) dados = { contas: PADRAO.map(([conta, nome]) => ({ conta, nome, itens: [] })) };
+let mesAtual = '', balMes = null, mesesBal = [];
+const contaDe = c => dados.contas.find(x => x.conta === c);
+function salvar(){ if (!lsSet(LS, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err'); }
+const saldoAte = (ct, ate) => r2(ct.itens.reduce((a, i) => a + (i.data <= ate ? i.valor : 0), 0));
+
+// ===================== importação do Book (aba "Trib Pagar") =====================
+function linhas(wb, sn){ return XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null }); }
+function lerTribPagar(wb){
+  const sn = wb.SheetNames.find(s => /TRIB\s*PAGAR/.test(norm(s)));
+  if (!sn) throw new Error('não encontrei a aba “Trib Pagar”');
+  const R = linhas(wb, sn), blocos = [];
+  let atual = null;
+  R.forEach(r => {
+    if (!r) return;
+    const b = norm(r[1]), c = String(r[2] ?? '').trim();
+    if (b === 'DATA' && /VALOR/.test(norm(r[3]))){
+      const m = c.match(/(\d\.\d\.\d{2}\.\d{4})\s*-\s*\d*\s*-?\s*(.*)$/);
+      atual = { conta: m ? m[1] : '', nome: m ? m[2].trim() : c, itens: [] }; blocos.push(atual); return;
+    }
+    if (!atual) return;
+    if (/SALDO FINDO/.test(norm(c))){ atual = null; return; }
+    const d = isoData(r[1]), v = num(r[3]);
+    if (!d || isNaN(v) || !v) return;
+    atual.itens.push({ id: uid(), data: d, desc: c, valor: r2(v), status: String(r[4] ?? '').trim(), origem: 'planilha' });
+  });
+  return blocos.filter(b => b.conta);
+}
+async function importarBook(f){
+  if (!f) return;
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const blocos = lerTribPagar(wb);
+    if (!blocos.length) throw new Error('nenhum bloco de conta encontrado na aba “Trib Pagar”');
+    const manuais = blocos.reduce((a, b) => a + ((contaDe(b.conta) || { itens: [] }).itens.filter(i => i.origem === 'manual').length), 0);
+    if (manuais && !confirm('Há ' + manuais + ' lançamento(s) feitos aqui nessas contas. Substituir pelos lançamentos da planilha?')) return;
+    let n = 0;
+    blocos.forEach(b => {
+      let ct = contaDe(b.conta);
+      if (!ct){ ct = { conta: b.conta, nome: b.nome, itens: [] }; dados.contas.push(ct); }
+      ct.itens = b.itens.sort((x, y) => x.data.localeCompare(y.data)); n += b.itens.length;
+    });
+    salvar();
+    const estranhas = blocos.reduce((a, b) => a.concat(b.itens.filter(i => i.data < '2020-01-01').map(i => b.conta + ' ' + br(i.data) + ' ' + i.desc)), []);
+    msg(`“${esc(f.name)}”: ${blocos.length} contas e ${n} lançamentos importados da aba Trib Pagar.`, 'ok');
+    if (estranhas.length) msg('Datas que parecem erradas na planilha (entram no saldo porque são anteriores à data-base): ' + estranhas.map(esc).join(' · '), 'warn');
+    await render();
+  } catch(e){ msg('Erro ao importar “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+}
+function exportJSON(){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 1)], { type: 'application/json' }));
+  a.download = 'tributos-a-pagar.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function importJSON(f){
+  if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!d || !Array.isArray(d.contas)) throw new Error('arquivo não é do controle de tributos');
+    if (!confirm('Substituir os dados de tributos deste navegador pelos do arquivo?')) return; dados = d; salvar(); await render(); msg('Dados importados.', 'ok');
+  } catch(e){ msg('Erro ao importar o JSON: ' + esc(e.message), 'err'); }
+}
+
+// ===================== balancete (do Book de conciliação) =====================
+async function carregarMeses(){
+  mesesBal = [];
+  try { if (window.HubDB) mesesBal = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort(); } catch(e){}
+  const deLanc = [...new Set(dados.contas.flatMap(c => c.itens.map(i => i.data.slice(0, 7))))].filter(m => m >= '2020-01');
+  const todos = [...new Set(mesesBal.concat(deLanc))].sort();
+  if (!mesAtual || !todos.includes(mesAtual)) mesAtual = mesesBal[mesesBal.length - 1] || todos[todos.length - 1] || new Date().toISOString().slice(0, 7);
+  if (!todos.includes(mesAtual)) todos.push(mesAtual);
+  $('selMes').innerHTML = todos.slice().reverse().map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${br(fimMes(m))}${mesesBal.includes(m) ? '' : ' (sem balancete)'}</option>`).join('');
+}
+async function carregarBal(m){ balMes = null; try { if (window.HubDB) balMes = await HubDB.getMeta('balancete:' + m); } catch(e){} }
+
+// ===================== conferência =====================
+async function render(){
+  await carregarMeses(); await carregarBal(mesAtual);
+  const fim = fimMes(mesAtual), ini = mesAtual + '-01', cb = c => balMes && balMes.contas ? balMes.contas[c] : null;
+  const sup = {}, T = { ctl: 0, cont: 0 }; let nOk = 0, nDiv = 0;
+  $('confBody').innerHTML = dados.contas.map(ct => {
+    const s = saldoAte(ct, fim), b = cb(ct.conta) || (balMes && balMes.contas ? { sf: 0, d: 0, c: 0 } : null), cont = b ? r2(b.sf) : NaN, dif = isNaN(cont) ? NaN : r2(cont - s);
+    const doMes = ct.itens.filter(i => i.data >= ini && i.data <= fim);
+    const prov = r2(-doMes.filter(i => i.valor < 0).reduce((a, i) => a + i.valor, 0)), pg = r2(doMes.filter(i => i.valor > 0).reduce((a, i) => a + i.valor, 0));
+    const tem = ct.itens.some(i => i.data <= fim);
+    T.ctl += s; if (!isNaN(cont)) T.cont += cont;
+    if (!isNaN(dif) && tem) (ok(dif) ? nOk++ : nDiv++);
+    if (tem) sup[ct.conta] = { fonte: FONTE, saldo: s, data: fim, detalhe: 'Controle de tributos · ' + ct.nome + ' · saldo até ' + br(fim) };
+    // em aberto: provisões ainda sem pagamento, contando do fim para trás até cobrir o saldo
+    let falta = -s; const abertas = [];
+    ct.itens.filter(i => i.data <= fim && i.valor < 0).slice().reverse().forEach(i => { if (falta > 0.005){ abertas.push(i); falta -= -i.valor; } });
+    const aberto = abertas.length ? abertas.slice(0, 6).map(i => esc(i.desc) + ' ' + fmt(-i.valor) + (i.status ? ' <span class="muted">(' + esc(i.status) + ')</span>' : '')).join(' · ') + (abertas.length > 6 ? ' · e mais ' + (abertas.length - 6) : '') : '';
+    const st = !tem ? '<span class="pill cinza">Sem controle</span>' : isNaN(dif) ? '<span class="pill warn">Sem balancete</span>' : ok(dif) ? '<span class="pill ok">Conciliada</span>' : '<span class="pill bad">Divergente</span>';
+    return `<tr><td><a href="#" onclick="verConta('${ct.conta}');return false">${esc(ct.conta)}</a></td><td class="wrap">${esc(ct.nome)}</td><td>${fmt(s)}</td><td>${fmt(cont)}</td>${difTd(dif)}<td>${st}</td>
+      <td>${fmt(prov)}</td><td>${b ? fmt(b.c) : '—'}</td><td>${fmt(pg)}</td><td>${b ? fmt(b.d) : '—'}</td><td class="small aberto">${aberto}</td></tr>`;
+  }).join('');
+  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL</td><td>${fmt(r2(T.ctl))}</td><td>${balMes ? fmt(r2(T.cont)) : '—'}</td>${balMes ? difTd(r2(T.cont - T.ctl)) : '<td>—</td>'}<td colspan="6"></td></tr>`;
+  const mapeadas = new Set(dados.contas.map(c => c.conta)), outras = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^2\.1\.15\.\d{4}$/.test(c) && !mapeadas.has(c) && Math.abs(balMes.contas[c].sf) >= 0.005) : [];
+  $('outrasContas').innerHTML = outras.length ? `<div class="msg" style="margin-top:10px"><b>Outras contas de tributos com saldo</b> (conciliadas em outros painéis ou ainda sem controle aqui — inclua na etapa 4 se for o caso): ${outras.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
+  $('tituloConf').textContent = '· data-base ' + br(fim) + (balMes ? '' : ' · sem balancete deste mês no Book de conciliação');
+  $('stTopo').textContent = dados.contas.reduce((a, c) => a + c.itens.length, 0) + ' lançamentos em ' + dados.contas.length + ' contas';
+  $('confInfo').textContent = balMes ? 'Os saldos do controle foram enviados ao Book de conciliação como suporte automático das contas.' : 'Importe o balancete de ' + mesLbl(mesAtual) + ' no Book de conciliação para comparar.';
+  $('kpis').innerHTML = [['Saldo do controle', fmt(r2(T.ctl))], ['Saldo contábil', balMes ? fmt(r2(T.cont)) : '—'], ['Contas conferidas', nOk + ' OK · ' + nDiv + ' com diferença']]
+    .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE) delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
+  renderContas(); renderLanc();
+}
+function verConta(c){ $('fConta').value = c; window.abrirEtapa && abrirEtapa('lanc'); renderLanc(); }
+
+// ===================== lançamentos =====================
+let editando = null;
+const TIPOS = { prov: 'Provisão', pgto: 'Pagamento / compensação', ajuste: 'Ajuste' };
+function novoLanc(tipo){
+  const c = $('fConta').value || (dados.contas[0] || {}).conta;
+  if (!c){ alert('Cadastre uma conta na etapa 4.'); return; }
+  editando = { id: '', conta: c, tipo, data: tipo === 'prov' ? fimMes(mesAtual) : '', desc: tipo === 'prov' ? 'PROVISÃO ' : tipo === 'pgto' ? 'PGTO' : '', valor: '', status: '' };
+  formLanc();
+}
+function editarLanc(conta, id){ const ct = contaDe(conta), i = ct && ct.itens.find(x => x.id === id); if (!i) return;
+  editando = Object.assign({}, i, { conta, tipo: 'ajuste', valor: i.valor }); formLanc(); }
+function formLanc(){
+  const e = editando; if (!e){ $('formLanc').innerHTML = ''; return; }
+  const i = (id, lbl, val, tipo, extra) => `<label>${lbl}<input type="${tipo || 'text'}" id="fl_${id}" value="${esc(val ?? '')}" ${extra || ''}></label>`;
+  const sinal = e.tipo === 'ajuste';
+  $('formLanc').innerHTML = `<div class="box" style="background:#F7F8FA;margin:0 0 12px">
+    <h3 style="margin-top:0">${e.id ? 'Editar lançamento' : 'Lançar ' + TIPOS[e.tipo].toLowerCase()}</h3>
+    <div class="filters">
+      <label>Conta<select id="fl_conta">${dados.contas.map(c => `<option value="${esc(c.conta)}" ${c.conta === e.conta ? 'selected' : ''}>${esc(c.conta)} · ${esc(c.nome)}</option>`).join('')}</select></label>
+      ${i('data', 'Data', e.data, 'date')}
+      ${i('desc', 'Histórico', e.desc, 'text', 'style="min-width:260px"')}
+      ${i('valor', sinal ? 'Valor (provisão negativa, pagamento positivo)' : 'Valor', e.valor === '' ? '' : fmt(sinal ? +e.valor : Math.abs(+e.valor)), 'text', 'inputmode="decimal" placeholder="0,00"')}
+      ${i('status', 'Status', e.status, 'text', 'placeholder="ex.: venc. 10/09, compensado"')}
+    </div>
+    <div class="toolbar"><button type="button" class="primary" onclick="gravarLanc()">Gravar</button><button type="button" onclick="editando=null;formLanc()">Cancelar</button>
+      <span class="muted small">${e.tipo === 'prov' ? 'A provisão entra com valor negativo (aumenta o tributo a recolher).' : e.tipo === 'pgto' ? 'O pagamento ou a compensação entra com valor positivo (baixa o tributo).' : 'O valor fica com o sinal digitado.'}</span></div>
+  </div>`;
+  $('fl_desc').focus();
+}
+function gravarLanc(){
+  const e = editando, g = id => ($('fl_' + id) || {}).value;
+  const data = g('data'), v = num(g('valor'));
+  if (!data){ alert('Informe a data.'); return; }
+  if (isNaN(v) || !v){ alert('Informe o valor.'); return; }
+  const valor = r2(e.tipo === 'prov' ? -Math.abs(v) : e.tipo === 'pgto' ? Math.abs(v) : v);
+  const it = { id: e.id || uid(), data, desc: g('desc').trim(), valor, status: g('status').trim(), origem: e.origem === 'planilha' ? 'planilha' : 'manual' };
+  dados.contas.forEach(c => { c.itens = c.itens.filter(x => x.id !== it.id); });
+  const ct = contaDe(g('conta')); ct.itens.push(it); ct.itens.sort((a, b) => a.data.localeCompare(b.data));
+  salvar(); editando = null; formLanc(); $('fConta').value = ct.conta; render();
+  msg((e.id ? 'Lançamento atualizado' : TIPOS[e.tipo] + ' lançada') + ' em ' + esc(ct.conta) + '.', 'ok');
+}
+function excluirLanc(conta, id){
+  const ct = contaDe(conta), i = ct && ct.itens.find(x => x.id === id); if (!i) return;
+  if (!confirm('Excluir “' + (i.desc || '') + '” (' + fmt(i.valor) + ') de ' + conta + '?')) return;
+  ct.itens = ct.itens.filter(x => x.id !== id); salvar(); render();
+}
+function renderLanc(){
+  const sel = $('fConta'), atual = sel.value || (dados.contas[0] || {}).conta || '';
+  sel.innerHTML = dados.contas.map(c => `<option value="${esc(c.conta)}" ${c.conta === atual ? 'selected' : ''}>${esc(c.conta)} · ${esc(c.nome)}</option>`).join('');
+  const ct = contaDe(sel.value); if (!ct){ $('lancBody').innerHTML = '<tr><td colspan="6" class="muted">Nenhuma conta.</td></tr>'; $('lancFoot').innerHTML = ''; return; }
+  const fim = fimMes(mesAtual), ini = mesAtual + '-01', fp = $('fPer').value, fb = norm($('fBusca').value);
+  $('lancTitulo').textContent = '· ' + ct.conta + ' · ' + ct.nome + ' · saldo em ' + br(fim) + ': ' + fmt(saldoAte(ct, fim));
+  let acc = 0;
+  const L = ct.itens.map(i => { acc = r2(acc + i.valor); return Object.assign({ acc }, i); })
+    .filter(i => (!fp || (fp === 'mes' ? i.data >= ini && i.data <= fim : fp === 'ate' ? i.data <= fim : i.origem === 'manual')) && (!fb || norm(i.desc + ' ' + i.status).indexOf(fb) >= 0));
+  $('lancBody').innerHTML = L.map(i => `<tr class="${i.data > fim ? 'depois' : ''}"><td>${br(i.data)}</td><td class="wrap">${esc(i.desc)}${i.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : ''}</td>
+    <td class="${i.valor < 0 ? 'dbad' : 'dok'}">${fmt(i.valor)}</td><td>${fmt(i.acc)}</td><td class="wrap">${esc(i.status)}</td>
+    <td style="white-space:nowrap"><button type="button" onclick="editarLanc('${esc(ct.conta)}','${i.id}')">Editar</button> <button type="button" class="danger" onclick="excluirLanc('${esc(ct.conta)}','${i.id}')">Excluir</button></td></tr>`).join('')
+    || '<tr><td colspan="6" class="muted">Nenhum lançamento com esses filtros.</td></tr>';
+  const sv = r2(L.reduce((a, i) => a + i.valor, 0));
+  $('lancFoot').innerHTML = `<tr><td colspan="2">TOTAL (${L.length})</td><td>${fmt(sv)}</td><td colspan="3"></td></tr>`;
+}
+
+// ===================== contas =====================
+function renderContas(){
+  $('ctBody').innerHTML = dados.contas.map((c, i) => `<tr><td><input type="text" value="${esc(c.conta)}" onchange="setConta(${i},'conta',this.value)"></td>
+    <td><input type="text" value="${esc(c.nome)}" style="min-width:260px" onchange="setConta(${i},'nome',this.value)"></td><td>${c.itens.length}</td>
+    <td><button type="button" class="danger" onclick="tirarConta(${i})">Remover</button></td></tr>`).join('');
+}
+function setConta(i, k, v){ const c = dados.contas[i]; if (!c) return; v = v.trim(); if (!v) return; if (k === 'conta' && contaDe(v)){ alert('Essa conta já existe.'); renderContas(); return; } c[k] = v; salvar(); render(); }
+function novaConta(){ const c = (prompt('Conta contábil (ex.: 2.1.15.1006)') || '').trim(); if (!/^\d\.\d\.\d{2}\.\d{4}$/.test(c) || contaDe(c)) return;
+  const b = balMes && balMes.contas && balMes.contas[c]; const n = (prompt('Nome do tributo', b ? b.desc : '') || '').trim() || c;
+  dados.contas.push({ conta: c, nome: n, itens: [] }); salvar(); render(); }
+function tirarConta(i){ const c = dados.contas[i]; if (!c) return;
+  if (!confirm('Remover a conta ' + c.conta + (c.itens.length ? ' e os ' + c.itens.length + ' lançamentos dela' : '') + '?')) return;
+  dados.contas.splice(i, 1); salvar(); render(); }
+
+window.focoConta = function(c){ if (c && contaDe(c)) verConta(c); else window.abrirEtapa && abrirEtapa('conferencia'); };
+salvar();
+render();
+</script>
+
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+<script>
+/* mede a barra de abas e os filtros dos bens para a parte congelada encaixar certinho */
+(function(){
+  function medir(){
+    var n=document.querySelector('nav.tabs'), t=document.getElementById('bensTopo'), r=document.documentElement.style;
+    r.setProperty('--navH',(n?n.offsetHeight:0)+'px');
+    if(t&&t.offsetHeight)r.setProperty('--topoH',t.offsetHeight+'px');
+  }
+  window.addEventListener('resize',medir); window.addEventListener('load',medir);
+  if(window.ResizeObserver){var ro=new ResizeObserver(medir);['bensTopo'].forEach(function(id){var e=document.getElementById(id);if(e)ro.observe(e);});var n=document.querySelector('nav.tabs');if(n)ro.observe(n);}
+  medir();
+})();
+</script>
+</body>
+</html>

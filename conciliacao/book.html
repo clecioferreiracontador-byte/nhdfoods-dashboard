@@ -637,10 +637,11 @@ async function renderFechamento(){
 
 // ===================== conta → painel de conciliação =====================
 // Clicar na conta abre o painel que concilia aquela conta (dentro do dash; fora dele, em nova aba).
-const PAINEL_FONTE = { 'Conciliação bancária': 'bancos', 'Consórcios': 'consorcios', 'Parcelamentos federais': 'parcelamentos-federais', 'Patrimonial': 'imobilizado', 'Imobilizado': 'imobilizado' };
+const PAINEL_FONTE = { 'Conciliação bancária': 'bancos', 'Consórcios': 'consorcios', 'Parcelamentos federais': 'parcelamentos-federais', 'Patrimonial': 'imobilizado', 'Imobilizado': 'imobilizado', 'Tributos a pagar': 'tributos', 'Provisões Trab.': 'provisoes' };
 const PAINEL_REGRA = [[/^1\.1\.01\.[23]/, 'bancos'], [/^1\.2\.02\.1002$|^2\.[12]\.02\.1003$/, 'consorcios'], [/^2\.1\.15\.101[23]$|^2\.2\.03\.100[24]$/, 'parcelamentos-federais'],
-  [/^2\.2\.03\.100[35]$/, 'parcelamentos-estaduais'], [/^1\.2\.(05|10)\./, 'imobilizado']];
-const NOME_PAINEL = { bancos: 'Conciliação bancária', consorcios: 'Consórcios', 'parcelamentos-federais': 'Parcelamentos federais', 'parcelamentos-estaduais': 'Parcelamentos estaduais', imobilizado: 'Patrimonial' };
+  [/^2\.2\.03\.100[35]$/, 'parcelamentos-estaduais'], [/^1\.2\.(05|10)\./, 'imobilizado'],
+  [/^2\.1\.15\.(100[2389]|1011|2001|3001)$/, 'tributos'], [/^2\.1\.10\.2/, 'provisoes']];
+const NOME_PAINEL = { bancos: 'Conciliação bancária', consorcios: 'Consórcios', 'parcelamentos-federais': 'Parcelamentos federais', 'parcelamentos-estaduais': 'Parcelamentos estaduais', imobilizado: 'Patrimonial', tributos: 'Tributos a pagar', provisoes: 'Provisões Trab.' };
 function painelDaConta(c){ const s = suportes()[c]; if (s && PAINEL_FONTE[s.fonte]) return PAINEL_FONTE[s.fonte]; const r = PAINEL_REGRA.find(x => x[0].test(c)); return r ? r[1] : ''; }
 function abrirPainelConta(c){
   const p = painelDaConta(c); if (!p) return;

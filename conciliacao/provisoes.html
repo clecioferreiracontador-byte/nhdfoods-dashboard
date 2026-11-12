@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Provisões Trab. Audicon</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Tema Audicon (mesmo padrão da Conferência de Faturamento): azul #122A4F, dourado #CD9A56, Red Hat Display */
+:root{
+  --aud-primary:#122A4F; --aud-primary-dark:#0C182B; --aud-secondary:#CD9A56; --aud-secondary-hover:#B5833F;
+  --aud-text:#231F20; --aud-white:#FFFFFF; --aud-gray-100:#F1F1F1; --aud-gray-500:#69727D; --aud-gray-700:#33373D;
+  --aud-gold-soft:rgba(205,154,86,.55);
+  --aud-success:#04751A; --aud-warning:#F5AD00; --aud-info:#46CECD; --aud-danger:#FF0016; --aud-danger-text:#B0000F;
+  --aud-radius:.5rem;
+  --font:"Red Hat Display","Segoe UI",Calibri,Arial,sans-serif;
+  /* nomes usados pelo código dos painéis */
+  --page-bg:var(--aud-gray-100); --panel:#fff; --panel-2:#F7F8FA; --border:#e1e4e8;
+  --text:var(--aud-text); --muted:var(--aud-gray-500); --accent:var(--aud-primary); --accent-2:var(--aud-secondary);
+  --good:var(--aud-success); --warn:#8A5A00; --bad:var(--aud-danger-text); --bad-border:#f5b5bb;
+  --btn-bg:#fff; --textarea-bg:#fff; --textarea-border:#c5cbd3;
+  --results-bg:#F7F8FA; --results-border:#e1e4e8; --item-bg:#fff; --item-border:#e1e4e8; --badge-bg:var(--aud-gray-100);
+  --radius:var(--aud-radius);
+}
+*{box-sizing:border-box}
+html{font-size:16px}
+body{margin:0;background:var(--aud-gray-100);color:var(--aud-text);font-family:var(--font);font-weight:400;line-height:1.5}
+h1,h2,h3,h4{font-weight:600;color:var(--aud-primary);margin:0}
+.wrap{width:100%;margin:0 auto;padding:0 16px}
+@media (min-width:576px){.wrap{max-width:540px}}
+@media (min-width:768px){.wrap{max-width:720px}}
+@media (min-width:992px){.wrap{max-width:960px}}
+@media (min-width:1200px){.wrap{max-width:1140px}}
+@media (min-width:1400px){.wrap{max-width:1320px}}
+/* cabeçalho */
+header.top{background:var(--aud-primary);color:var(--aud-white);padding:10px 0 9px;border-bottom:3px solid var(--aud-secondary)}
+header.top .eyebrow{color:var(--aud-secondary);font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:1px}
+header.top h1{color:var(--aud-white);font-size:clamp(1.05rem,.95rem + .45vw,1.3rem);line-height:1.25}
+header.top p{margin:2px 0 0;font-size:.78rem;color:#dbe3ef}
+/* menu de etapas (hambúrguer abaixo de 992px) */
+nav.tabs{background:var(--aud-primary-dark);position:sticky;top:0;z-index:10;box-shadow:0 2px 6px rgba(5,11,20,.25)}
+nav.tabs .wrap{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between}
+nav.tabs .brand{color:var(--aud-white);font-weight:600;font-size:.875rem;padding:12px 0}
+nav.tabs .toggler{display:inline-flex;border:1px solid var(--aud-gold-soft);background:transparent;color:var(--aud-white);border-radius:var(--aud-radius);padding:6px 10px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer}
+nav.tabs .menu{display:none;width:100%;flex-direction:column;padding-bottom:8px}
+nav.tabs .menu.open{display:flex}
+nav.tabs .menu button{border:0;border-left:3px solid transparent;background:transparent;color:var(--aud-white);padding:10px 12px;font:inherit;font-size:.875rem;font-weight:600;cursor:pointer;text-align:left;border-radius:0}
+nav.tabs .menu button:hover{color:var(--aud-secondary);filter:none}
+nav.tabs .menu button[aria-selected="true"]{color:var(--aud-secondary);border-left-color:var(--aud-secondary)}
+@media (min-width:992px){
+  nav.tabs .toggler{display:none}
+  nav.tabs .menu{display:flex;flex-direction:row;width:auto;padding-bottom:0;gap:4px}
+  nav.tabs .menu button{border-left:0;border-bottom:3px solid transparent;padding:14px 16px;text-align:center}
+  nav.tabs .menu button[aria-selected="true"]{border-bottom-color:var(--aud-secondary)}
+}
+main{padding-top:24px;padding-bottom:40px}
+@media (min-width:992px){main{padding-top:32px;padding-bottom:56px}}
+section.panel{display:none}
+section.panel.active{display:block}
+/* cartões: blocos da página (.box, .summary) e cartões de cada cota/parcelamento (.card) */
+.box,.summary{background:var(--aud-white);border:0;border-radius:var(--aud-radius);padding:20px;margin-bottom:20px;box-shadow:0 .125rem .5rem rgba(18,42,79,.12);overflow-x:auto}
+.box h2,.summary h2{margin:0 0 12px;font-size:clamp(1.15rem,1rem + .6vw,1.4rem);color:var(--aud-primary);padding-bottom:8px;border-bottom:2px solid var(--aud-gold-soft)}
+.box h3{margin:14px 0 6px;font-size:1rem;color:var(--aud-primary)}
+.summary h2 .tag{font-size:.8rem!important;font-weight:500!important;color:var(--aud-gray-500)!important;margin-left:6px}
+.summary h2 select{font-size:.85rem!important}
+.muted{color:var(--aud-gray-500)}
+.small{font-size:.85rem}
+/* barra de ações */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.toolbar label{display:flex;align-items:center;gap:6px;margin:0;font-size:.85rem!important;font-weight:600;color:var(--aud-gray-700)!important}
+.toolbar select{width:auto!important}
+.pdf-msg{font-size:.85rem;margin-left:4px}
+/* botões: principal dourado com texto azul; demais brancos com borda azul */
+button{cursor:pointer;border:1px solid var(--aud-primary);background:var(--aud-white);color:var(--aud-primary);padding:8px 14px;border-radius:var(--aud-radius);font:inherit;font-size:.8125rem;font-weight:600;line-height:1.3}
+button:hover{background:var(--aud-primary);color:var(--aud-white)}
+button.primary{background:var(--aud-secondary);border-color:var(--aud-secondary);color:var(--aud-primary)}
+button.primary:hover{background:var(--aud-secondary-hover);border-color:var(--aud-secondary-hover);color:var(--aud-primary)}
+button.ghost{border-color:#c5cbd3;color:var(--aud-gray-700)}
+button.ghost:hover{background:var(--aud-gray-100);color:var(--aud-primary)}
+button.danger{color:var(--aud-danger-text);border-color:var(--bad-border);background:var(--aud-white)}
+button.danger:hover{background:#FFE3E6;color:var(--aud-danger-text)}
+:focus-visible{outline:3px solid var(--aud-secondary);outline-offset:2px}
+input[type=file]{display:none}
+/* tabelas: cabeçalho azul, total com linha dourada */
+table{border-collapse:collapse;width:100%;font-size:.875rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #e1e4e8;white-space:nowrap;font-variant-numeric:tabular-nums}
+th:first-child,td:first-child,td.left,th.left{text-align:left}
+thead th{background:var(--aud-primary);color:var(--aud-white);font-weight:600;font-size:.8rem}
+tfoot td{font-weight:700;background:var(--aud-gray-100);border-top:2px solid var(--aud-secondary)}
+tbody tr:hover td{background:#fbf3e8}
+/* cartão de cada cota / parcelamento */
+.card{background:var(--aud-white);border:0;border-radius:var(--aud-radius);margin-bottom:16px;overflow:hidden;box-shadow:0 .125rem .5rem rgba(18,42,79,.12)}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;background:var(--aud-white);padding:12px 18px;border-left:5px solid var(--aud-secondary);border-bottom:1px solid #e1e4e8;cursor:pointer}
+.card-head .title{font-weight:600;font-size:1rem;color:var(--aud-primary)}
+.card-head .title .tag{font-weight:500;color:var(--aud-gray-500);font-size:.8rem;margin-left:8px}
+.card-body{padding:18px;display:none}
+.card.open .card-body{display:block}
+.card-head .chev{transition:transform .15s;color:var(--aud-secondary)}
+.card.open .card-head .chev{transform:rotate(90deg)}
+.paste-box{margin-bottom:14px}
+.paste-box textarea{width:100%;min-height:90px;font-family:Consolas,monospace;font-size:.75rem;border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:10px;resize:vertical;background:#fff;color:var(--aud-text)}
+.paste-actions{display:flex;gap:8px;margin-top:6px;align-items:center;flex-wrap:wrap}
+.parse-msg{font-size:.85rem;color:var(--aud-success)}
+.parse-msg.err{color:var(--aud-danger-text)}
+fieldset{border:1px solid #e1e4e8;border-radius:var(--aud-radius);margin:0 0 14px;padding:12px 14px}
+legend{font-size:.8rem;font-weight:600;color:var(--aud-primary);padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px 14px}
+label{display:block;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);margin-bottom:3px}
+input[type=text],input[type=date],input[type=number],select{width:100%;font:inherit;font-size:.9rem;padding:7px 9px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);background:var(--aud-white);color:var(--aud-text)}
+select:focus,input:focus{outline:none;border-color:var(--aud-secondary)}
+input[readonly]{background:#F7F8FA}
+/* resultados (indicadores no estilo KPI) */
+.results{background:#F7F8FA;border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:14px 16px}
+.results h3{font-size:.95rem;margin:0 0 10px;color:var(--aud-primary)}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px 14px}
+.rgrid .item{background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary);border-radius:var(--aud-radius);padding:8px 10px}
+.rgrid .item .lbl{font-size:.75rem;color:var(--aud-gray-500)}
+.rgrid .item .val{font-size:1rem;font-weight:700;margin-top:2px;color:var(--aud-text)}
+.rgrid .item.hi{border-top-color:var(--aud-primary)}
+.rgrid .item.hi .val{color:var(--aud-primary)}
+/* notas e etiquetas */
+.note{font-size:.8rem;margin-top:10px;padding:8px 12px;border-radius:var(--aud-radius);background:#FFF8E6;border-left:4px solid var(--aud-warning);color:var(--aud-text)}
+.note.exact{background:#EAF6EC;border-left-color:var(--aud-success);color:#0b4f1a}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap;background:var(--aud-gray-100);color:var(--aud-primary);margin-left:6px}
+.badge.ok{background:var(--aud-success);color:var(--aud-white)}
+.badge.warn{background:var(--aud-warning);color:var(--aud-text)}
+.dif-ok{color:var(--aud-success);font-weight:700}
+.dif-bad{color:var(--aud-danger-text);font-weight:700}
+.conc-inputs{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px 14px;margin-bottom:12px}
+/* roteiro (etapa 1) */
+ol.steps{padding-left:22px;margin:6px 0}
+ol.steps li{margin:8px 0}
+ul.cl{padding-left:0;margin:6px 0}
+ul.cl li{list-style:none;margin:6px 0}
+ul.cl label{display:flex;gap:8px;align-items:flex-start;font-size:.9rem;font-weight:400;color:var(--aud-text)}
+.box table td,.box table th{white-space:normal;text-align:left}
+footer{display:none}
+@media (max-width:575px){html{font-size:15px}.box,.summary{padding:14px}}
+@media print{
+  header.top,nav.tabs,.toolbar,.card-head button,.paste-actions,.paste-box{display:none!important}
+  body{background:#fff}.box,.summary,.card{box-shadow:none}
+  section.panel{display:block!important}
+}
+/* modo visualização (usuário com permissão "Book: visualizar"): nada de importar, salvar ou editar */
+body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="lanc"],body.leitura nav.tabs button[data-tab="fontes"],
+body.leitura ul.cl,body.leitura #btnLimparChecklist,body.leitura .so-admin-box{display:none!important}
+body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select{pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
+.ro-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:#EAF2FB;color:#1A3A6B;font-size:.9rem;border:1px solid #BBD3EE}
+body.leitura .ro-aviso{display:block}
+</style>
+<style>
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.75rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--aud-success);color:#fff}
+.pill.bad{background:#FFE3E6;color:var(--aud-danger-text);border:1px solid #f5b5bb}
+.pill.warn{background:var(--aud-warning);color:var(--aud-text)}
+.pill.info{background:var(--aud-info);color:var(--aud-primary)}
+.pill.cinza{background:var(--aud-gray-100);color:var(--aud-gray-500)}
+.msg{padding:10px 14px;border-radius:var(--aud-radius);margin:8px 0;font-size:.9rem;background:#fff;border:1px solid #e1e4e8;border-left:5px solid var(--aud-primary)}
+.msg.err{border-left-color:var(--aud-danger);background:#FFF1F2;color:var(--aud-danger-text)}
+.msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
+.msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
+.filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
+.filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
+.filters select,.filters input[type=text]{width:auto}
+.filters label.ck{flex-direction:row;align-items:center;gap:6px}
+.tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
+.tscroll thead th{position:sticky;top:0;z-index:2}
+/* Bens: filtros e cabeçalho da tabela ficam congelados ao descer pelos lançamentos */
+.box.bensMain{overflow:visible}
+.bensTopo{position:sticky;top:var(--navH,0px);z-index:6;background:var(--aud-white);margin:0 -20px;padding:8px 20px 10px}
+.bensMain .tscroll{overflow:visible;max-height:none}
+.bensMain .tscroll thead th{top:calc(var(--navH,0px) + var(--topoH,0px))}
+td.wrap,th.wrap{white-space:normal;text-align:left}
+td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
+td input.obs{min-width:220px}
+td select{padding:3px 4px;font-size:.8rem;width:auto}
+/* Book compacto: usa a largura toda e cabe sem rolagem lateral */
+.wrap{max-width:none!important;padding:0 8px}
+#tab-conferencia .box{padding:12px 10px}
+table.bk{font-size:.72rem;table-layout:auto}
+table.bk th,table.bk td{padding:4px 4px}
+table.bk thead th{font-size:.68rem;white-space:normal;line-height:1.15;text-align:center}
+table.bk .dsc{width:112px;white-space:normal;line-height:1.2;overflow-wrap:anywhere}
+table.bk td input[type=text]{min-width:0;width:68px;padding:2px 4px;font-size:.72rem}
+table.bk td.obs{width:30%;min-width:175px}
+table.bk td.c-raz{width:22px;text-align:center}
+table.bk textarea.obs{width:100%;min-height:30px;font:inherit;font-size:.76rem;line-height:1.25;padding:3px 6px;border:1px solid #c5cbd3;border-radius:var(--aud-radius);resize:vertical;background:#fff;color:var(--aud-text)}
+table.bk textarea.obs:focus{outline:none;border-color:var(--aud-secondary)}
+table.bk .auto{font-size:.66rem;line-height:1.2}
+table.bk .lupa{font-size:.9rem;padding:0 2px}
+/* status: a própria etiqueta abre as opções */
+select.stsel{appearance:none;-webkit-appearance:none;border:0;cursor:pointer;padding:3px 18px 3px 8px;border-radius:999px;font:inherit;font-size:.68rem;font-weight:600;width:auto;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23122A4F' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 7px center}
+select.stsel.ok{background-color:var(--aud-success);color:#fff;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23fff' stroke-width='1.5' fill='none'/%3E%3C/svg%3E")}
+select.stsel.bad{background-color:#FFE3E6;color:var(--aud-danger-text);box-shadow:inset 0 0 0 1px #f5b5bb}
+select.stsel.warn{background-color:var(--aud-warning);color:var(--aud-text)}
+select.stsel.info{background-color:var(--aud-info);color:var(--aud-primary)}
+select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500)}
+select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
+select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
+tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
+tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
+tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
+tr.grp0 td .dsc{color:#CD9A56}
+.fech{margin-bottom:14px}
+.fech h2{margin-bottom:4px}
+.fech .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:10px}
+.fech .card{border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:12px 14px;background:#fff}
+.fech .card h3{font-size:.85rem;margin:0 0 8px;color:var(--aud-primary)}
+.fech .card table{width:100%;border-collapse:collapse;font-size:.85rem}
+.fech .card td{padding:3px 0;border-bottom:1px dashed #eceff3}
+.fech .card td:last-child{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.fech .card tr.tot td{font-weight:700;border-bottom:0;padding-top:6px}
+.fech .res{font-size:1.25rem;font-weight:700}
+.fech .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.75rem;font-weight:700}
+.fech .pill.ok{background:#E3F4E7;color:var(--aud-success)}
+.fech .pill.bad{background:#FDE7E9;color:var(--aud-danger-text)}
+.fech .pill.info{background:#EEF2F8;color:var(--aud-primary)}
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));margin-bottom:14px}
+.kpi{border-radius:var(--aud-radius);padding:12px 14px;background:#fff;border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
+.kpi .t{font-size:.78rem;font-weight:600;color:var(--aud-gray-500)}
+.kpi .v{font-size:1.15rem;font-weight:700;color:var(--aud-primary)}
+.upl{border:2px dashed var(--aud-gold-soft);border-radius:var(--aud-radius);padding:14px;background:#fff}
+.upl h3{margin:0 0 4px;font-size:1rem}
+.empty{padding:24px;text-align:center;color:var(--aud-gray-500)}
+.dbad{color:var(--aud-danger-text);font-weight:600}
+.dok{color:var(--aud-success);font-weight:600}
+.lupa{border:0;background:transparent;cursor:pointer;font-size:1rem;padding:2px 4px}
+.lupa:hover{background:var(--aud-gray-100);color:inherit}
+.auto{font-size:.72rem;color:var(--aud-gray-500)}
+</style>
+<script src="vendor/sheetjs/xlsx.full.min.js"></script>
+<script src="hub-db.js?v=2"></script>
+<style>
+tr.depois td{opacity:.5}
+td.small{font-size:.74rem;line-height:1.25}
+table.pv{font-size:.78rem}
+table.pv th,table.pv td{padding:4px 5px;text-align:right;white-space:nowrap}
+table.pv th:first-child,table.pv td:first-child{text-align:left;white-space:normal;min-width:170px}
+table.pv td:nth-child(2){text-align:left;color:var(--aud-gray-500);font-size:.72rem}
+table.pv input.cel{width:96px;min-width:0;padding:3px 5px;font-size:.78rem;text-align:right}
+table.pv .base{background:#FFF8E6}
+table.pv thead th.base{background:var(--aud-secondary);color:var(--aud-primary)}
+table.pv tr.tot td{font-weight:700;border-top:1px solid #c5cbd3}
+table.pv tr.dif td{font-weight:600}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap">
+  <div class="eyebrow">Audicon Contadores · Controladoria</div>
+  <h1>Provisões Trab. — Relatório da folha x Contabilidade</h1>
+  <p>NHD Foods · Provisões de férias e 13º salário (com INSS e FGTS) do relatório da folha, mês a mês, conferidas com as contas do grupo 2.1.10.2 — Provisão da folha (aba “Prov Trab” do Book)</p>
+</div></header>
+<nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
+  <span class="brand">Provisões Trab.</span>
+  <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
+  <div class="menu" id="menuAbas" role="tablist">
+    <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
+    <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Provisões e conferência</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="contas">3 · Contas</button>
+  </div>
+</div></nav>
+<main class="wrap">
+
+<div class="box">
+  <div class="upl">
+    <h3>👥 Provisões trabalhistas</h3>
+    <div class="muted small">Digite na tabela os saldos do <b>relatório de provisões da folha</b> de cada mês (provisão, INSS e FGTS de férias e de 13º) <b>ou</b> importe o Book NHD (.xlsx, aba “Prov Trab”). O total de cada provisão é comparado com o saldo da conta no balancete do mesmo mês, importado no Book de conciliação.</div>
+    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inProv').click()">Importar Book (aba Prov Trab)</button>
+      <button type="button" onclick="exportJSON()">Exportar dados (JSON)</button> <button type="button" onclick="document.getElementById('inJson').click()">Importar dados (JSON)</button></div>
+    <input type="file" id="inProv" accept=".xlsx,.xls" onchange="importarBook(this.files[0]);this.value=''">
+    <input type="file" id="inJson" accept="application/json" onchange="importJSON(this.files[0]);this.value=''">
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <label>Ano:<select id="selAno" onchange="ano=this.value;render()"></select></label>
+    <label>Data-base (envio ao Book):<select id="selMes" onchange="mesBase=this.value;render()"></select></label>
+    <span class="muted small" id="stTopo"></span>
+  </div>
+  <div id="msgs"></div>
+</div>
+
+<section class="panel" id="tab-processo">
+  <div class="box"><h2>Objetivo</h2><p>Garantir todo mês que as contas de <b>provisão de férias</b> e <b>provisão de 13º salário</b> (grupo 2.1.10.2) estejam iguais ao relatório de provisões da folha — provisão + INSS + FGTS — e acompanhar a variação mensal de cada uma.</p></div>
+  <div class="box"><h2>Passo a passo</h2><ol class="steps">
+    <li>Importar o balancete do mês no <b>Book de conciliação</b>.</li>
+    <li>Pegar com o DP o <b>relatório de provisões</b> de férias e 13º do mês (saldo da provisão, INSS e FGTS).</li>
+    <li>Na etapa <b>2</b>, digitar os valores na coluna do mês (ou importar o Book NHD, aba “Prov Trab”).</li>
+    <li>Conferir a linha <b>Diferença</b> de cada provisão; a variação do mês aparece no quadro abaixo.</li>
+    <li>Os totais da data-base vão sozinhos para o <b>Book de conciliação</b> como suporte das contas 2.1.10.2001 e 2.1.10.2002.</li>
+  </ol></div>
+  <div class="box"><h2>Regras</h2><table><thead><tr><th>Regra</th><th>Definição</th></tr></thead><tbody>
+    <tr><td>R1</td><td>Mapeamento igual ao Book NHD: Férias (provisão + INSS + FGTS) = 2.1.10.2001 · Provisão de férias; 13º (provisão + INSS + FGTS) = 2.1.10.2002 · Provisão de 13º salário. As contas podem ser trocadas na etapa 3.</td></tr>
+    <tr><td>R2</td><td>Os valores são saldos (posição no fim do mês), positivos como no relatório; na contabilidade a provisão é credora.</td></tr>
+    <tr><td>R3</td><td>Variação do mês = saldo do mês − saldo do mês anterior.</td></tr>
+    <tr><td>R4</td><td>Diferença até R$ 0,01 é tratada como arredondamento.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="panel active" id="tab-conferencia">
+  <div class="kpis" id="kpis"></div>
+  <div class="box">
+    <h2>Provisões trabalhistas <span class="muted small" id="tituloConf"></span></h2>
+    <div class="tscroll"><table class="pv">
+      <thead id="pvHead"></thead><tbody id="pvBody"></tbody>
+    </table></div>
+    <div class="muted small" style="margin-top:8px">Digite o valor e saia da célula (Tab/Enter) para gravar. Célula vazia = mês sem relatório.</div>
+    <div id="outrasContas"></div>
+  </div>
+  <div class="box">
+    <h2>Variações mensais</h2>
+    <div class="tscroll"><table class="pv">
+      <thead id="varHead"></thead><tbody id="varBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-contas">
+  <div class="box">
+    <h2>Contas</h2>
+    <div class="muted small" style="margin-bottom:10px">Conta contábil de cada provisão (padrão igual ao Book NHD). Vale para todos os meses.</div>
+    <div class="tscroll"><table>
+      <thead><tr><th>Provisão</th><th>Conta contábil</th></tr></thead>
+      <tbody id="ctBody"></tbody>
+    </table></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+// ===================== utilitários =====================
+const $ = id => document.getElementById(id);
+const LS = 'aud-provtrab-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Provisões Trab.';
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : (v + 0 === 0 ? 0 : v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+const norm = s => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toUpperCase().replace(/\s+/g, ' ').trim();
+const MES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+const mesLbl = m => m ? MES[+m.slice(5, 7) - 1] + '/' + m.slice(0, 4) : '';
+const fimMes = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm, 0); return y + '-' + String(mm).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const br = iso => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '';
+function lsGet(k, d){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch(e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
+function msg(t, tipo){ const d = document.createElement('div'); d.className = 'msg ' + (tipo || ''); d.innerHTML = t; $('msgs').appendChild(d); setTimeout(() => d.remove(), tipo === 'err' ? 15000 : 8000); }
+function num(v){
+  if (v === null || v === undefined || v === '') return NaN;
+  if (typeof v === 'number') return v;
+  let s = String(v).trim().replace(/\s|R\$/g, '');
+  if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
+  return parseFloat(s);
+}
+function isoData(v){
+  if (v instanceof Date && !isNaN(v)) return v.getFullYear() + '-' + String(v.getMonth() + 1).padStart(2, '0') + '-' + String(v.getDate()).padStart(2, '0');
+  if (typeof v === 'number' && v > 20000 && v < 80000){ const d = new Date(Math.round((v - 25569) * 864e5)); return d.getUTCFullYear() + '-' + String(d.getUTCMonth() + 1).padStart(2, '0') + '-' + String(d.getUTCDate()).padStart(2, '0'); }
+  const s = String(v ?? '').trim(); let m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/); if (m) return m[3] + '-' + m[2].padStart(2, '0') + '-' + m[1].padStart(2, '0');
+  m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? m[0] : '';
+}
+const ok = d => Math.abs(d) < 0.015;
+
+// ===================== dados =====================
+// valores[aaaa-mm][grupo][item] = saldo do relatório da folha (positivo)
+const GRUPOS = [
+  { id: 'ferias', nome: 'Provisão de férias', conta: '2.1.10.2001', itens: [['prov', 'Provisão de férias'], ['inss', 'INSS s/ férias'], ['fgts', 'FGTS s/ férias']] },
+  { id: 'decimo', nome: 'Provisão de 13º salário', conta: '2.1.10.2002', itens: [['prov', 'Provisão de 13º salário'], ['inss', 'INSS s/ 13º salário'], ['fgts', 'FGTS s/ 13º salário']] }
+];
+let dados = lsGet(LS, null);
+if (!dados || typeof dados.valores !== 'object') dados = { valores: {}, contas: {} };
+GRUPOS.forEach(g => { if (!dados.contas[g.id]) dados.contas[g.id] = g.conta; });
+let ano = '', mesBase = '', mesesBal = [], bal = {};
+function salvar(){ if (!lsSet(LS, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err'); }
+const val = (m, g, i) => { const v = ((dados.valores[m] || {})[g] || {})[i]; return typeof v === 'number' ? v : NaN; };
+const temMes = (m, g) => GRUPOS.find(x => x.id === g).itens.some(([i]) => !isNaN(val(m, g, i)));
+const totalMes = (m, g) => temMes(m, g) ? r2(GRUPOS.find(x => x.id === g).itens.reduce((a, [i]) => a + (isNaN(val(m, g, i)) ? 0 : val(m, g, i)), 0)) : NaN;
+const meses = a => MES.map((_, k) => a + '-' + String(k + 1).padStart(2, '0'));
+const mesAnt = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm - 2, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+
+// ===================== importação do Book (aba "Prov Trab") =====================
+function linhas(wb, sn){ return XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null }); }
+async function importarBook(f){
+  if (!f) return;
+  try {
+    const wb = XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true });
+    const sn = wb.SheetNames.find(s => /PROV\s*TRAB/.test(norm(s)));
+    if (!sn) throw new Error('não encontrei a aba “Prov Trab”');
+    const R = linhas(wb, sn);
+    const hr = R.findIndex(r => r && r.some(c => norm(c) === 'CONTA') && r.some(c => /DESCRI/.test(norm(c))));
+    if (hr < 0) throw new Error('não encontrei o cabeçalho (Provisão | Conta | Descrição | meses)');
+    const H = R[hr], cDesc = H.findIndex(c => /DESCRI/.test(norm(c)));
+    const cols = H.map((c, i) => ({ i, m: isoData(c).slice(0, 7) })).filter(x => x.m);
+    let n = 0;
+    for (let k = hr + 1; k < R.length; k++){
+      const r = R[k]; if (!r) continue;
+      const d = norm(r[cDesc]); if (!d) continue;
+      if (/VARIAC/.test(norm(r[1])) || (k > hr + 1 && R[k].some(c => norm(c) === 'CONTA'))) break;   // começou o quadro de variações
+      const g = /FERIAS/.test(d) ? 'ferias' : /13/.test(d) ? 'decimo' : ''; if (!g) continue;
+      const it = /INSS/.test(d) ? 'inss' : /FGTS/.test(d) ? 'fgts' : 'prov';
+      cols.forEach(({ i, m }) => { const v = num(r[i]); if (r[i] === null || r[i] === '' || isNaN(v) || !v) return;   // zero na planilha = mês sem relatório
+        const o = dados.valores[m] = dados.valores[m] || {}; (o[g] = o[g] || {})[it] = r2(Math.abs(v)); n++; });
+    }
+    salvar();
+    msg(`“${esc(f.name)}”: ${n} valor(es) importados da aba Prov Trab.` + (n ? '' : ' A aba está sem valores preenchidos — digite os do relatório da folha na tabela.'), n ? 'ok' : 'warn');
+    await render();
+  } catch(e){ msg('Erro ao importar “' + esc(f.name) + '”: ' + esc(e.message), 'err'); }
+}
+function exportJSON(){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(dados, null, 1)], { type: 'application/json' }));
+  a.download = 'provisoes-trabalhistas.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+async function importJSON(f){
+  if (!f) return;
+  try { const d = JSON.parse(await f.text()); if (!d || typeof d.valores !== 'object') throw new Error('arquivo não é das provisões trabalhistas');
+    if (!confirm('Substituir as provisões deste navegador pelas do arquivo?')) return; dados = d; GRUPOS.forEach(g => { dados.contas = dados.contas || {}; if (!dados.contas[g.id]) dados.contas[g.id] = g.conta; }); salvar(); await render(); msg('Dados importados.', 'ok');
+  } catch(e){ msg('Erro ao importar o JSON: ' + esc(e.message), 'err'); }
+}
+
+// ===================== edição na grade =====================
+function setVal(m, g, i, txt){
+  const v = num(txt), o = dados.valores[m] = dados.valores[m] || {}, gg = o[g] = o[g] || {};
+  if (String(txt).trim() === '' || isNaN(v)) delete gg[i]; else gg[i] = r2(Math.abs(v));
+  if (!Object.keys(gg).length) delete o[g]; if (!Object.keys(o).length) delete dados.valores[m];
+  salvar(); render();
+}
+
+// ===================== balancetes (do Book de conciliação) =====================
+async function carregar(){
+  mesesBal = []; bal = {};
+  try { if (window.HubDB){ mesesBal = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort();
+    for (const m of mesesBal){ const b = await HubDB.getMeta('balancete:' + m); if (b) bal[m] = b; } } } catch(e){}
+  const anos = [...new Set(mesesBal.concat(Object.keys(dados.valores)).map(m => m.slice(0, 4)).concat([String(new Date().getFullYear())]))].sort();
+  if (!ano || !anos.includes(ano)) ano = (mesesBal[mesesBal.length - 1] || '').slice(0, 4) || anos[anos.length - 1];
+  $('selAno').innerHTML = anos.slice().reverse().map(a => `<option ${a === ano ? 'selected' : ''}>${a}</option>`).join('');
+  if (!mesBase) mesBase = mesesBal[mesesBal.length - 1] || meses(ano)[new Date().getMonth()];
+  const ops = [...new Set(mesesBal.concat(Object.keys(dados.valores)).concat([mesBase]))].sort().reverse();
+  $('selMes').innerHTML = ops.map(m => `<option value="${m}" ${m === mesBase ? 'selected' : ''}>${br(fimMes(m))}${mesesBal.includes(m) ? '' : ' (sem balancete)'}</option>`).join('');
+}
+const contab = (m, g) => { const b = bal[m], c = dados.contas[g]; const x = b && b.contas ? b.contas[c] : null; return x ? r2(-x.sf) : NaN; };
+
+// ===================== render =====================
+async function render(){
+  await carregar();
+  const MM = meses(ano), th = '<tr><th class="wrap">Provisão</th><th>Conta</th>' + MM.map(m => `<th class="${m === mesBase ? 'base' : ''}">${MES[+m.slice(5) - 1]}/${m.slice(2, 4)}</th>`).join('') + '</tr>';
+  $('pvHead').innerHTML = th; $('varHead').innerHTML = th;
+  let html = '', vhtml = '', nOk = 0, nDiv = 0;
+  GRUPOS.forEach(g => {
+    const conta = dados.contas[g.id];
+    html += `<tr class="grp"><td colspan="${MM.length + 2}">${esc(g.nome)}</td></tr>`;
+    g.itens.forEach(([i, nome]) => {
+      html += `<tr><td class="wrap">${esc(nome)}</td><td>${esc(conta)}</td>` + MM.map(m => { const v = val(m, g.id, i);
+        return `<td class="${m === mesBase ? 'base' : ''}"><input type="text" class="cel" inputmode="decimal" value="${isNaN(v) ? '' : fmt(v)}" onchange="setVal('${m}','${g.id}','${i}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>`; }).join('') + '</tr>';
+    });
+    const tot = MM.map(m => totalMes(m, g.id)), cont = MM.map(m => contab(m, g.id));
+    html += `<tr class="tot"><td>Total relatório da folha</td><td></td>${tot.map((v, k) => `<td class="${MM[k] === mesBase ? 'base' : ''}">${isNaN(v) ? '' : fmt(v)}</td>`).join('')}</tr>`;
+    html += `<tr><td>Saldo contábil</td><td>${esc(conta)}</td>${cont.map((v, k) => `<td class="${MM[k] === mesBase ? 'base' : ''}">${isNaN(v) ? '' : fmt(v)}</td>`).join('')}</tr>`;
+    html += `<tr class="dif"><td>Diferença</td><td></td>${MM.map((m, k) => { const t = tot[k], c = cont[k]; if (isNaN(c) && isNaN(t)) return `<td class="${m === mesBase ? 'base' : ''}"></td>`;
+      if (isNaN(t)) return `<td class="${m === mesBase ? 'base' : ''}"><span class="pill warn">sem relatório</span></td>`;
+      if (isNaN(c)) return `<td class="${m === mesBase ? 'base' : ''}"><span class="pill cinza">sem balancete</span></td>`;
+      const d = r2(c - t); if (m === mesBase) (ok(d) ? nOk++ : nDiv++);
+      return `<td class="${m === mesBase ? 'base' : ''} ${ok(d) ? 'dok' : 'dbad'}">${ok(d) ? 'OK' : fmt(d)}</td>`; }).join('')}</tr>`;
+    // variações
+    vhtml += `<tr class="grp"><td colspan="${MM.length + 2}">${esc(g.nome)}</td></tr>`;
+    const varr = (f, nome, cls) => `<tr class="${cls || ''}"><td class="wrap">${esc(nome)}</td><td></td>` + MM.map(m => { const a = f(m), b = f(mesAnt(m)); return `<td class="${m === mesBase ? 'base' : ''}">${isNaN(a) || isNaN(b) ? '' : fmt(r2(a - b))}</td>`; }).join('') + '</tr>';
+    g.itens.forEach(([i, nome]) => { vhtml += varr(m => val(m, g.id, i), nome); });
+    vhtml += varr(m => totalMes(m, g.id), 'Total relatório da folha', 'tot') + varr(m => contab(m, g.id), 'Variação contábil');
+  });
+  $('pvBody').innerHTML = html; $('varBody').innerHTML = vhtml;
+  // suporte para o Book: total do relatório na data-base
+  const sup = {};
+  GRUPOS.forEach(g => { const t = totalMes(mesBase, g.id); if (!isNaN(t)) sup[dados.contas[g.id]] = { fonte: FONTE, saldo: -t, data: fimMes(mesBase), detalhe: 'Relatório de provisões da folha · ' + g.nome + ' (provisão + INSS + FGTS) em ' + br(fimMes(mesBase)) }; });
+  const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE) delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
+  const b = bal[mesBase], usadas = new Set(Object.values(dados.contas));
+  const outras = b && b.contas ? Object.keys(b.contas).filter(c => /^2\.1\.10\.2\d{3}$/.test(c) && !usadas.has(c) && Math.abs(b.contas[c].sf) >= 0.005) : [];
+  $('outrasContas').innerHTML = outras.length ? `<div class="msg warn" style="margin-top:10px"><b>Contas do grupo 2.1.10.2 com saldo sem provisão ligada</b> (ligue na etapa 3): ${outras.map(c => esc(c) + ' ' + esc(b.contas[c].desc) + ' (' + fmt(b.contas[c].sf) + ')').join(' · ')}</div>` : '';
+  $('tituloConf').textContent = '· ' + ano + ' · data-base enviada ao Book: ' + br(fimMes(mesBase));
+  $('stTopo').textContent = Object.keys(dados.valores).length + ' mês(es) com relatório';
+  const kp = GRUPOS.map(g => [g.nome + ' em ' + mesLbl(mesBase), fmt(totalMes(mesBase, g.id)) + ' · contábil ' + fmt(contab(mesBase, g.id))]);
+  $('kpis').innerHTML = kp.concat([['Conferência na data-base', nOk + ' OK · ' + nDiv + ' com diferença']]).map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  $('ctBody').innerHTML = GRUPOS.map(g => `<tr><td>${esc(g.nome)} (provisão + INSS + FGTS)</td><td><input type="text" value="${esc(dados.contas[g.id])}" onchange="setConta('${g.id}',this.value)"></td></tr>`).join('');
+}
+function setConta(g, v){ v = v.trim(); if (!/^\d\.\d\.\d{2}\.\d{4}$/.test(v)){ alert('Conta no formato 2.1.10.2001'); render(); return; } dados.contas[g] = v; salvar(); render(); }
+
+window.focoConta = function(){ window.abrirEtapa && abrirEtapa('conferencia'); };
+salvar();
+render();
+</script>
+
+<script>
+/* etapas (mesmo comportamento da Conferência de Faturamento) */
+(function(){
+  var KEY = location.pathname.split('/').pop() + ':etapa';
+  function abrir(t){
+    document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.setAttribute('aria-selected', b.getAttribute('data-tab') === t ? 'true' : 'false'); });
+    document.querySelectorAll('section.panel').forEach(function(s){ s.classList.toggle('active', s.id === 'tab-' + t); });
+    try { sessionStorage.setItem(KEY, t); } catch(e){}
+    var m = document.getElementById('menuAbas'); if (m) m.classList.remove('open');
+  }
+  window.abrirEtapa = abrir;
+  document.querySelectorAll('nav.tabs button[data-tab]').forEach(function(b){ b.addEventListener('click', function(){ abrir(b.getAttribute('data-tab')); }); });
+  var tg = document.getElementById('navToggle');
+  if (tg) tg.addEventListener('click', function(){ var m = document.getElementById('menuAbas'); var o = m.classList.toggle('open'); tg.setAttribute('aria-expanded', o ? 'true' : 'false'); });
+  var salvo = null; try { salvo = sessionStorage.getItem(KEY); } catch(e){}
+  abrir(salvo || 'conferencia');
+  // depois de carregar PDFs, mostra a conferência
+  ['globalPdfInput'].forEach(function(id){ var el = document.getElementById(id); if (el) el.addEventListener('change', function(){ abrir('conferencia'); }); });
+  // checklist do fechamento (guardado neste navegador)
+  var CK = location.pathname.split('/').pop() + ':checklist';
+  var ck = {}; try { ck = JSON.parse(localStorage.getItem(CK) || '{}'); } catch(e){}
+  document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c, i){
+    c.checked = !!ck[i];
+    c.addEventListener('change', function(){ ck[i] = c.checked; try { localStorage.setItem(CK, JSON.stringify(ck)); } catch(e){} });
+  });
+  var lim = document.getElementById('btnLimparChecklist');
+  if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+<script>
+/* mede a barra de abas e os filtros dos bens para a parte congelada encaixar certinho */
+(function(){
+  function medir(){
+    var n=document.querySelector('nav.tabs'), t=document.getElementById('bensTopo'), r=document.documentElement.style;
+    r.setProperty('--navH',(n?n.offsetHeight:0)+'px');
+    if(t&&t.offsetHeight)r.setProperty('--topoH',t.offsetHeight+'px');
+  }
+  window.addEventListener('resize',medir); window.addEventListener('load',medir);
+  if(window.ResizeObserver){var ro=new ResizeObserver(medir);['bensTopo'].forEach(function(id){var e=document.getElementById(id);if(e)ro.observe(e);});var n=document.querySelector('nav.tabs');if(n)ro.observe(n);}
+  medir();
+})();
+</script>
+</body>
+</html>

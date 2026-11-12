@@ -577,6 +577,8 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
     <button class="fs conc-tab" data-p="parcelamentos-federais" onclick="concTab('parcelamentos-federais')">Parcelamentos federais</button>
     <button class="fs conc-tab" data-p="parcelamentos-estaduais" onclick="concTab('parcelamentos-estaduais')">Parcelamentos estaduais</button>
     <button class="fs conc-tab" data-p="imobilizado" onclick="concTab('imobilizado')">Patrimonial</button>
+    <button class="fs conc-tab" data-p="tributos" onclick="concTab('tributos')">Tributos a pagar</button>
+    <button class="fs conc-tab" data-p="provisoes" onclick="concTab('provisoes')">Provisões Trab.</button>
     <button class="fs conc-tab" data-p="faturamento" onclick="concTab('faturamento')">Conferência de faturamento</button>
     <a class="fs conc-open" id="concOpen" href="#" target="_blank" rel="noopener" title="Abrir o painel em uma aba separada do navegador">↗ Abrir em nova aba</a>
   </div>
@@ -2439,7 +2441,7 @@ async function exportDREXlsx(){
 // Admin = quem está na lista de acessos do Firebase com papel "admin" (auth/hub-auth.js).
 // O token do GitHub ficou só para o portal do Book (repositório privado nhdfoods-conciliacao).
 var IS_ADMIN=false;
-var CONC_PAINEIS={'book':'conciliacao/book.html','imobilizado':'conciliacao/imobilizado.html','bancos':'conciliacao/bancos.html','consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html','faturamento':'conciliacao/faturamento.html'};
+var CONC_PAINEIS={'book':'conciliacao/book.html','imobilizado':'conciliacao/imobilizado.html','tributos':'conciliacao/tributos.html','provisoes':'conciliacao/provisoes.html','bancos':'conciliacao/bancos.html','consorcios':'conciliacao/consorcios.html','parcelamentos-federais':'conciliacao/parcelamentos-federais.html','parcelamentos-estaduais':'conciliacao/parcelamentos-estaduais.html','faturamento':'conciliacao/faturamento.html'};
 // valida o token do portal do Book: precisa de escrita no repositório privado da conciliação
 var PORTAL_REPO_BOOK='clecioferreiracontador-byte/nhdfoods-conciliacao';
 async function adminCheckToken(token){
