@@ -167,6 +167,11 @@ body.leitura .ro-aviso{display:block}
 .filters label.ck{flex-direction:row;align-items:center;gap:6px}
 .tscroll{overflow:auto;max-height:680px;border:1px solid #e1e4e8;border-radius:var(--aud-radius)}
 .tscroll thead th{position:sticky;top:0;z-index:2}
+/* Bens: filtros e cabeçalho da tabela ficam congelados ao descer pelos lançamentos */
+.box.bensMain{overflow:visible}
+.bensTopo{position:sticky;top:var(--navH,0px);z-index:6;background:var(--aud-white);margin:0 -20px;padding:8px 20px 10px}
+.bensMain .tscroll{overflow:visible;max-height:none}
+.bensMain .tscroll thead th{top:calc(var(--navH,0px) + var(--topoH,0px))}
 td.wrap,th.wrap{white-space:normal;text-align:left}
 td input[type=text]{padding:4px 6px;font-size:.82rem;min-width:110px}
 td input.obs{min-width:220px}
@@ -304,7 +309,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 </section>
 
 <section class="panel" id="tab-bens">
-  <div class="box">
+  <div class="box bensMain">
     <h2>Bens do controle patrimonial <span class="muted small" id="bensTitulo"></span></h2>
     <div class="toolbar" style="margin-bottom:10px">
       <button type="button" class="primary" onclick="novoBem(false)">+ Lançar aquisição</button>
@@ -312,11 +317,11 @@ tr.grp0 td .dsc{color:#CD9A56}
       <span class="muted small">Depreciação calculada como na planilha: valor ÷ vida útil × tempo de uso (dias ÷ 30) até a data-base.</span>
     </div>
     <div id="formBem"></div>
-    <div class="filters">
+    <div class="bensTopo" id="bensTopo"><div class="filters">
       <label>Classe<select id="fClasse" onchange="renderBens()"><option value="">Todas</option></select></label>
       <label>Período<select id="fPer" onchange="renderBens()"><option value="">Todos</option><option value="mes">Só do mês</option><option value="baixa">Só baixas</option><option value="manual">Só lançados aqui</option></select></label>
       <label>Buscar<input type="text" id="fBusca" oninput="renderBens()" placeholder="descrição, fornecedor, nota"></label>
-    </div>
+    </div></div>
     <div class="tscroll"><table>
       <thead><tr><th>Data</th><th>Classe</th><th>Nota</th><th>Fornecedor</th><th class="wrap">Descrição</th><th>Valor aquisição/(baixa)</th><th>Vida útil (meses)</th><th>Tempo de uso (meses)</th><th>Deprec. acumulada</th><th>Valor contábil</th><th></th></tr></thead>
       <tbody id="bensBody"></tbody><tfoot id="bensFoot"></tfoot>
@@ -729,6 +734,19 @@ render();
   });
   var lim = document.getElementById('btnLimparChecklist');
   if (lim) lim.addEventListener('click', function(){ ck = {}; try { localStorage.removeItem(CK); } catch(e){} document.querySelectorAll('ul.cl input[type=checkbox]').forEach(function(c){ c.checked = false; }); });
+})();
+</script>
+<script>
+/* mede a barra de abas e os filtros dos bens para a parte congelada encaixar certinho */
+(function(){
+  function medir(){
+    var n=document.querySelector('nav.tabs'), t=document.getElementById('bensTopo'), r=document.documentElement.style;
+    r.setProperty('--navH',(n?n.offsetHeight:0)+'px');
+    if(t&&t.offsetHeight)r.setProperty('--topoH',t.offsetHeight+'px');
+  }
+  window.addEventListener('resize',medir); window.addEventListener('load',medir);
+  if(window.ResizeObserver){var ro=new ResizeObserver(medir);['bensTopo'].forEach(function(id){var e=document.getElementById(id);if(e)ro.observe(e);});var n=document.querySelector('nav.tabs');if(n)ro.observe(n);}
+  medir();
 })();
 </script>
 </body>
