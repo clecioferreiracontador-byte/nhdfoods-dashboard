@@ -176,38 +176,37 @@ body.hub-locked>*:not(#hubLogin):not(#hubTrans){display:none!important}
 const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
 /* ---------------- tela de transição (entrando / carregando o painel) ----------------
-   O "A" da Audicon se desenha (pernas, travessão e o arco dourado), aparecem AUDICON e RESOLVE e a marca
+   A marca da Audicon (a imagem oficial do topo) monta de baixo para cima, um brilho passa por ela e ela
    fica pulsando até o painel terminar de carregar. Fica no ar pelo menos o tempo da animação. */
 const cssT = `
-#hubTrans{position:fixed;inset:0;z-index:100001;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
-  background:radial-gradient(900px 520px at 50% 38%,rgba(201,168,76,.12),transparent 62%),linear-gradient(160deg,#0F2035 0%,#0B1626 70%);
+#hubTrans{position:fixed;inset:0;z-index:100001;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:radial-gradient(900px 520px at 50% 40%,rgba(201,168,76,.12),transparent 62%),linear-gradient(160deg,#0F2035 0%,#0B1626 70%);
   color:#EDEAE4;font-family:"Red Hat Display",Calibri,"Segoe UI",Arial,sans-serif;opacity:1;transition:opacity .5s ease}
 #hubTrans.sai{opacity:0;pointer-events:none}
-#hubTrans svg{width:min(250px,62vw);height:auto;overflow:visible}
-#hubTrans .ht-marca{transform-origin:100px 70px;animation:htPulse 1.8s 2.1s ease-in-out infinite}
-#hubTrans path{fill:none;stroke-linecap:round;stroke-linejoin:round}
-#hubTrans .ht-a{stroke:#EDEAE4;stroke-width:7;stroke-dasharray:182;stroke-dashoffset:182;animation:htDraw .9s .1s cubic-bezier(.6,0,.3,1) forwards}
-#hubTrans .ht-bar{stroke:#EDEAE4;stroke-width:6;stroke-dasharray:34;stroke-dashoffset:34;animation:htDraw .35s .85s ease-out forwards}
-#hubTrans .ht-arc{stroke:#C9A84C;stroke-width:3.2;stroke-dasharray:205;stroke-dashoffset:205;animation:htDraw .9s 1s cubic-bezier(.5,0,.2,1) forwards}
-#hubTrans .ht-nome{font-size:30px;font-weight:600;letter-spacing:.34em;padding-left:.34em;opacity:0;transform:translateY(6px);animation:htIn .6s 1.45s forwards}
-#hubTrans .ht-res{margin-top:-8px;font-size:12px;font-weight:700;letter-spacing:.62em;padding-left:.62em;color:#C9A84C;opacity:0;animation:htIn .6s 1.65s forwards}
-#hubTrans .ht-msg{margin-top:18px;font-size:14px;color:#A0B0BE;opacity:0;animation:htIn .5s 1.9s forwards}
+#hubTrans .ht-logo{position:relative;width:min(320px,72vw);animation:htPulse 1.9s 1.9s ease-in-out infinite}
+#hubTrans .ht-logo img{display:block;width:100%;height:auto;clip-path:inset(100% 0 0 0);animation:htMonta 1.3s .1s cubic-bezier(.55,0,.25,1) forwards}
+#hubTrans .ht-brilho{position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,244,214,.95) 48%,rgba(255,255,255,.98) 50%,rgba(255,244,214,.95) 52%,transparent 70%) no-repeat;background-size:260% 100%;background-position:130% 0;
+  -webkit-mask:var(--ht-logo) center/contain no-repeat;mask:var(--ht-logo) center/contain no-repeat;animation:htBrilho 2.6s 1.35s ease-in-out infinite}
+#hubTrans .ht-msg{font-size:14px;color:#A0B0BE;opacity:0;animation:htIn .5s 1.5s forwards}
 #hubTrans .ht-msg:after{content:"";display:inline-block;width:1.2em;text-align:left;animation:htPts 1.4s steps(4) infinite}
-@keyframes htDraw{to{stroke-dashoffset:0}}
-@keyframes htIn{to{opacity:1;transform:none}}
-@keyframes htPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(201,168,76,0))}50%{transform:scale(1.05);filter:drop-shadow(0 0 16px rgba(201,168,76,.5))}}
+@keyframes htMonta{to{clip-path:inset(0 0 0 0)}}
+@keyframes htBrilho{0%{opacity:1;background-position:130% 0}45%,100%{opacity:1;background-position:-30% 0}}
+@keyframes htIn{to{opacity:1}}
+@keyframes htPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(201,168,76,0))}50%{transform:scale(1.04);filter:drop-shadow(0 0 18px rgba(201,168,76,.45))}}
 @keyframes htPts{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @media (prefers-reduced-motion:reduce){
-  #hubTrans .ht-a,#hubTrans .ht-bar,#hubTrans .ht-arc{animation:none;stroke-dashoffset:0}
-  #hubTrans .ht-nome,#hubTrans .ht-res,#hubTrans .ht-msg{animation:none;opacity:1;transform:none}
-  #hubTrans .ht-marca{animation:none}
+  #hubTrans .ht-logo,#hubTrans .ht-brilho{animation:none}
+  #hubTrans .ht-logo img{animation:none;clip-path:none}
+  #hubTrans .ht-msg{animation:none;opacity:1}
 }`;
 const stT = document.createElement('style'); stT.textContent = cssT; document.head.appendChild(stT);
 const trans = document.createElement('div');
 trans.id = 'hubTrans'; trans.setAttribute('role', 'status'); trans.setAttribute('aria-live', 'polite');
-trans.innerHTML = '<svg viewBox="0 0 200 120" aria-hidden="true"><g class="ht-marca">' +
-  '<path class="ht-arc" d="M6 98 Q100 54 194 98"/><path class="ht-a" d="M68 106 L100 20 L132 106"/><path class="ht-bar" d="M84 80 L116 80"/></g></svg>' +
-  '<div class="ht-nome">AUDICON</div><div class="ht-res">RESOLVE</div><div class="ht-msg">Carregando</div>';
+// a própria marca da Audicon (a mesma imagem do topo do painel), sem redesenhar nada
+const logoAud = (document.querySelector('.tb-aud-logo') || {}).src || '';
+trans.style.setProperty('--ht-logo', 'url("' + logoAud + '")');
+trans.innerHTML = '<div class="ht-logo"><img src="' + logoAud + '" alt="Audicon Contadores"><div class="ht-brilho"></div></div><div class="ht-msg">Carregando</div>';
 let transDesde = 0, transFim = null, transTrava = null;
 function mostrarTrans(texto){
   trans.querySelector('.ht-msg').textContent = texto || 'Carregando';
@@ -215,7 +214,7 @@ function mostrarTrans(texto){
   if (!trans.isConnected || trans.classList.contains('sai')){
     trans.classList.remove('sai');
     // recomeça a animação do A a cada vez que a tela aparece
-    trans.querySelectorAll('path,.ht-nome,.ht-res,.ht-msg,.ht-marca').forEach(e => { e.style.animation = 'none'; void e.getBoundingClientRect(); e.style.animation = ''; });
+    trans.querySelectorAll('.ht-logo,.ht-logo img,.ht-brilho,.ht-msg').forEach(e => { e.style.animation = 'none'; void e.getBoundingClientRect(); e.style.animation = ''; });
     document.body.appendChild(trans); transDesde = Date.now();
   }
   transTrava = setTimeout(esconderTrans, 25000);   // nunca prende a tela se algo falhar
@@ -223,7 +222,7 @@ function mostrarTrans(texto){
 function esconderTrans(imediato){
   if (!trans.isConnected) return;
   clearTimeout(transFim); clearTimeout(transTrava);
-  const falta = imediato ? 0 : Math.max(0, 2200 - (Date.now() - transDesde));   // deixa o A terminar de se desenhar
+  const falta = imediato ? 0 : Math.max(0, 2000 - (Date.now() - transDesde));   // deixa a marca terminar de montar
   transFim = setTimeout(() => { trans.classList.add('sai'); setTimeout(() => { if (trans.classList.contains('sai')) trans.remove(); }, 520); }, falta);
 }
 window.HubTransicao = { mostrar: mostrarTrans, esconder: esconderTrans };
