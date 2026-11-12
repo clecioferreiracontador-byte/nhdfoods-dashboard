@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Imobilizado Audicon</title>
+<title>Patrimonial Audicon</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -232,11 +232,11 @@ tr.grp0 td .dsc{color:#CD9A56}
 <body>
 <header class="top"><div class="wrap">
   <div class="eyebrow">Audicon Contadores · Controladoria</div>
-  <h1>Imobilizado — Controle Patrimonial x Contabilidade</h1>
+  <h1>Patrimonial — Controle Patrimonial x Contabilidade</h1>
   <p>NHD Foods · Controle patrimonial (aba “Controle Patrimonial” do Book) conferido com as contas 1.2.05 (imobilizado e depreciação acumulada) e 1.2.10 (intangível) do balancete</p>
 </div></header>
 <nav class="tabs" role="navigation" aria-label="Etapas"><div class="wrap">
-  <span class="brand">Imobilizado</span>
+  <span class="brand">Patrimonial</span>
   <button type="button" class="toggler" id="navToggle" aria-expanded="false" aria-controls="menuAbas" aria-label="Alternar menu">☰ Menu</button>
   <div class="menu" id="menuAbas" role="tablist">
     <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
@@ -321,7 +321,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 <script>
 // ===================== utilitários =====================
 const $ = id => document.getElementById(id);
-const LS_IMOB = 'aud-imob-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Imobilizado';
+const LS_IMOB = 'aud-imob-v1', LS_SUP = 'aud-hub-suportes', FONTE = 'Patrimonial';
 const r2 = v => Math.round(v * 100) / 100;
 const fmt = v => (v === null || v === undefined || isNaN(v)) ? '—' : v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
@@ -489,7 +489,7 @@ async function render(){
     <tr><td>Baixas do mês (${doMes.filter(b => b.valor < 0).length}) × créditos nas contas de custo</td><td>${fmt(bx)}</td><td>${fmt(credC)}</td>${difTd(r2(credC - bx))}</tr>
     <tr><td>Depreciação do mês × créditos líquidos na depreciação acumulada</td><td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
   // suporte automático no Book
-  const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE) delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
+  const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE || s[k].fonte === 'Imobilizado') delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
   // filtros dos bens
   const cls = [...new Set(D.bens.map(b => b.classe))].sort();
   const atual = $('fClasse').value;
