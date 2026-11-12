@@ -179,6 +179,13 @@ td input.obs{min-width:220px}
 td select{padding:3px 4px;font-size:.8rem;width:auto}
 /* Book compacto: usa a largura toda e cabe sem rolagem lateral */
 .wrap{max-width:none!important;padding:0 8px}
+/* cabeçalho do topo: mesma largura e margem dos outros painéis (só a tabela usa a tela inteira) */
+header.top .wrap{padding:0 16px!important}
+@media (min-width:576px){header.top .wrap{max-width:540px!important}}
+@media (min-width:768px){header.top .wrap{max-width:720px!important}}
+@media (min-width:992px){header.top .wrap{max-width:960px!important}}
+@media (min-width:1200px){header.top .wrap{max-width:1140px!important}}
+@media (min-width:1400px){header.top .wrap{max-width:1320px!important}}
 #tab-conferencia .box{padding:12px 10px}
 table.bk{font-size:.72rem;table-layout:auto}
 table.bk th,table.bk td{padding:4px 4px}
