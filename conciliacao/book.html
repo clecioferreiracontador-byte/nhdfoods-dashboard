@@ -223,6 +223,15 @@ tr.grp0 td{background:#0C182B;color:#fff;font-weight:700}
 tr.grp0 td .dsc{color:#CD9A56}
 /* diferença zerada: bolinha verde com check, como no Book original */
 td.c-ok{text-align:center}
+/* cadeado do período (canto do quadro de fechamento) */
+.fech .fech-cad{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:700;padding:3px 10px 3px 8px;border-radius:999px;cursor:pointer;white-space:nowrap;letter-spacing:.01em}
+.fech .fech-cad svg{width:14px;height:14px;flex:none}
+.fech .fech-cad.aberto{color:#8A5A00;background:#FFF1CC;box-shadow:inset 0 0 0 1px #F5D27A}
+.fech .fech-cad.fechado{color:#fff;background:#04751A}
+.fech .fech-cad .barra{display:inline-block;width:46px;height:5px;border-radius:3px;background:rgba(138,90,0,.18);overflow:hidden}
+.fech .fech-cad .barra i{display:block;height:100%;background:#CD9A56}
+.fech .fech-cad.fechado .barra{display:none}
+body.leitura .fech .fech-cad{cursor:default}
 table.bk td.mes-res{font-size:.62rem}
 .okc{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#2E9E4F;color:#fff;font-size:9px;font-weight:800;line-height:1}
 .fech{margin-bottom:14px}
@@ -732,12 +741,13 @@ async function renderFechamento(){
       <tr class="tot"><td>Balancete fecha? (1 + 2 + 3${resG.length > 1 ? '…' : ''} = 0)</td><td>${pill(fecha, 'Sim', 'Não · ' + fmt(fecha))}</td></tr>
     </table></div>`;
   };
-  const fechaSf = r2(A.sf + P.sf + R.sf);
+  const fechaSf = r2(A.sf + P.sf + R.sf); FECHA_OK = ok(fechaSf);
   const antOk = bAnt ? Object.keys(Object.assign({}, T, totaisMatriz(bAnt))).every(g => ok((T[g] ? T[g].sa : 0) - (totaisMatriz(bAnt)[g] ? totaisMatriz(bAnt)[g].sf : 0))) : null;
   const pRes = `<span class="pill ${resMes >= 0 ? 'ok' : 'bad'}">${resMes >= 0 ? 'Lucro' : 'Prejuízo'} de ${fmt(Math.abs(resMes))}</span>`;
   box.classList.toggle('min', lsGet('aud-book-fech-min', true));
   box.innerHTML = `<h2 class="fech-tit" onclick="toggleFech()" title="Clique para mostrar ou recolher o fechamento"><span class="fech-seta">▸</span>Fechamento de ${mesLbl(mesAtual)}
       <span class="fech-lucro ${resMes >= 0 ? 'dok' : 'dbad'}">· ${resMes >= 0 ? 'Lucro' : 'Prejuízo'} de ${fmt(Math.abs(resMes))}</span>
+      <span class="fech-cad" id="fechCad" onclick="event.stopPropagation();alternarCadeado()"></span>
       <span class="fech-resumo">${pRes} Balancete fecha: ${pill(fechaSf, 'Sim', 'Não · ' + fmt(fechaSf))} Mês anterior: ${antOk === null ? '<span class="pill info">sem ' + mesLbl(mAnt) + '</span>' : antOk ? '<span class="pill ok">bate</span>' : '<span class="pill bad">não bate</span>'}</span></h2>
     <div class="fech-corpo">
     <div class="muted small">Totais somados das contas analíticas do arquivo importado. A diferença entre ativo e passivo tem que ser igual ao resultado ainda não encerrado no PL.</div>
@@ -751,7 +761,43 @@ async function renderFechamento(){
       ${bloco('Saldos finais (mês que está fechando)', 'sf')}
       <div class="card"><h3>Mês anterior × saldo anterior deste mês</h3>${antHtml}</div>
     </div></div>`;
+  atualizarCadeado();
 }
+// ---- cadeado do período: fecha sozinho quando 100% das contas patrimoniais estão conciliadas/justificadas e o
+// balancete fecha; o admin pode fechar ou reabrir pelo clique (fica guardado no mês e vai para o portal).
+let K_ULT = null, FECHA_OK = null;
+const SVG_FECH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+const SVG_ABER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/></svg>';
+function estadoPeriodo(){
+  const pct = K_ULT && K_ULT.tot ? (K_ULT.ok + K_ULT.just) / K_ULT.tot * 100 : 0;
+  const auto = !!(K_ULT && K_ULT.tot) && pct >= 99.995 && FECHA_OK !== false;
+  const st = rev[mesAtual + '|__fech'];
+  if (st && typeof st.fechado === 'boolean') return { fechado: st.fechado, manual: true, pct, auto, st };
+  return { fechado: auto, manual: false, pct, auto };
+}
+function atualizarCadeado(){
+  const e = estadoPeriodo(), el = $('fechCad');
+  if (el){
+    const p = Math.floor(e.pct);
+    el.className = 'fech-cad ' + (e.fechado ? 'fechado' : 'aberto');
+    el.innerHTML = (e.fechado ? SVG_FECH + 'Período fechado' : SVG_ABER + p + '% conciliado <span class="barra"><i style="width:' + Math.min(100, p) + '%"></i></span>');
+    el.title = e.fechado
+      ? (e.manual ? 'Fechado manualmente' + (e.st.em ? ' em ' + new Date(e.st.em).toLocaleString('pt-BR') : '') : 'Fechado automaticamente: 100% das contas conciliadas ou justificadas e o balancete fecha') + (LEITURA ? '' : '. Clique para reabrir o período.')
+      : 'Período em aberto: ' + p + '% das contas patrimoniais conciliadas ou justificadas' + (e.manual ? ' (reaberto manualmente)' : '') + (LEITURA ? '' : '. Fecha sozinho em 100%, ou clique para fechar agora.');
+  }
+  // período fechado: campos travados até reabrir
+  if (!LEITURA) $('bkBody').querySelectorAll('input,textarea,select').forEach(x => { x.disabled = e.fechado; });
+  document.body.classList.toggle('book-fechado', e.fechado);
+}
+function alternarCadeado(){
+  if (LEITURA || !bal) return;
+  const e = estadoPeriodo(), novo = !e.fechado;
+  if (!confirm(novo ? 'Fechar o Book de ' + mesLbl(mesAtual) + (e.pct < 99.995 ? ' com ' + Math.floor(e.pct) + '% conciliado' : '') + '? Os campos ficam travados até reabrir.' : 'Reabrir o Book de ' + mesLbl(mesAtual) + ' para edição?')) return;
+  const k = mesAtual + '|__fech';
+  if (novo === e.auto) delete rev[k]; else rev[k] = { fechado: novo, em: new Date().toISOString() };
+  lsSet(LS_REV, rev); renderBook();
+}
+function periodoFechado(){ return !LEITURA && !!bal && estadoPeriodo().fechado; }
 function toggleFech(){ const b = $('fechBox'), min = !b.classList.contains('min'); b.classList.toggle('min', min); lsSet('aud-book-fech-min', min); }
 
 // ===================== conta → painel de conciliação =====================
@@ -789,6 +835,7 @@ function renderBook(){
   });
   const K = { tot: 0, ok: 0, div: 0, pend: 0, just: 0 };
   anal.forEach(l => { if (l.res || l.st === 'zero') return; K.tot++; K[l.st]++; });
+  K_ULT = K;
   $('kpis').innerHTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
   $('bkTit').textContent = 'Book';
@@ -831,10 +878,11 @@ function renderBook(){
   });
   $('bkBody').innerHTML = h || '<tr><td colspan="11" class="muted">Nenhuma conta com esses filtros.</td></tr>';
   if (LEITURA) $('bkBody').querySelectorAll('input,textarea,select').forEach(e => { e.disabled = true; e.tabIndex = -1; });
+  atualizarCadeado();
   renderFechamento();
   $('stTopo').textContent = bal ? 'Book de ' + mesLbl(mesAtual) + ' · origem: ' + (bal.origem || '') : '';
 }
-function setRev(k, campo, v){ if (LEITURA) return; rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
+function setRev(k, campo, v){ if (LEITURA || periodoFechado()) return; rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
 
 // ===================== lançamentos =====================
 async function verLanc(conta){
