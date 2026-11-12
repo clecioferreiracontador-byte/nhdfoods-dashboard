@@ -254,16 +254,12 @@ tr.grp0 td .dsc{color:#CD9A56}
 <main class="wrap">
 
 <div class="box">
-  <div class="upl" id="recImport" data-recolher="Importação do controle patrimonial">
-    <h3>🏗️ Controle patrimonial do mês</h3>
-    <div class="muted small">Importe o Book NHD (.xlsx, aba “Controle Patrimonial”) <b>ou</b> crie o mês aqui e lance as aquisições e baixas à mão — o mês novo parte dos bens do mês anterior e a depreciação é recalculada. Os saldos contábeis vêm do balancete importado no Book de conciliação.</div>
-    <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial</button> <button type="button" onclick="novoMes()">+ Novo mês</button></div>
-    <input type="file" id="inImob" accept=".xlsx,.xls" onchange="importarImob(this.files[0]);this.value=''">
-  </div>
-  <div class="toolbar" style="margin-top:12px">
+  <div class="toolbar">
     <label>Mês:<select id="selMes" onchange="mesAtual=this.value;render()"></select></label>
+    <button type="button" onclick="novoMes()" title="Normalmente não precisa: o mês do balancete novo do Book é criado sozinho a partir do mês anterior">+ Novo mês</button>
     <button type="button" class="danger" onclick="apagarMes()">Remover mês</button>
     <span class="muted small" id="stTopo"></span>
+    <span class="muted small" id="stNuvem" style="flex-basis:100%"></span>
   </div>
   <div id="msgs"></div>
 </div>
@@ -287,9 +283,17 @@ tr.grp0 td .dsc{color:#CD9A56}
 </section>
 
 <section class="panel active" id="tab-conferencia">
-  <div id="vazio" class="box empty">Importe o Book NHD do mês (aba “Controle Patrimonial”) ou clique em “+ Novo mês” para lançar os bens à mão.</div>
+  <div id="vazio" class="box empty">Ainda não há controle patrimonial neste navegador. Clique em “+ Novo mês” para começar ou importe a planilha na etapa 4 · Classes e contas.</div>
   <div id="conteudo" style="display:none">
     <div class="kpis" id="kpis"></div>
+    <div class="box">
+      <h2>Depreciação a lançar no mês <span class="muted small" id="lancarTit"></span></h2>
+      <div class="tscroll"><table class="bk">
+        <thead><tr><th>Classe</th><th>Conta de depreciação acumulada</th><th>Depreciação do mês (controle)</th><th>Já lançada no mês</th><th>Falta lançar</th></tr></thead>
+        <tbody id="lancarBody"></tbody><tfoot id="lancarFoot"></tfoot>
+      </table></div>
+      <div class="muted small" style="margin-top:6px">Lançamento: débito na despesa de depreciação da classe e crédito na conta de depreciação acumulada. “Já lançada” = créditos menos débitos da conta no balancete do mês.</div>
+    </div>
     <div class="box">
       <h2>Conferência por classe <span class="muted small" id="tituloConf"></span></h2>
       <div class="tscroll"><table class="bk">
@@ -339,6 +343,12 @@ tr.grp0 td .dsc{color:#CD9A56}
       <tbody id="clsBody"></tbody>
     </table></div>
     <div class="toolbar" style="margin-top:10px"><button type="button" onclick="novaClasse()">+ Nova classe</button></div>
+  </div>
+  <div class="box">
+    <h2>Importar a planilha (opcional)</h2>
+    <div class="muted small" style="margin-bottom:10px">O controle é mantido aqui, mês a mês (lance as aquisições e baixas na etapa 3 · Bens). Só use se quiser substituir um mês pelo da aba “Controle Patrimonial” do Book NHD.</div>
+    <button type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial (.xlsx)</button>
+    <input type="file" id="inImob" accept=".xlsx,.xls" onchange="importarImob(this.files[0]);this.value=''">
   </div>
 </section>
 
@@ -406,7 +416,47 @@ Object.values(dados).forEach(D => {
   (D.bens || []).forEach(b => { if (!b.id) b.id = uid(); if (b.daBase === undefined && b.da !== undefined && D.ref){ b.daBase = b.da; b.refBase = D.ref; } });
   if (D.classes && D.red) D.classes.forEach(k => { if (!cfg.classes.some(c => c.classe === k.classe)) cfg.classes.push({ classe: k.classe, contaAq: k.redAq ? (D.red[k.redAq] || '') : '', contaDp: k.redDp ? (D.red[k.redDp] || '') : '', vida: isNaN(+k.vida) ? '' : k.vida }); });
 });
-function salvar(){ if (!lsSet(LS_IMOB, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err'); lsSet(LS_CFG, cfg); }
+// ---- controle salvo neste navegador e no Firebase (coleção "dados", documento "patrimonial"; só o admin grava)
+const HUB = (() => { try { return window.parent !== window && window.parent.HubAuth ? window.parent.HubAuth : null; } catch(e){ return null; } })();
+const LS_SALVO = 'aud-imob-salvo-em', DOC_NUVEM = 'patrimonial';
+let tNuvem = null;
+function stNuvem(t, tipo){ const el = $('stNuvem'); if (!el) return; el.textContent = t; el.style.color = tipo === 'err' ? 'var(--aud-danger-text)' : tipo === 'ok' ? 'var(--aud-success)' : ''; }
+function salvar(){
+  if (!lsSet(LS_IMOB, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err');
+  lsSet(LS_CFG, cfg); lsSet(LS_SALVO, new Date().toISOString()); agendarNuvem();
+}
+function agendarNuvem(){
+  if (!HUB || HUB.papel !== 'admin') return;
+  clearTimeout(tNuvem); stNuvem('☁ Salvando no Firebase…');
+  tNuvem = setTimeout(async () => {
+    try { await HUB.gravarDoc(DOC_NUVEM, { savedAt: lsGet(LS_SALVO, '') || new Date().toISOString(), dados, cfg }); stNuvem('☁ Controle salvo no Firebase às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.', 'ok'); }
+    catch(e){ stNuvem('⚠ Não foi possível salvar no Firebase: ' + ((e && e.message) || e) + ' (continua salvo neste navegador).', 'err'); }
+  }, 2500);
+}
+async function carregarNuvem(){
+  if (!HUB){ stNuvem('Controle guardado neste navegador (abra pelo Hub para salvar no Firebase).'); return; }
+  try {
+    const d = await HUB.lerDoc(DOC_NUVEM), local = lsGet(LS_SALVO, '');
+    if (d && d.dados && (!local || !Object.keys(dados).length || (d.savedAt || '') > local)){
+      dados = d.dados; cfg = d.cfg || cfg; lsSet(LS_IMOB, dados); lsSet(LS_CFG, cfg); lsSet(LS_SALVO, d.savedAt || '');
+      stNuvem('☁ Controle carregado do Firebase (salvo em ' + new Date(d.savedAt).toLocaleString('pt-BR') + ').', 'ok');
+    } else if (Object.keys(dados).length && (!d || (d.savedAt || '') < local)) agendarNuvem();   // este navegador tem a versão mais nova
+    else if (d) stNuvem('☁ Controle em dia com o Firebase.', 'ok');
+  } catch(e){ stNuvem('⚠ Não foi possível ler o Firebase: ' + ((e && e.message) || e) + ' — usando o deste navegador.', 'err'); }
+}
+// mês novo automático: cada balancete do Book mais novo que o último mês do controle ganha o seu mês,
+// com os bens do mês anterior (a depreciação é recalculada para a nova data-base)
+async function criarMesesAuto(){
+  const meses = Object.keys(dados).sort(); if (!meses.length || !window.HubDB) return;
+  let bals = []; try { bals = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort(); } catch(e){ return; }
+  const novos = [];
+  bals.filter(m => m > meses[meses.length - 1]).forEach(m => {
+    const ult = Object.keys(dados).sort().pop();
+    dados[m] = { ref: fimMes(m), origem: 'a partir de ' + mesLbl(ult), em: new Date().toISOString(), bens: JSON.parse(JSON.stringify(dados[ult].bens)), balArquivo: null };
+    novos.push(m);
+  });
+  if (novos.length){ salvar(); mesAtual = novos[novos.length - 1]; msg(novos.map(mesLbl).join(', ') + ' criado(s) a partir do mês anterior. Lance as aquisições e baixas do mês na etapa 3 · Bens.', 'ok'); }
+}
 const classeCfg = nome => cfg.classes.find(c => c.classe === nome);
 
 function linhas(wb, sn){ return XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1, raw: true, defval: null }); }
@@ -631,6 +681,7 @@ async function render(){
     if (k.classe === g) x.classes.unshift(k.classe); else x.classes.push(k.classe);
     x.custo = r2(x.custo + k.custo); x.da = r2(x.da + k.da); x.daMes = r2(x.daMes + k.daMes); });
   const soma = (L, f) => { const v = L.map(cb).filter(Boolean); return v.length ? r2(v.reduce((a, x) => a + f(x), 0)) : NaN; };
+  const LANC = [];
   const html = Object.values(G).map(k => {
     const cfs = k.classes.map(n => classeCfg(n) || {});
     const CC = [...new Set(cfs.map(c => c.contaAq).filter(Boolean))];
@@ -643,6 +694,7 @@ async function render(){
     fixas.forEach(o => { T.dFix = r2(T.dFix - o.x.sf);
       sup[o.c] = { fonte: FONTE, saldo: r2(o.x.sf), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classes.join(' + ') + ' · depreciação acumulada pelo saldo próprio (a depreciação dos bens está em ' + (CD[0] || k.classes[0]) + ')' }; });
     const custoB = soma(CC, x => x.sf), daB = soma(CD, x => -x.sf), mesB = soma(CD, x => x.c - x.d);
+    if (Math.abs(k.daMes) >= 0.005 || (!isNaN(mesB) && Math.abs(mesB) >= 0.005)) LANC.push({ nome: k.classes.join(' + '), conta: CD.join(' + '), ctl: r2(k.daMes), feito: mesB });
     T.cC += k.custo; T.dC += k.da; T.mC += k.daMes;
     if (!k.custo && !k.da && !custoB && !daB) return '';
     const dC = isNaN(custoB) ? NaN : r2(custoB - k.custo), dD = isNaN(daB) ? NaN : r2(daB - k.da), dM = isNaN(mesB) ? NaN : r2(mesB - k.daMes);
@@ -665,6 +717,13 @@ async function render(){
       <td>${contas(CD) || '<span class="muted">—</span>'}${notaFix}</td><td>${fmt(k.da)}</td><td>${fmt(daB)}</td>${difTd(dD)}<td>${fmt(k.daMes)}</td><td>${fmt(mesB)}</td>${difTd(dM)}</tr>`;
   }).join('');
   $('confBody').innerHTML = html;
+  const tl = LANC.reduce((a, x) => ({ ctl: a.ctl + x.ctl, feito: a.feito + (isNaN(x.feito) ? 0 : x.feito) }), { ctl: 0, feito: 0 });
+  $('lancarTit').textContent = '· ' + mesLbl(mesAtual) + (balMes ? '' : ' · sem balancete deste mês: falta lançar = depreciação do controle');
+  $('lancarBody').innerHTML = LANC.map(x => { const falta = r2(x.ctl - (isNaN(x.feito) ? 0 : x.feito));
+    return `<tr><td><b>${esc(x.nome)}</b></td><td>${esc(x.conta) || '<span class="muted">sem conta</span>'}</td><td>${fmt(x.ctl)}</td><td>${balMes ? fmt(isNaN(x.feito) ? 0 : x.feito) : '—'}</td><td class="${Math.abs(falta) < 1 ? 'dok' : 'dbad'}">${Math.abs(falta) < 1 ? '✓ lançada' : fmt(falta)}</td></tr>`; }).join('')
+    || '<tr><td colspan="5" class="muted">Sem depreciação no mês.</td></tr>';
+  const faltaT = r2(tl.ctl - tl.feito);
+  $('lancarFoot').innerHTML = `<tr><td colspan="2">TOTAL</td><td>${fmt(r2(tl.ctl))}</td><td>${balMes ? fmt(r2(tl.feito)) : '—'}</td><td>${Math.abs(faltaT) < 1 ? '✓' : fmt(faltaT)}</td></tr>`;
   const contasImob = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^1\.2\.(05|10)\.\d\d\d\d$/.test(c)) : [];
   const ehDA = c => /^1\.2\.(05|10)\.2/.test(c);
   contasImob.forEach(c => { const x = balMes.contas[c]; if (ehDA(c)){ T.dB += -x.sf; T.mB += x.c - x.d; } else T.cB += x.sf; });
@@ -704,8 +763,7 @@ function renderBens(){
   $('bensFoot').innerHTML = `<tr><td colspan="5">TOTAL (${L.length})</td><td>${fmt(sv)}</td><td></td><td></td><td>${fmt(sd)}</td><td>${fmt(sv - sd)}</td><td></td></tr>`;
 }
 window.focoConta = function(){ window.abrirEtapa && abrirEtapa('conferencia'); };
-salvar();
-render();
+(async () => { await carregarNuvem(); await criarMesesAuto(); await render(); })();
 </script>
 
 <script>
