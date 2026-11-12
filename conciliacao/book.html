@@ -951,8 +951,17 @@ async function exportarBook(){
   if (!window.indexedDB) { msg('Este navegador não permite guardar o razão (IndexedDB indisponível).', 'err'); return; }
   try { await atualizarListas(); await carregarMes(); } catch(e){ msg('Erro ao abrir a base local: ' + esc(e.message), 'err'); }
   // suportes enviados por outros painéis (outra aba/janela) atualizam o Book
-  window.addEventListener('storage', e => { if (e.key === LS_SUP){ renderBook(); atualizarListas(); } });
-  window.addEventListener('focus', () => { if (bal) renderBook(); });
+  // Ao voltar para o Book, redesenha só se algum painel mandou suporte novo — e nunca no meio de um clique:
+  // o foco chega no mousedown, e trocar a tabela ali fazia o clique na conta se perder (era preciso clicar 2 vezes).
+  let ultSup = localStorage.getItem(LS_SUP), apertado = false, pendente = false;
+  const redesenhar = () => { ultSup = localStorage.getItem(LS_SUP); if (bal) renderBook(); };
+  window.addEventListener('pointerdown', () => { apertado = true; }, true);
+  window.addEventListener('pointerup', () => { apertado = false; if (pendente){ pendente = false; setTimeout(redesenhar, 0); } }, true);
+  window.addEventListener('focus', () => {
+    if (!bal || localStorage.getItem(LS_SUP) === ultSup) return;
+    if (apertado) pendente = true; else redesenhar();
+  });
+  window.addEventListener('storage', e => { if (e.key === LS_SUP){ if (apertado) pendente = true; else { redesenhar(); atualizarListas(); } } });
   // admin logado: mostra quais meses já estão salvos no portal (sem avisar erro se o token ainda não tiver acesso)
   if (tokenGh()) listarPortal(true);
 })();
