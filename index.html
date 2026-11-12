@@ -109,6 +109,10 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 /* Recursos de admin (importar, publicar, editar LALUR): o cliente não vê */
 body:not(.is-admin) .adm-only{display:none!important}
 .dre-lnk{cursor:pointer;border-bottom:1px dotted rgba(201,168,76,.6)}
+/* oscilação fora do padrão (só admin): um "?" discreto ao lado do valor */
+.osc{display:inline-block;width:13px;height:13px;line-height:12px;margin-left:4px;border-radius:50%;border:1px solid rgba(232,201,106,.75);color:var(--g2);font-size:9px;font-weight:700;text-align:center;vertical-align:1px;cursor:help;opacity:.8}
+.osc:hover{opacity:1;background:rgba(201,168,76,.18)}
+.osc.lk{cursor:pointer}
 .dre-lnk:hover{color:var(--g2)}
 #lancModal{position:fixed;inset:0;background:rgba(5,11,20,.72);z-index:9999;display:none;align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
 #lancModal .lm-box{background:var(--n3);border:1px solid rgba(201,168,76,.35);border-radius:10px;width:min(1200px,100%);padding:18px 20px;color:var(--white)}
@@ -826,7 +830,7 @@ function ensureTip(){
   gtip.className='dtip-g';
   document.body.appendChild(gtip);
   document.addEventListener('mouseover',function(e){
-    var t=e.target.closest?e.target.closest('.dlbl,.idx-tip'):null;
+    var t=e.target.closest?e.target.closest('.dlbl,.idx-tip,.osc'):null;
     if(!t||!t.dataset.tip)return;
     gtip.textContent=t.dataset.tip;
     gtip.style.left='0px';gtip.style.top='0px';gtip.style.display='block';
@@ -839,7 +843,7 @@ function ensureTip(){
     gtip.style.left=left+'px';gtip.style.top=top+'px';
   });
   document.addEventListener('mouseout',function(e){
-    var t=e.target.closest?e.target.closest('.dlbl,.idx-tip'):null;
+    var t=e.target.closest?e.target.closest('.dlbl,.idx-tip,.osc'):null;
     if(t)gtip.style.display='none';
   });
   return gtip;
@@ -879,6 +883,42 @@ function dreBkNo(r){
   var tem=function(ns){return ns.some(function(n){return n.r===r||(n.c&&tem(n.c));});};
   return tem(DTREE.filter(function(n){return n.r===6||n.r===7;}))?'rb':'rl';
 }
+/* Oscilação fora do padrão (só o admin vê): cada mês da linha é comparado com a MEDIANA dos outros meses.
+   Marca só linhas de conta (subtotal com subcontas fica de fora: as subcontas mostram de onde veio) quando a
+   diferença é material (acima de R$ 15 mil ou 0,5% da receita líquida média) e foge do normal da linha (mais de 4
+   desvios robustos e pelo menos o dobro/metade da mediana), quando a conta zera ou quando o sinal inverte.
+   IRPJ/CSLL ficam de fora (apuração trimestral/anual oscila por natureza).
+   Serve para achar lançamento em conta errada, em duplicidade, fora do mês ou faltando. */
+function oscMed(a){var o=a.slice().sort(function(x,y){return x-y;}),n=o.length;return n?(n%2?o[(n-1)/2]:(o[n/2-1]+o[n/2])/2):0;}
+function oscLimite(){var s=0,n=0;for(var i=0;i<numMeses;i++){var x=Math.abs((D.rl||[])[i]||0);if(x){s+=x;n++;}}return Math.max(15000,n?s/n*0.005:0);}
+var OSC_FORA={86:1,87:1,88:1};
+function oscilacao(node,i){
+  if(!IS_ADMIN||node.t==='rt'||node.t==='rst'||(node.c&&node.c.length)||OSC_FORA[node.r]||/IRPJ|CSLL/i.test(node.l))return null;
+  var v=node.v[i];if(v===undefined||v===null||i>=numMeses)return null;
+  var outros=[];for(var k=0;k<numMeses;k++){if(k===i)continue;var x=node.v[k];if(x!==undefined&&x!==null)outros.push(x);}
+  if(outros.length<3)return null;
+  var med=oscMed(outros),mad=oscMed(outros.map(function(x){return Math.abs(x-med);})),lim=oscLimite(),dev=v-med;
+  if(Math.abs(dev)<lim)return null;
+  var tipo='';
+  if(Math.abs(med)>=lim&&Math.abs(v)<0.005)tipo='zerada';
+  else if(Math.abs(med)>=lim&&v*med<0)tipo='sinal';
+  else if(Math.abs(med)<lim/4&&Math.abs(v)>=lim&&outros.filter(function(x){return Math.abs(x)>=lim;}).length<=1)tipo='novo';
+  else if(Math.abs(dev)>Math.max(4*1.4826*mad,Math.abs(med))||(Math.abs(med)>=lim&&Math.abs(v)<Math.abs(med)/2&&Math.abs(dev)>4*1.4826*mad))tipo=Math.abs(v)>Math.abs(med)?'maior':'menor';
+  if(!tipo)return null;
+  return {tipo:tipo,v:v,med:med,pct:med?(Math.abs(v)-Math.abs(med))/Math.abs(med):0,n:outros.length};
+}
+function oscHtml(node,i){
+  var o=oscilacao(node,i);if(!o)return '';
+  var mes=(typeof MF!=='undefined'&&MF[i])?MF[i]:'este mês';
+  var txt=o.tipo==='zerada'?'A linha ficou zerada em '+mes+', mas nos outros meses gira em torno de '+fmt(o.med)+'.'
+    :o.tipo==='novo'?'Valor de '+mes+' ('+fmt(o.v)+') numa linha que nos outros meses fica praticamente zerada.'
+    :o.tipo==='sinal'?'O sinal inverteu em '+mes+' ('+fmt(o.v)+'), contra '+fmt(o.med)+' de mediana nos outros meses.'
+    :'Valor de '+mes+' ('+fmt(o.v)+') '+(o.tipo==='maior'?'bem acima':'bem abaixo')+' do normal da linha: mediana de '+fmt(o.med)+' nos outros '+o.n+' meses ('+(o.pct>0?'+':'')+(o.pct*100).toFixed(0)+'%).';
+  txt+=' Pode ser lançamento em conta errada, em duplicidade, fora do mês ou faltando.';
+  var lk=dreTemLanc(node.r);
+  if(lk)txt+=' Clique para ver os lançamentos.';
+  return '<span class="osc'+(lk?' lk':'')+'" data-tip="'+txt.replace(/"/g,'&quot;')+'"'+(lk?' onclick="event.stopPropagation();abrirLancDRE('+node.r+')"':'')+'>?</span>';
+}
 function renderTreeRows(nodes,ci,view,base,bk,depth){
   var h='';
   nodes.forEach(function(node){
@@ -902,10 +942,10 @@ function renderTreeRows(nodes,ci,view,base,bk,depth){
       var i=ci[ci2];var bv=D[bk][i];var p=bv?v/bv:0;
       var arr='▬';
       if(ci2>0){var pv=node.v[ci[ci2-1]];if(pv!==undefined){var pp=D[bk][ci[ci2-1]]?pv/D[bk][ci[ci2-1]]:0;arr=p>pp?'▲':p<pp?'▼':'▬';}}
-      var nc=v<0?' vn':'';var ac=arr==='▲'?'au':arr==='▼'?'ad':'an';
-      if(view==='val')h+='<td class="'+nc+'">'+fmt(v)+' <span class="'+ac+'">'+arr+'</span></td>';
-      else if(view==='pct')h+='<td><span class="vpc">'+(p*100).toFixed(1)+'%</span><span class="'+ac+'">'+arr+'</span></td>';
-      else h+='<td class="'+nc+'">'+fmt(v)+'<span class="vpc">'+(p*100).toFixed(1)+'% <span class="'+ac+'">'+arr+'</span></span></td>';
+      var nc=v<0?' vn':'';var ac=arr==='▲'?'au':arr==='▼'?'ad':'an';var oh=oscHtml(node,i);
+      if(view==='val')h+='<td class="'+nc+'">'+fmt(v)+' <span class="'+ac+'">'+arr+'</span>'+oh+'</td>';
+      else if(view==='pct')h+='<td><span class="vpc">'+(p*100).toFixed(1)+'%</span><span class="'+ac+'">'+arr+'</span>'+oh+'</td>';
+      else h+='<td class="'+nc+'">'+fmt(v)+oh+'<span class="vpc">'+(p*100).toFixed(1)+'% <span class="'+ac+'">'+arr+'</span></span></td>';
     });
     if(ci.length>1){
       var tp=totB?anual/totB:0;
