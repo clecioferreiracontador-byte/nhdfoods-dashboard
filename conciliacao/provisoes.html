@@ -246,6 +246,7 @@ table.pv thead th.base{background:var(--aud-secondary);color:var(--aud-primary)}
 table.pv tr.tot td{font-weight:700;border-top:1px solid #c5cbd3}
 table.pv tr.dif td{font-weight:600}
 </style>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -265,7 +266,7 @@ table.pv tr.dif td{font-weight:600}
 <main class="wrap">
 
 <div class="box">
-  <div class="upl">
+  <div class="upl" id="recImport" data-recolher="Importação (Book, aba Prov Trab) e cópia dos dados">
     <h3>👥 Provisões trabalhistas</h3>
     <div class="muted small">Digite na tabela os saldos do <b>relatório de provisões da folha</b> de cada mês (provisão, INSS e FGTS de férias e de 13º) <b>ou</b> importe o Book NHD (.xlsx, aba “Prov Trab”). O total de cada provisão é comparado com o saldo da conta no balancete do mesmo mês, importado no Book de conciliação.</div>
     <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inProv').click()">Importar Book (aba Prov Trab)</button>

@@ -253,6 +253,7 @@ table.pv thead th.base{background:var(--aud-secondary);color:var(--aud-primary)}
 table.pv tr.tot td{font-weight:700;border-top:1px solid #c5cbd3}
 table.pv tr.dif td{font-weight:600}
 </style>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -274,7 +275,7 @@ table.pv tr.dif td{font-weight:600}
 <main class="wrap">
 
 <div class="box">
-  <div class="upl">
+  <div class="upl" id="recImport" data-recolher="Importação (Book, aba Trib Pagar) e cópia dos dados">
     <h3>🧾 Controle de tributos a pagar</h3>
     <div class="muted small">Importe o Book NHD (.xlsx, aba “Trib Pagar”) <b>ou</b> lance as provisões e os pagamentos aqui (etapa 3). Provisão entra negativa e pagamento/compensação positivo, como na planilha; o saldo de cada conta é a soma dos lançamentos até a data-base. Os saldos contábeis vêm do balancete importado no Book de conciliação.</div>
     <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inTrib').click()">Importar Book (aba Trib Pagar)</button>

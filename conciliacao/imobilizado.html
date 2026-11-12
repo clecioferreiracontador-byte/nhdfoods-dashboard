@@ -233,6 +233,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 </style>
 <script src="vendor/sheetjs/xlsx.full.min.js"></script>
 <script src="hub-db.js?v=2"></script>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -253,7 +254,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 <main class="wrap">
 
 <div class="box">
-  <div class="upl">
+  <div class="upl" id="recImport" data-recolher="Importação do controle patrimonial">
     <h3>🏗️ Controle patrimonial do mês</h3>
     <div class="muted small">Importe o Book NHD (.xlsx, aba “Controle Patrimonial”) <b>ou</b> crie o mês aqui e lance as aquisições e baixas à mão — o mês novo parte dos bens do mês anterior e a depreciação é recalculada. Os saldos contábeis vêm do balancete importado no Book de conciliação.</div>
     <div class="paste-actions"><button class="primary" type="button" onclick="document.getElementById('inImob').click()">Importar controle patrimonial</button> <button type="button" onclick="novoMes()">+ Novo mês</button></div>

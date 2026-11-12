@@ -177,6 +177,7 @@ tr.clickable{cursor:pointer}
 </style>
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script src="vendor/sheetjs/xlsx.full.min.js"></script>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -197,7 +198,7 @@ tr.clickable{cursor:pointer}
 <main class="wrap">
 
 <div class="box">
-  <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+  <div class="grid" id="recImport" data-recolher="Importação de arquivos (razão e extratos)" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
     <div class="upl">
       <h3>📒 Razão contábil</h3>
       <div class="muted small">Protheus › Lançamentos Contábeis (.xlsx). Pode ser o razão completo: só as contas de caixa, bancos e aplicações (1.1.01) são usadas aqui.</div>

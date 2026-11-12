@@ -148,6 +148,7 @@ footer{display:none}
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
 <script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
 <script src="hub-db.js?v=2"></script>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -181,7 +182,7 @@ footer{display:none}
   <input type="file" id="importFile" accept="application/json" onchange="importJSON(event)">
   <input type="file" id="globalPdfInput" accept="application/pdf" multiple onchange="handleGlobalPdfUpload(event)">
 </div>
-<p class="muted small" style="margin:10px 0 0">Envie o PDF do extrato atualizado (RFB/PGFN) de cada parcelamento — ou cole o texto manualmente — e a ferramenta extrai os valores e calcula o que deve ficar na contabilidade. Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</p>
+<p class="muted small" id="recImport" data-recolher="Como carregar os extratos" style="margin:10px 0 0">Envie o PDF do extrato atualizado (RFB/PGFN) de cada parcelamento — ou cole o texto manualmente — e a ferramenta extrai os valores e calcula o que deve ficar na contabilidade. Os dados ficam salvos apenas neste navegador; a leitura do PDF acontece localmente, nada é enviado para a internet.</p>
 </div>
 
 <section class="panel" id="tab-processo">

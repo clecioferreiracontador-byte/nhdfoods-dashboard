@@ -258,6 +258,7 @@ table.bk td.mes-res{font-size:.62rem}
 </style>
 <script src="vendor/sheetjs/xlsx.full.min.js"></script>
 <script src="hub-db.js?v=2"></script>
+<script src="recolher.js?v=1"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -279,7 +280,7 @@ table.bk td.mes-res{font-size:.62rem}
 
 <div class="box">
   <div class="ro-aviso" role="status">👁 <b>Modo visualização.</b> Você vê o Book dos meses fechados pela Audicon; nada pode ser alterado aqui.</div>
-  <div class="grid upl-grid" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
+  <div class="grid upl-grid" id="recImport" data-recolher="Importação de arquivos (Book / balancete e razão)" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">
     <div class="upl">
       <h3>📘 Balancete / Book do mês</h3>
       <div class="muted small">O Book (.xlsx, aba “Book”) traz saldos, observações e diferenças já apuradas; ou o balancete do Protheus (Conta | Descrição | Saldo anterior | Débito | Crédito | Saldo atual).</div>
