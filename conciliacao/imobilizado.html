@@ -339,7 +339,7 @@ tr.grp0 td .dsc{color:#CD9A56}
     <h2>Classes e contas</h2>
     <div class="muted small" style="margin-bottom:10px">Cada classe do controle é ligada à conta de custo e à conta de depreciação acumulada do balancete. A vida útil é o padrão sugerido ao lançar um bem da classe (pode ser trocada no bem). Vale para todos os meses. Em <b>Conciliar junto com</b>, a classe é tratada como parte da outra (ex.: Ferramentas dentro de Móveis e Utensílios): o custo do controle é comparado com a soma das contas de custo das duas, a depreciação do controle com a conta de depreciação da classe principal, e a conta de depreciação da classe que entra junto fica conciliada pelo próprio saldo.</div>
     <div class="tscroll"><table>
-      <thead><tr><th>Classe</th><th>Conta de custo</th><th>Conta de depreciação acumulada</th><th>Vida útil padrão (meses)</th><th title="Classes que a contabilidade junta numa mesma conciliação (ex.: Ferramentas lançadas em Móveis e Utensílios)">Conciliar junto com</th><th></th></tr></thead>
+      <thead><tr><th>Classe</th><th>Conta de custo</th><th>Conta de depreciação acumulada</th><th>Vida útil padrão (meses)</th><th title="Classes que a contabilidade junta numa mesma conciliação (ex.: Ferramentas em Móveis e Utensílios; Equipamentos de informática em Máquinas e Equipamentos)">Conciliar junto com</th><th></th></tr></thead>
       <tbody id="clsBody"></tbody>
     </table></div>
     <div class="toolbar" style="margin-top:10px"><button type="button" onclick="novaClasse()">+ Nova classe</button></div>
@@ -628,9 +628,11 @@ function grupoDe(nome){ const c = classeCfg(nome); return c && c.junto && c.junt
 // pega a conta do balancete de mesmo nome (ex.: FERRAMENTAS / DA FERRAMENTAS)
 function ajustarPadroes(){
   let mudou = false;
-  const mov = cfg.classes.find(c => /MOVEIS E UTENSILIOS/.test(norm(c.classe)));
+  const mov = cfg.classes.find(c => /MOVEIS E UTENSILIOS/.test(norm(c.classe))), maq = cfg.classes.find(c => /^MAQUINAS/.test(norm(c.classe)));
   cfg.classes.forEach(c => {
     if (mov && c !== mov && c.junto === undefined && /FERRAMENT/.test(norm(c.classe))){ c.junto = mov.classe; mudou = true; }
+    // Equipamentos de informática (1.2.05.1006, processamento eletrônico de dados) somados a Máquinas e Equipamentos, como no Book NHD
+    if (maq && c !== maq && c.junto === undefined && /INFORMATICA|PROCES.*DADOS/.test(norm(c.classe))){ c.junto = maq.classe; mudou = true; }
     if (!balMes || !balMes.contas) return;
     const alvo = norm(c.classe), sem = d => norm(d).replace(/^\(-\)\s*/, '').replace(/^(DA|AA)\s+/, '').trim();
     const mexe = x => Math.abs(x.sf) >= 0.005 || Math.abs(x.d) >= 0.005 || Math.abs(x.c) >= 0.005;   // só liga conta que tem saldo ou movimento
