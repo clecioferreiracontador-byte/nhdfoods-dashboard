@@ -267,7 +267,8 @@ table.pv tr.dif td{font-weight:600}
     <button type="button" role="tab" aria-selected="false" data-tab="processo">1 · Processo mensal</button>
     <button type="button" role="tab" aria-selected="true" data-tab="conferencia">2 · Conferência</button>
     <button type="button" role="tab" aria-selected="false" data-tab="lanc">3 · Lançamentos</button>
-    <button type="button" role="tab" aria-selected="false" data-tab="contas">4 · Contas</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="mensal">4 · Mês a mês</button>
+    <button type="button" role="tab" aria-selected="false" data-tab="contas">5 · Contas</button>
   </div>
 </div></nav>
 <main class="wrap">
@@ -293,6 +294,8 @@ table.pv tr.dif td{font-weight:600}
   <div class="box"><h2>Passo a passo</h2><ol class="steps">
     <li>Importar o balancete do mês no <b>Book de conciliação</b>.</li>
     <li>Na etapa <b>3 · Lançamentos</b>, lançar as <b>provisões do mês</b> (apuração de cada tributo) e os <b>pagamentos/compensações</b> feitos — ou importar o Book NHD (aba “Trib Pagar”).</li>
+    <li>Ao importar o <b>razão</b> no Book de conciliação, as contas daqui são atualizadas sozinhas: <b>crédito = provisão</b> e <b>débito = pagamento</b> (substitui os lançamentos da planilha naquele mês e mantém os que você lançou aqui).</li>
+    <li>Na etapa <b>4 · Mês a mês</b>, digitar o valor da <b>guia</b> de cada competência: a provisão do mês tem de bater com a guia e o pagamento do mês com a provisão do mês anterior.</li>
     <li>Escolher a <b>data-base</b> = último dia do mês que está sendo fechado.</li>
     <li>Na etapa <b>2 · Conferência</b>, cada conta mostra o saldo do controle, o saldo contábil e a diferença. Também confere as provisões do mês com os créditos e os pagamentos com os débitos da conta.</li>
     <li>Os saldos do controle vão sozinhos para o <b>Book de conciliação</b> como suporte das contas.</li>
@@ -301,6 +304,8 @@ table.pv tr.dif td{font-weight:600}
     <tr><td>R1</td><td>Mapeamento igual ao Book NHD: cada bloco da aba “Trib Pagar” é uma conta (DCTFWeb 2.1.15.1011, PIS 2.1.15.1002, COFINS 2.1.15.1003, CSLL 2.1.15.1008, IRPJ 2.1.15.1009, ICMS 2.1.15.2001 e ISS 2.1.15.3001). Outras contas podem ser incluídas na etapa 4.</td></tr>
     <tr><td>R2</td><td>Saldo do controle = soma dos lançamentos com data até a data-base (provisão negativa, pagamento positivo), igual à fórmula “Saldo findo dia” da planilha.</td></tr>
     <tr><td>R3</td><td>Diferença até R$ 0,01 é tratada como arredondamento.</td></tr>
+    <tr><td>R4</td><td>Razão: em conta de passivo, <b>crédito = provisão</b> (entra negativo) e <b>débito = pagamento/compensação</b> (positivo). Os meses que vierem no razão substituem os lançamentos da planilha/razão daquele mês; o status e o check passam para o lançamento do razão de mesmo valor.</td></tr>
+    <tr><td>R5</td><td>Confronto mensal: provisão do mês = guia da competência; pagamentos do mês = provisão do mês anterior.</td></tr>
   </tbody></table></div>
 </section>
 
@@ -309,7 +314,7 @@ table.pv tr.dif td{font-weight:600}
   <div class="box">
     <h2>Conferência por conta <span class="muted small" id="tituloConf"></span></h2>
     <div class="tscroll"><table class="bk">
-      <thead><tr><th>Conta</th><th class="wrap">Tributo</th><th>Saldo controle</th><th>Saldo contábil</th><th>Diferença</th><th>Status</th><th>Provisões do mês</th><th>Créditos no mês</th><th>Pagamentos do mês</th><th>Débitos no mês</th><th class="wrap">Em aberto na data-base</th></tr></thead>
+      <thead><tr><th>Conta</th><th class="wrap">Tributo</th><th>Saldo controle</th><th>Saldo contábil</th><th>Diferença</th><th>Status</th><th>Provisão × guia</th><th>Pagto × mês anterior</th><th>Provisões do mês</th><th>Créditos no mês</th><th>Pagamentos do mês</th><th>Débitos no mês</th><th class="wrap">Em aberto na data-base</th></tr></thead>
       <tbody id="confBody"></tbody><tfoot id="confFoot"></tfoot>
     </table></div>
     <div id="outrasContas"></div>
@@ -329,13 +334,25 @@ table.pv tr.dif td{font-weight:600}
     <div id="formLanc"></div>
     <div class="bensTopo" id="bensTopo"><div class="filters">
       <label>Conta<select id="fConta" onchange="renderLanc()"></select></label>
-      <label>Período<select id="fPer" onchange="renderLanc()"><option value="">Todos</option><option value="mes">Só do mês da data-base</option><option value="ate">Até a data-base</option><option value="manual">Só lançados aqui</option></select></label>
+      <label>Período<select id="fPer" onchange="renderLanc()"><option value="">Todos</option><option value="mes">Só do mês da data-base</option><option value="ate">Até a data-base</option><option value="manual">Só lançados aqui</option><option value="razao">Só vindos do razão</option></select></label>
       <label>Buscar<input type="text" id="fBusca" oninput="renderLanc()" placeholder="histórico, status"></label>
       <label class="ck" title="Provisão já paga/compensada e os pagamentos dela"><input type="checkbox" id="fOcultar" onchange="lsSet('aud-trib-ocultar',this.checked);renderLanc()"> ocultar os já quitados</label>
     </div></div>
     <div class="tscroll"><table>
       <thead><tr><th title="Quitado: provisão com pagamento/compensação">✓</th><th>Data</th><th class="wrap">Histórico</th><th>Valor</th><th>Saldo acumulado</th><th class="wrap">Status</th><th></th></tr></thead>
       <tbody id="lancBody"></tbody><tfoot id="lancFoot"></tfoot>
+    </table></div>
+  </div>
+</section>
+
+<section class="panel" id="tab-mensal">
+  <div class="box">
+    <h2>Mês a mês <span class="muted small" id="mensalTitulo"></span></h2>
+    <div class="muted small" style="margin-bottom:10px">Para cada competência: a <b>provisão do mês</b> (créditos da conta) tem de ser igual à <b>guia</b> apurada, e os <b>pagamentos do mês</b> (débitos) têm de ser iguais à <b>provisão do mês anterior</b>. Digite o valor da guia de cada competência (aceita soma, ex.: <i>11.064,01 + 473,62</i>).</div>
+    <div class="filters"><label>Conta<select id="fContaM" onchange="renderMensal()"></select></label></div>
+    <div class="tscroll"><table class="bk">
+      <thead><tr><th>Competência</th><th>Saldo anterior</th><th>Provisão do mês</th><th>Guia da competência</th><th>Provisão × guia</th><th>Pagamentos do mês</th><th>Provisão do mês anterior</th><th>Pagamento × mês anterior</th><th>Saldo final</th></tr></thead>
+      <tbody id="mensalBody"></tbody>
     </table></div>
   </div>
 </section>
@@ -432,6 +449,8 @@ async function importarBook(f){
       let ct = contaDe(b.conta);
       if (!ct){ ct = { conta: b.conta, nome: b.nome, itens: [] }; dados.contas.push(ct); }
       ct.itens = b.itens.sort((x, y) => x.data.localeCompare(y.data)); n += b.itens.length;
+      // os meses que já vieram do razão voltam a ser aplicados por cima da planilha
+      Object.keys(dados.razao || {}).forEach(k => { if (k.endsWith('|' + b.conta)) delete dados.razao[k]; });
     });
     salvar();
     const estranhas = blocos.reduce((a, b) => a.concat(b.itens.filter(i => i.data < '2020-01-01').map(i => b.conta + ' ' + br(i.data) + ' ' + i.desc)), []);
@@ -463,8 +482,80 @@ async function carregarMeses(){
 }
 async function carregarBal(m){ balMes = null; try { if (window.HubDB) balMes = await HubDB.getMeta('balancete:' + m); } catch(e){} }
 
+// ===================== razão (importado no Book de conciliação) =====================
+// Cada mês do razão que traz a conta substitui os lançamentos da planilha/razão daquele mês:
+// crédito = provisão (negativo), débito = pagamento (positivo). Os lançados aqui (manual) ficam.
+async function sincronizarRazao(){
+  if (!window.HubDB) return;
+  let info = null; try { info = await HubDB.getMeta('razao'); } catch(e){}
+  if (!info || !info.agg) return;
+  dados.razao = dados.razao || {};
+  const feitos = [], manuais = [];
+  for (const ct of dados.contas){
+    for (const m of Object.keys(info.agg).sort()){
+      const a = info.agg[m][ct.conta]; if (!a) continue;
+      const k = m + '|' + ct.conta, assin = r2(a.d) + '|' + r2(a.c) + '|' + a.n;
+      if (dados.razao[k] === assin) continue;
+      let L = []; try { L = await HubDB.lancamentosConta(ct.conta, [m]); } catch(e){ continue; }
+      const ini = m + '-01', fim = fimMes(m);
+      const saem = ct.itens.filter(i => i.data >= ini && i.data <= fim && i.origem !== 'manual');
+      let novos = L.map(l => ({ id: uid(), data: l.data, desc: String(l.hist || '').trim(), valor: r2((l.deb || 0) - (l.cred || 0)), status: '', origem: 'razao', doc: l.doc || '' })).filter(i => i.valor);
+      // conta com muitos lançamentos no mês (ex.: ICMS nota a nota): soma por dia, créditos e débitos separados
+      if (novos.length > 60){
+        const g = {};
+        novos.forEach(i => { const kk = i.data + (i.valor < 0 ? 'C' : 'D'); const x = g[kk] = g[kk] || { id: uid(), data: i.data, desc: '', valor: 0, n: 0, status: '', origem: 'razao' }; x.valor += i.valor; x.n++; });
+        novos = Object.values(g).map(x => Object.assign(x, { valor: r2(x.valor), desc: (x.valor < 0 ? 'Créditos do dia (provisão)' : 'Débitos do dia (pagamento/baixa)') + ' · ' + x.n + ' lançamento' + (x.n > 1 ? 's' : '') + ' do razão' })).filter(i => i.valor);
+      }
+      // o status ("venc. 10/09", "compensado") e o check passam para o lançamento do razão de mesmo valor
+      const sobra = saem.slice();
+      novos.forEach(i => { const j = sobra.findIndex(x => Math.abs(x.valor - i.valor) < 0.005); if (j >= 0){ if (sobra[j].status) i.status = sobra[j].status; if (typeof sobra[j].conc === 'boolean') i.conc = sobra[j].conc; sobra.splice(j, 1); } });
+      ct.itens = ct.itens.filter(i => !saem.includes(i)).concat(novos).sort((x, y) => x.data.localeCompare(y.data));
+      dados.razao[k] = assin; feitos.push(ct.conta + ' ' + mesLbl(m) + ' (' + novos.length + ')');
+      const man = ct.itens.filter(i => i.origem === 'manual' && i.data >= ini && i.data <= fim);
+      if (man.length) manuais.push(ct.conta + ' ' + mesLbl(m) + ': ' + man.length);
+    }
+  }
+  if (feitos.length){
+    salvar();
+    msg('Atualizado pelo razão (crédito = provisão, débito = pagamento): ' + feitos.map(esc).join(' · ') + '.', 'ok');
+    if (manuais.length) msg('Lançamentos feitos aqui à mão nesses meses foram mantidos — confira se não duplicam o razão: ' + manuais.map(esc).join(' · '), 'warn');
+  }
+}
+// ===================== confronto mensal: provisão × guia e pagamento × provisão do mês anterior =====================
+const mesAntM = m => { const [y, mm] = m.split('-').map(Number); const d = new Date(y, mm - 2, 1); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+function movMes(ct, m){
+  const ini = m + '-01', fim = fimMes(m), L = ct.itens.filter(i => i.data >= ini && i.data <= fim);
+  return { prov: r2(-L.filter(i => i.valor < 0).reduce((a, i) => a + i.valor, 0)), pg: r2(L.filter(i => i.valor > 0).reduce((a, i) => a + i.valor, 0)), n: L.length };
+}
+const guiaDe = (conta, m) => { const g = ((dados.guias || {})[conta] || {})[m]; return typeof g === 'number' ? g : NaN; };
+function confrontos(ct, m){
+  const mv = movMes(ct, m), ant = movMes(ct, mesAntM(m)), g = guiaDe(ct.conta, m);
+  return { mv, ant, guia: g, dGuia: isNaN(g) ? NaN : r2(mv.prov - g), dPg: (mv.pg || ant.prov) ? r2(mv.pg - ant.prov) : NaN };
+}
+const chkTd = (d, vazio) => isNaN(d) ? `<td class="muted small">${vazio}</td>` : `<td class="${ok(d) ? 'dok' : 'dbad'}">${ok(d) ? '✓ OK' : fmt(d)}</td>`;
+function setGuia(conta, m, txt){
+  const partes = String(txt).split('+').map(x => num(x)).filter(x => !isNaN(x));
+  dados.guias = dados.guias || {}; const g = dados.guias[conta] = dados.guias[conta] || {};
+  if (!partes.length) delete g[m]; else g[m] = r2(partes.reduce((a, x) => a + x, 0));
+  salvar(); render();
+}
+function renderMensal(){
+  const sel = $('fContaM'), atual = sel.value || (dados.contas[0] || {}).conta || '';
+  sel.innerHTML = dados.contas.map(c => `<option value="${esc(c.conta)}" ${c.conta === atual ? 'selected' : ''}>${esc(c.conta)} · ${esc(c.nome)}</option>`).join('');
+  const ct = contaDe(sel.value); if (!ct){ $('mensalBody').innerHTML = ''; return; }
+  const ms = [...new Set(ct.itens.map(i => i.data.slice(0, 7)).filter(m => m >= '2020-01').concat(Object.keys((dados.guias || {})[ct.conta] || {})))].sort();
+  $('mensalTitulo').textContent = '· ' + ct.conta + ' · ' + ct.nome;
+  $('mensalBody').innerHTML = ms.slice().reverse().map(m => {
+    const c = confrontos(ct, m), sa = saldoAte(ct, fimMes(mesAntM(m))), sf = saldoAte(ct, fimMes(m));
+    return `<tr class="${m === mesAtual ? 'grp' : ''}"><td>${mesLbl(m)}</td><td>${fmt(sa)}</td><td>${fmt(c.mv.prov)}</td>
+      <td><input type="text" inputmode="decimal" style="width:120px" value="${isNaN(c.guia) ? '' : fmt(c.guia)}" placeholder="valor da guia" onchange="setGuia('${esc(ct.conta)}','${m}',this.value)" onkeydown="if(event.key==='Enter')this.blur()"></td>
+      ${chkTd(c.dGuia, 'sem guia')}<td>${fmt(c.mv.pg)}</td><td>${fmt(c.ant.prov)}</td>${chkTd(c.dPg, '—')}<td>${fmt(sf)}</td></tr>`;
+  }).join('') || '<tr><td colspan="9" class="muted">Sem lançamentos nesta conta.</td></tr>';
+}
+
 // ===================== conferência =====================
 async function render(){
+  await sincronizarRazao();
   await carregarMeses(); await carregarBal(mesAtual);
   const fim = fimMes(mesAtual), ini = mesAtual + '-01', cb = c => balMes && balMes.contas ? balMes.contas[c] : null;
   const sup = {}, T = { ctl: 0, cont: 0 }; let nOk = 0, nDiv = 0;
@@ -482,9 +573,10 @@ async function render(){
     const aberto = abertas.length ? abertas.slice(0, 6).map(i => esc(i.desc) + ' ' + fmt(-i.valor) + (i.status ? ' <span class="muted">(' + esc(i.status) + ')</span>' : '')).join(' · ') + (abertas.length > 6 ? ' · e mais ' + (abertas.length - 6) : '') : '';
     const st = !tem ? '<span class="pill cinza">Sem controle</span>' : isNaN(dif) ? '<span class="pill warn">Sem balancete</span>' : ok(dif) ? '<span class="pill ok">Conciliada</span>' : '<span class="pill bad">Divergente</span>';
     return `<tr><td><a href="#" onclick="verConta('${ct.conta}');return false">${esc(ct.conta)}</a></td><td class="wrap">${esc(ct.nome)}</td><td>${fmt(s)}</td><td>${fmt(cont)}</td>${difTd(dif)}<td>${st}</td>
+      ${chkTd(confrontos(ct, mesAtual).dGuia, 'sem guia')}${chkTd(confrontos(ct, mesAtual).dPg, '—')}
       <td>${fmt(prov)}</td><td>${b ? fmt(b.c) : '—'}</td><td>${fmt(pg)}</td><td>${b ? fmt(b.d) : '—'}</td><td class="small aberto">${aberto}</td></tr>`;
   }).join('');
-  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL</td><td>${fmt(r2(T.ctl))}</td><td>${balMes ? fmt(r2(T.cont)) : '—'}</td>${balMes ? difTd(r2(T.cont - T.ctl)) : '<td>—</td>'}<td colspan="6"></td></tr>`;
+  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL</td><td>${fmt(r2(T.ctl))}</td><td>${balMes ? fmt(r2(T.cont)) : '—'}</td>${balMes ? difTd(r2(T.cont - T.ctl)) : '<td>—</td>'}<td colspan="8"></td></tr>`;
   const mapeadas = new Set(dados.contas.map(c => c.conta)), outras = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^2\.1\.15\.\d{4}$/.test(c) && !mapeadas.has(c) && Math.abs(balMes.contas[c].sf) >= 0.005) : [];
   $('outrasContas').innerHTML = outras.length ? `<div class="msg" style="margin-top:10px"><b>Outras contas de tributos com saldo</b> (conciliadas em outros painéis ou ainda sem controle aqui — inclua na etapa 4 se for o caso): ${outras.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
   $('tituloConf').textContent = '· data-base ' + br(fim) + (balMes ? '' : ' · sem balancete deste mês no Book de conciliação');
@@ -493,7 +585,7 @@ async function render(){
   $('kpis').innerHTML = [['Saldo do controle', fmt(r2(T.ctl))], ['Saldo contábil', balMes ? fmt(r2(T.cont)) : '—'], ['Contas conferidas', nOk + ' OK · ' + nDiv + ' com diferença']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
   const s = lsGet(LS_SUP, {}); Object.keys(s).forEach(k => { if (s[k].fonte === FONTE) delete s[k]; }); Object.assign(s, sup); lsSet(LS_SUP, s);
-  renderContas(); renderLanc();
+  renderContas(); renderLanc(); renderMensal();
 }
 function verConta(c){ $('fConta').value = c; window.abrirEtapa && abrirEtapa('lanc'); renderLanc(); }
 
@@ -574,9 +666,9 @@ function renderLanc(){
   const todos = ct.itens.map(i => { acc = r2(acc + i.valor); return Object.assign({ acc, q: quitado(i, auto) }, i); });
   const nQ = todos.filter(i => i.q).length;
   const L = todos.filter(i => !(ocultar && i.q))
-    .filter(i => (!fp || (fp === 'mes' ? i.data >= ini && i.data <= fim : fp === 'ate' ? i.data <= fim : i.origem === 'manual')) && (!fb || norm(i.desc + ' ' + i.status).indexOf(fb) >= 0));
+    .filter(i => (!fp || (fp === 'mes' ? i.data >= ini && i.data <= fim : fp === 'ate' ? i.data <= fim : i.origem === fp)) && (!fb || norm(i.desc + ' ' + i.status).indexOf(fb) >= 0));
   $('lancBody').innerHTML = L.map(i => `<tr class="${i.data > fim ? 'depois' : ''}${i.q ? ' baixado' : ''}${typeof i.conc === 'boolean' ? ' manual' : ''}">
-    <td class="ck"><input type="checkbox" ${i.q ? 'checked' : ''} title="${typeof i.conc === 'boolean' ? 'Marcado à mão' : i.q ? 'Quitado (automático)' : 'Em aberto'}" onchange="marcarQuitado('${esc(ct.conta)}','${i.id}',this.checked)"></td><td>${br(i.data)}</td><td class="wrap">${esc(i.desc)}${i.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : ''}</td>
+    <td class="ck"><input type="checkbox" ${i.q ? 'checked' : ''} title="${typeof i.conc === 'boolean' ? 'Marcado à mão' : i.q ? 'Quitado (automático)' : 'Em aberto'}" onchange="marcarQuitado('${esc(ct.conta)}','${i.id}',this.checked)"></td><td>${br(i.data)}</td><td class="wrap">${esc(i.desc)}${i.origem === 'manual' ? ' <span class="pill info">lançado aqui</span>' : i.origem === 'razao' ? ' <span class="pill cinza">razão</span>' : ''}</td>
     <td class="${i.valor < 0 ? 'dbad' : 'dok'}">${fmt(i.valor)}</td><td>${fmt(i.acc)}</td><td class="wrap">${esc(i.status)}</td>
     <td style="white-space:nowrap"><button type="button" onclick="editarLanc('${esc(ct.conta)}','${i.id}')">Editar</button> <button type="button" class="danger" onclick="excluirLanc('${esc(ct.conta)}','${i.id}')">Excluir</button></td></tr>`).join('')
     || '<tr><td colspan="7" class="muted">Nenhum lançamento com esses filtros.</td></tr>';
