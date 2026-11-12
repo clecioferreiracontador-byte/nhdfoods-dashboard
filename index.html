@@ -56,6 +56,11 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 .conc-tabs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
 .conc-tab{opacity:.65}
 .conc-tab.active{opacity:1;border-color:var(--gold);color:var(--g2);background:rgba(201,168,76,.13)}
+/* Book de conciliação = painel principal: cores invertidas (fundo dourado, texto azul) */
+.conc-tab[data-p="book"]{opacity:1;background:var(--gold);color:var(--navy);border-color:var(--gold);font-weight:700}
+.conc-tab[data-p="book"]:hover{background:var(--g2);border-color:var(--g2)}
+.conc-tab[data-p="book"]:not(.active){opacity:.82}
+.conc-tab[data-p="book"].active{background:var(--g2);color:var(--navy);box-shadow:0 0 0 2px rgba(232,201,106,.35)}
 .conc-open{margin-left:auto;text-decoration:none;font-size:13px}
 .conc-frame{display:block;width:100%;height:calc(100vh - 200px);min-height:560px;border:1px solid var(--bdr);border-radius:10px;background:#F1F1F1}
 @media(max-width:768px){.conc-frame{height:75vh}.conc-open{margin-left:0}}
