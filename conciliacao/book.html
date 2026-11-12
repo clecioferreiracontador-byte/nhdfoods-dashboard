@@ -794,7 +794,7 @@ function renderBook(){
     if (g4 !== grp4 && bal.contas[g4] && g4 !== l.conta){ grp4 = g4; const s = bal.contas[g4]; h += `<tr class="grp4"><td>${g4}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="5"></td></tr>`; }
     const k = mesAtual + '|' + l.conta;
     if (l.res){
-      h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+      h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td><b>${fmt(l.c.sa)}</b></td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td class="muted small${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}"><span class="ex">!</span>${esc(l.alerta.curto)}</span>` : ''}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
@@ -809,7 +809,7 @@ function renderBook(){
       .concat(Object.keys(ST).filter(s => s !== 'zero' && s !== l.st).map(s => [s, ST[s][1]]))
       .concat(manual ? [['', '↺ Automático (' + ST[l.stAuto][1] + ')']] : []);
     const stSel = `<select class="stsel ${st[0]}${manual ? ' manual' : ''}" title="${manual ? 'Definido manualmente — clique para mudar' : 'Automático — clique para mudar'}" onchange="setRev('${k}','st',this.value)">${opcoes.map((o, i) => `<option value="${o[0]}" ${i === 0 ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
-    h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+    h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td><b>${fmt(l.c.sa)}</b></td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
       <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
