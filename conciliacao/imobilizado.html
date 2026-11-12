@@ -327,7 +327,7 @@ tr.grp0 td .dsc{color:#CD9A56}
 <section class="panel" id="tab-classes">
   <div class="box">
     <h2>Classes e contas</h2>
-    <div class="muted small" style="margin-bottom:10px">Cada classe do controle é ligada à conta de custo e à conta de depreciação acumulada do balancete. A vida útil é o padrão sugerido ao lançar um bem da classe (pode ser trocada no bem). Vale para todos os meses. Em <b>Conciliar junto com</b>, a classe é somada a outra na conciliação: o custo e a depreciação das duas classes são comparados com a soma das contas das duas (ex.: Ferramentas junto com Móveis e Utensílios).</div>
+    <div class="muted small" style="margin-bottom:10px">Cada classe do controle é ligada à conta de custo e à conta de depreciação acumulada do balancete. A vida útil é o padrão sugerido ao lançar um bem da classe (pode ser trocada no bem). Vale para todos os meses. Em <b>Conciliar junto com</b>, a classe é tratada como parte da outra (ex.: Ferramentas dentro de Móveis e Utensílios): o custo do controle é comparado com a soma das contas de custo das duas, a depreciação do controle com a conta de depreciação da classe principal, e a conta de depreciação da classe que entra junto fica conciliada pelo próprio saldo.</div>
     <div class="tscroll"><table>
       <thead><tr><th>Classe</th><th>Conta de custo</th><th>Conta de depreciação acumulada</th><th>Vida útil padrão (meses)</th><th title="Classes que a contabilidade junta numa mesma conciliação (ex.: Ferramentas lançadas em Móveis e Utensílios)">Conciliar junto com</th><th></th></tr></thead>
       <tbody id="clsBody"></tbody>
@@ -615,7 +615,7 @@ async function render(){
   if (!D){ renderBens(); return; }
   await carregarBal(mesAtual);
   const cb = c => balMes && balMes.contas && c ? balMes.contas[c] : null;
-  const usadas = new Set(), T = { cC: 0, cB: 0, dC: 0, dB: 0, mC: 0, mB: 0 }, sup = {};
+  const usadas = new Set(), T = { cC: 0, cB: 0, dC: 0, dB: 0, mC: 0, mB: 0, dFix: 0 }, sup = {};
   let ok = 0, div = 0;
   ajustarPadroes();
   const RES = resumo(D, mesAtual);
@@ -627,8 +627,15 @@ async function render(){
   const soma = (L, f) => { const v = L.map(cb).filter(Boolean); return v.length ? r2(v.reduce((a, x) => a + f(x), 0)) : NaN; };
   const html = Object.values(G).map(k => {
     const cfs = k.classes.map(n => classeCfg(n) || {});
-    const CC = [...new Set(cfs.map(c => c.contaAq).filter(Boolean))], CD = [...new Set(cfs.map(c => c.contaDp).filter(Boolean))];
-    CC.concat(CD).forEach(c => usadas.add(c));
+    const CC = [...new Set(cfs.map(c => c.contaAq).filter(Boolean))];
+    // depreciação: a classe que entra junto não existe no controle (a depreciação dos bens dela já está na principal),
+    // então só a conta da classe principal é comparada; a das outras fica conciliada pelo próprio saldo
+    const CD = cfs[0].contaDp ? [cfs[0].contaDp] : [];
+    const CDfix = [...new Set(cfs.slice(1).map(c => c.contaDp).filter(c => c && !CD.includes(c)))];
+    CC.concat(CD, CDfix).forEach(c => usadas.add(c));
+    const fixas = CDfix.map(c => ({ c, x: cb(c) })).filter(o => o.x);
+    fixas.forEach(o => { T.dFix = r2(T.dFix - o.x.sf);
+      sup[o.c] = { fonte: FONTE, saldo: r2(o.x.sf), data: fimMes(mesAtual), detalhe: 'Controle patrimonial · ' + k.classes.join(' + ') + ' · depreciação acumulada pelo saldo próprio (a depreciação dos bens está em ' + (CD[0] || k.classes[0]) + ')' }; });
     const custoB = soma(CC, x => x.sf), daB = soma(CD, x => -x.sf), mesB = soma(CD, x => x.c - x.d);
     T.cC += k.custo; T.dC += k.da; T.mC += k.daMes;
     if (!k.custo && !k.da && !custoB && !daB) return '';
@@ -647,14 +654,15 @@ async function render(){
     suportes(CC, k.custo, x => x.sf, 'custo');
     suportes(CD, -k.da, x => x.sf, 'depreciação acumulada');
     const contas = L => L.length ? L.map(esc).join('<br>+ ') : '';
+    const notaFix = fixas.length ? '<div class="muted small">' + fixas.map(o => esc(o.c) + ' ' + fmt(-o.x.sf) + ' pelo saldo próprio').join('<br>') + '</div>' : '';
     return `<tr><td><b>${esc(nome)}</b>${k.classes.length > 1 ? '<div class="muted small">conciliadas juntas</div>' : ''}</td><td>${contas(CC) || '<span class="muted">sem conta</span>'}</td><td>${fmt(k.custo)}</td><td>${fmt(custoB)}</td>${difTd(dC)}
-      <td>${contas(CD) || '<span class="muted">—</span>'}</td><td>${fmt(k.da)}</td><td>${fmt(daB)}</td>${difTd(dD)}<td>${fmt(k.daMes)}</td><td>${fmt(mesB)}</td>${difTd(dM)}</tr>`;
+      <td>${contas(CD) || '<span class="muted">—</span>'}${notaFix}</td><td>${fmt(k.da)}</td><td>${fmt(daB)}</td>${difTd(dD)}<td>${fmt(k.daMes)}</td><td>${fmt(mesB)}</td>${difTd(dM)}</tr>`;
   }).join('');
   $('confBody').innerHTML = html;
   const contasImob = balMes && balMes.contas ? Object.keys(balMes.contas).filter(c => /^1\.2\.(05|10)\.\d\d\d\d$/.test(c)) : [];
   const ehDA = c => /^1\.2\.(05|10)\.2/.test(c);
   contasImob.forEach(c => { const x = balMes.contas[c]; if (ehDA(c)){ T.dB += -x.sf; T.mB += x.c - x.d; } else T.cB += x.sf; });
-  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL do controle × contas 1.2.05 / 1.2.10</td><td>${fmt(T.cC)}</td><td>${balMes ? fmt(T.cB) : '—'}</td>${balMes ? difTd(r2(T.cB - T.cC)) : '<td>—</td>'}<td></td><td>${fmt(T.dC)}</td><td>${balMes ? fmt(T.dB) : '—'}</td>${balMes ? difTd(r2(T.dB - T.dC)) : '<td>—</td>'}<td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
+  $('confFoot').innerHTML = `<tr><td colspan="2">TOTAL do controle × contas 1.2.05 / 1.2.10</td><td>${fmt(T.cC)}</td><td>${balMes ? fmt(T.cB) : '—'}</td>${balMes ? difTd(r2(T.cB - T.cC)) : '<td>—</td>'}<td>${T.dFix ? '<span class="muted small">controle + ' + fmt(T.dFix) + ' pelo saldo próprio</span>' : ''}</td><td>${fmt(r2(T.dC + T.dFix))}</td><td>${balMes ? fmt(T.dB) : '—'}</td>${balMes ? difTd(r2(T.dB - T.dC - T.dFix)) : '<td>—</td>'}<td>${fmt(T.mC)}</td><td>${balMes ? fmt(T.mB) : '—'}</td>${balMes ? difTd(r2(T.mB - T.mC)) : '<td>—</td>'}</tr>`;
   const sem = contasImob.filter(c => !usadas.has(c) && (Math.abs(balMes.contas[c].sf) >= 0.005 || Math.abs(balMes.contas[c].d) >= 0.005 || Math.abs(balMes.contas[c].c) >= 0.005));
   $('semClasse').innerHTML = sem.length ? `<div class="msg warn" style="margin-top:10px"><b>${sem.length} conta(s) com saldo sem classe no controle patrimonial</b> (entram só no total; ligue a conta a uma classe na etapa 4 · Classes e contas): ${sem.map(c => esc(c) + ' ' + esc(balMes.contas[c].desc) + ' (' + fmt(balMes.contas[c].sf) + ')').join(' · ')}</div>` : '';
   $('tituloConf').textContent = '· ' + mesLbl(mesAtual) + (balMes ? ' · saldos ' + balMes.__fonte : ' · sem balancete deste mês');

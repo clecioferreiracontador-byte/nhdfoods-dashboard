@@ -529,9 +529,9 @@ function linhaConta(conta){
   let razOk = null;
   if (raz && raz.agg[mesAtual]){ const d = agg ? agg.d : 0, cr = agg ? agg.c : 0; razOk = Math.abs(d - c.d) < 0.01 && Math.abs(cr - c.c) < 0.01; }
   let stAuto;
-  if (!isNaN(suporte)) stAuto = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  if (!isNaN(suporte)) stAuto = Math.abs(dif) < 0.015 ? 'ok' : 'div';
   else if (Math.abs(c.sf) < 0.005 && Math.abs(c.d) < 0.005 && Math.abs(c.c) < 0.005) stAuto = 'zero';
-  else if (difDoBook) stAuto = Math.abs(dif) < 0.01 ? 'ok' : 'div';
+  else if (difDoBook) stAuto = Math.abs(dif) < 0.015 ? 'ok' : 'div';
   else stAuto = 'pend';
   const st = r.st || stAuto;
   return { conta, c, r, b, suporte, fonte, dif, difDoBook, razOk, agg, st, stAuto, obs: r.obs !== undefined ? r.obs : (b.obs || (b.status && b.status !== '0' ? b.status : '')) };
