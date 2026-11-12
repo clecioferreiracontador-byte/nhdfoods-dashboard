@@ -202,7 +202,8 @@ select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500
 select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
 select.stsel.manual{outline:1.5px dashed var(--aud-secondary);outline-offset:1px} /* status definido à mão: mesmo tamanho, só o tracejado em volta */
 td.mov-alerta{background:#FFF4D6!important}
-.mov-med{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:#F5AD00;color:#231F20;font-weight:700;font-size:.66rem;cursor:help;white-space:nowrap}
+.mov-med{display:inline-flex;align-items:center;gap:5px;margin-left:6px;padding:0 7px 0 2px;border-radius:999px;background:#FFE8A8;color:#231F20;font-weight:700;font-size:.66rem;cursor:help;white-space:nowrap}
+.mov-med .ex{display:inline-block;width:14px;height:14px;line-height:13px;border-radius:50%;background:#F5AD00;color:#231F20;text-align:center;font-size:.7rem;font-weight:800}
 tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
 tr.grp4 td{background:#F6F8FB;font-weight:700;color:#1E3062;border-top:1px solid #DDE3EE}
 tr.grp4 td:first-child,tr.grp4 td:nth-child(2){padding-left:18px}
@@ -335,7 +336,7 @@ tr.grp0 td .dsc{color:#CD9A56}
       <h2 id="bkTit">Book</h2>
       <div class="filters">
         <label>Grupo<select id="fGrupo" onchange="renderBook()"><option value="">Todas (1, 2, 3 e 4)</option><option value="12">Só ativo, passivo e PL</option><option value="1">Ativo</option><option value="2.1">Passivo circulante</option><option value="2.2">Passivo não circulante</option><option value="2.3">Patrimônio líquido</option><option value="3">Resultado (3)</option><option value="4">Apuração do resultado (4)</option></select></label>
-        <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option><option value="atencao">⚠ Atenção (resultado fora da média)</option></select></label>
+        <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option><option value="atencao">! Atenção (resultado fora da média)</option></select></label>
         <label>Buscar<input type="text" id="fBusca" oninput="renderBook()" placeholder="conta, descrição, observação"></label>
         <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
       </div>
@@ -557,14 +558,36 @@ async function apagarBal(m){ if (!confirm('Remover o balancete de ' + mesLbl(m) 
 async function limparRazao(){ if (!confirm('Apagar todo o razão guardado neste navegador? (o Book e as observações continuam)')) return; await HubDB.limparRazao(); await atualizarListas(); await carregarMes(); renderLanc(); }
 
 // ---- movimento das contas de resultado mês a mês (balancetes guardados + razão), para comparar com a média
-let MOVS = {}, MESES_MOV = [];
+// Fontes, nesta ordem: balancetes guardados no Book, razão importado e a DRE do Hub (meses já importados no
+// dash: cada linha da DRE que é uma conta só dá o movimento daquela conta no mês).
+// MESES_MOV = meses em que TODAS as contas são conhecidas (balancete/razão: conta ausente = sem movimento);
+// MESES_DRE[conta] = meses que vieram da DRE só para aquela conta.
+let MOVS = {}, MESES_MOV = [], MESES_DRE = {};
 async function carregarMovs(){
-  MOVS = {}; const ms = new Set();
+  MOVS = {}; MESES_DRE = {}; const ms = new Set();
   const ks = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0);
   for (const k of ks){ const m = k.slice(10), b = await HubDB.getMeta(k); if (!b || !b.contas) continue; ms.add(m);
     Object.entries(b.contas).forEach(([c, x]) => { if (/^3/.test(c)) (MOVS[c] = MOVS[c] || {})[m] = r2((x.d || 0) - (x.c || 0)); }); }
   if (raz) Object.keys(raz.agg).forEach(m => { ms.add(m); Object.entries(raz.agg[m]).forEach(([c, a]) => { if (!/^3/.test(c)) return; const o = MOVS[c] = MOVS[c] || {}; if (o[m] === undefined) o[m] = r2(a.d - a.c); }); });
   MESES_MOV = [...ms].sort();
+  try {
+    const P = window.parent;
+    if (P && P !== window && P.DTREE && typeof P.eval === 'function'){
+      const REC = P.eval('typeof DRE_RECIPE !== "undefined" ? DRE_RECIPE : null'), nm = +P.numMeses || 0, ano = '2026';
+      const acha = (ns, r) => { for (const n of ns){ if (n.r === r) return n; if (n.c){ const x = acha(n.c, r); if (x) return x; } } return null; };
+      if (REC) Object.keys(REC).forEach(r => {
+        const rc = REC[r]; if (!rc || rc.t !== 'L' || !rc.x || rc.x.length !== 1) return;
+        const [code, sign, op] = rc.x[0]; if (!/^3\.\d\.\d{2}\.\d{4}$/.test(code) || !sign) return;
+        const no = acha(P.DTREE, +r); if (!no || !no.v) return;
+        for (let i = 0; i < nm; i++){
+          const v = no.v[i], m = ano + '-' + String(i + 1).padStart(2, '0');
+          if (v === undefined || v === null || ms.has(m)) continue;   // mês com balancete/razão no Book: vale o Book
+          (MOVS[code] = MOVS[code] || {})[m] = r2((op === 'CD' ? -v : v) / sign);
+          (MESES_DRE[code] = MESES_DRE[code] || []).push(m);
+        }
+      });
+    }
+  } catch(e){}
 }
 // Atenção: o movimento do mês foge da média dos outros meses (pelo menos 3 meses para comparar).
 // Marca quando a diferença passa de R$ 10 mil e o mês é o dobro (ou +80%) / metade da média, quando a conta
@@ -572,7 +595,7 @@ async function carregarMovs(){
 const MOV_LIM = 10000;
 function alertaMov(c, desc){
   if (LEITURA || !/^3/.test(c) || /IRPJ|CSLL|IMPOSTO DE RENDA|CONTRIBUICAO SOCIAL/.test(norm(desc))) return null;
-  const o = MOVS[c] || {}, outros = MESES_MOV.filter(m => m !== mesAtual).map(m => o[m] || 0);
+  const o = MOVS[c] || {}, meses = [...new Set(MESES_MOV.concat(MESES_DRE[c] || []))].filter(m => m !== mesAtual), outros = meses.map(m => o[m] || 0);
   if (outros.length < 3) return null;
   const mov = o[mesAtual] !== undefined ? o[mesAtual] : 0, med = outros.reduce((a, x) => a + x, 0) / outros.length, dev = mov - med;
   if (Math.abs(dev) < MOV_LIM) return null;
@@ -726,7 +749,7 @@ function renderBook(){
     if (l.res){
       h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
-      <td class="muted small${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}">⚠ ${esc(l.alerta.curto)}</span>` : ''}</td>
+      <td class="muted small${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}"><span class="ex">!</span>${esc(l.alerta.curto)}</span>` : ''}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
       </tr>`;
       return;
