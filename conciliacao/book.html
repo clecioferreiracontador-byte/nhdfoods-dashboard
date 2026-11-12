@@ -216,6 +216,7 @@ tr.grp0 td{background:#0C182B;color:#fff;font-weight:700}
 tr.grp0 td .dsc{color:#CD9A56}
 /* diferença zerada: bolinha verde com check, como no Book original */
 td.c-ok{text-align:center}
+table.bk td.mes-res{font-size:.62rem}
 .okc{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#2E9E4F;color:#fff;font-size:9px;font-weight:800;line-height:1}
 .fech{margin-bottom:14px}
 /* quadro de fechamento recolhível: recolhido, fica uma linha com o essencial */
@@ -799,7 +800,7 @@ function renderBook(){
     if (l.res){
       h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td><b>${fmt(l.c.sa)}</b></td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
-      <td class="muted small${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}"><span class="ex">!</span>${esc(l.alerta.curto)}</span>` : ''}</td>
+      <td class="muted small mes-res${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}"><span class="ex">!</span>${esc(l.alerta.curto)}</span>` : ''}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
       </tr>`;
       return;
