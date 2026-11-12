@@ -214,6 +214,9 @@ a.lnk-lanc{color:inherit;text-decoration:none;cursor:pointer}
 a.lnk-lanc:hover{color:var(--aud-primary);text-decoration:underline}
 tr.grp0 td{background:#0C182B;color:#fff;font-weight:700}
 tr.grp0 td .dsc{color:#CD9A56}
+/* diferença zerada: bolinha verde com check, como no Book original */
+td.c-ok{text-align:center}
+.okc{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#2E9E4F;color:#fff;font-size:9px;font-weight:800;line-height:1}
 .fech{margin-bottom:14px}
 /* quadro de fechamento recolhível: recolhido, fica uma linha com o essencial */
 .fech .fech-tit{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
@@ -812,7 +815,7 @@ function renderBook(){
     h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td><b>${fmt(l.c.sa)}</b></td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
-      <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
+      <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.015 ? 'c-ok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.015 ? '<span class="okc" title="Sem diferença' + (Math.abs(l.dif) >= 0.005 ? ' (arredondamento de ' + fmt(l.dif) + ')' : '') + '">✓</span>' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
       <td>${stSel}</td>
       <td class="obs"><textarea class="obs" rows="${Math.min(4, Math.max(1, Math.ceil(String(l.obs || '').length / 48)))}" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
       </tr>`;
