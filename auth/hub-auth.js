@@ -127,7 +127,7 @@ const PONTOS = [
 const ic = d => '<svg viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="' + d + '" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const css = `
 body.hub-locked{overflow:hidden}
-body.hub-locked>*:not(#hubLogin){display:none!important}
+body.hub-locked>*:not(#hubLogin):not(#hubTrans){display:none!important}
 #hubLogin{position:fixed;inset:0;z-index:100000;display:flex;background:#0B1626;color:#EDEAE4;font-family:Calibri,"Segoe UI",Arial,sans-serif;overflow:auto}
 #hubLogin[hidden]{display:none}
 .hl-side{flex:1.15;position:relative;padding:48px 56px;display:flex;flex-direction:column;gap:28px;justify-content:center;
@@ -175,6 +175,59 @@ body.hub-locked>*:not(#hubLogin){display:none!important}
 }`;
 const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
+/* ---------------- tela de transição (entrando / carregando o painel) ----------------
+   O "A" da Audicon se desenha (pernas, travessão e o arco dourado), aparecem AUDICON e RESOLVE e a marca
+   fica pulsando até o painel terminar de carregar. Fica no ar pelo menos o tempo da animação. */
+const cssT = `
+#hubTrans{position:fixed;inset:0;z-index:100001;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  background:radial-gradient(900px 520px at 50% 38%,rgba(201,168,76,.12),transparent 62%),linear-gradient(160deg,#0F2035 0%,#0B1626 70%);
+  color:#EDEAE4;font-family:"Red Hat Display",Calibri,"Segoe UI",Arial,sans-serif;opacity:1;transition:opacity .5s ease}
+#hubTrans.sai{opacity:0;pointer-events:none}
+#hubTrans svg{width:min(250px,62vw);height:auto;overflow:visible}
+#hubTrans .ht-marca{transform-origin:100px 70px;animation:htPulse 1.8s 2.1s ease-in-out infinite}
+#hubTrans path{fill:none;stroke-linecap:round;stroke-linejoin:round}
+#hubTrans .ht-a{stroke:#EDEAE4;stroke-width:7;stroke-dasharray:182;stroke-dashoffset:182;animation:htDraw .9s .1s cubic-bezier(.6,0,.3,1) forwards}
+#hubTrans .ht-bar{stroke:#EDEAE4;stroke-width:6;stroke-dasharray:34;stroke-dashoffset:34;animation:htDraw .35s .85s ease-out forwards}
+#hubTrans .ht-arc{stroke:#C9A84C;stroke-width:3.2;stroke-dasharray:205;stroke-dashoffset:205;animation:htDraw .9s 1s cubic-bezier(.5,0,.2,1) forwards}
+#hubTrans .ht-nome{font-size:30px;font-weight:600;letter-spacing:.34em;padding-left:.34em;opacity:0;transform:translateY(6px);animation:htIn .6s 1.45s forwards}
+#hubTrans .ht-res{margin-top:-8px;font-size:12px;font-weight:700;letter-spacing:.62em;padding-left:.62em;color:#C9A84C;opacity:0;animation:htIn .6s 1.65s forwards}
+#hubTrans .ht-msg{margin-top:18px;font-size:14px;color:#A0B0BE;opacity:0;animation:htIn .5s 1.9s forwards}
+#hubTrans .ht-msg:after{content:"";display:inline-block;width:1.2em;text-align:left;animation:htPts 1.4s steps(4) infinite}
+@keyframes htDraw{to{stroke-dashoffset:0}}
+@keyframes htIn{to{opacity:1;transform:none}}
+@keyframes htPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(201,168,76,0))}50%{transform:scale(1.05);filter:drop-shadow(0 0 16px rgba(201,168,76,.5))}}
+@keyframes htPts{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
+@media (prefers-reduced-motion:reduce){
+  #hubTrans .ht-a,#hubTrans .ht-bar,#hubTrans .ht-arc{animation:none;stroke-dashoffset:0}
+  #hubTrans .ht-nome,#hubTrans .ht-res,#hubTrans .ht-msg{animation:none;opacity:1;transform:none}
+  #hubTrans .ht-marca{animation:none}
+}`;
+const stT = document.createElement('style'); stT.textContent = cssT; document.head.appendChild(stT);
+const trans = document.createElement('div');
+trans.id = 'hubTrans'; trans.setAttribute('role', 'status'); trans.setAttribute('aria-live', 'polite');
+trans.innerHTML = '<svg viewBox="0 0 200 120" aria-hidden="true"><g class="ht-marca">' +
+  '<path class="ht-arc" d="M6 98 Q100 54 194 98"/><path class="ht-a" d="M68 106 L100 20 L132 106"/><path class="ht-bar" d="M84 80 L116 80"/></g></svg>' +
+  '<div class="ht-nome">AUDICON</div><div class="ht-res">RESOLVE</div><div class="ht-msg">Carregando</div>';
+let transDesde = 0, transFim = null, transTrava = null;
+function mostrarTrans(texto){
+  trans.querySelector('.ht-msg').textContent = texto || 'Carregando';
+  clearTimeout(transFim); clearTimeout(transTrava);
+  if (!trans.isConnected || trans.classList.contains('sai')){
+    trans.classList.remove('sai');
+    // recomeça a animação do A a cada vez que a tela aparece
+    trans.querySelectorAll('path,.ht-nome,.ht-res,.ht-msg,.ht-marca').forEach(e => { e.style.animation = 'none'; void e.getBoundingClientRect(); e.style.animation = ''; });
+    document.body.appendChild(trans); transDesde = Date.now();
+  }
+  transTrava = setTimeout(esconderTrans, 25000);   // nunca prende a tela se algo falhar
+}
+function esconderTrans(imediato){
+  if (!trans.isConnected) return;
+  clearTimeout(transFim); clearTimeout(transTrava);
+  const falta = imediato ? 0 : Math.max(0, 2200 - (Date.now() - transDesde));   // deixa o A terminar de se desenhar
+  transFim = setTimeout(() => { trans.classList.add('sai'); setTimeout(() => { if (trans.classList.contains('sai')) trans.remove(); }, 520); }, falta);
+}
+window.HubTransicao = { mostrar: mostrarTrans, esconder: esconderTrans };
+
 const raiz = document.createElement('div');
 raiz.id = 'hubLogin'; raiz.setAttribute('role', 'main');
 function logos(){
@@ -202,6 +255,7 @@ function campoSenha(id, rot, auto){
 }
 function tela(m, extra){
   modo = m; const c = $('hlCard'); if (!c) return;
+  if (m === 'carregando') mostrarTrans('Verificando o seu acesso'); else esconderTrans(true);
   const em = (extra && extra.email) || ($('hlEmail') && $('hlEmail').value) || '';
   const campoEmail = '<label for="hlEmail">E-mail<input id="hlEmail" type="email" autocomplete="username" required value="' + em.replace(/"/g, '&quot;') + '"></label>';
   if (m === 'carregando') c.innerHTML = '<h2>Hub Contábil</h2><div class="hl-spin" role="status" aria-label="Verificando acesso"></div><p class="hl-sub" style="text-align:center">Verificando o seu acesso…</p>';
@@ -239,6 +293,7 @@ raiz.addEventListener('submit', async ev => {
   try {
     if (modo === 'entrar'){
       const s = $('hlSenha').value; if (!s){ msg('Informe a senha.'); return; }
+      mostrarTrans('Entrando');
       await signInWithEmailAndPassword(auth, email, s);
     } else if (modo === 'criar'){
       const s = $('hlSenha').value, s2 = $('hlSenha2').value;
@@ -250,7 +305,7 @@ raiz.addEventListener('submit', async ev => {
       await sendPasswordResetEmail(auth, email);
       tela('entrar', { email, msg: 'Se este e-mail tiver cadastro, você vai receber o link em instantes. Confira também o spam.', tipo: 'ok' });
     }
-  } catch (e) { msg(erroMsg(e)); }
+  } catch (e) { esconderTrans(true); msg(erroMsg(e)); }
   finally { ocupado(b, false); }
 });
 
@@ -266,6 +321,7 @@ async function verificar(forcar){
     ACESSO = a.data();
     if (liberado) return;
     liberado = true;
+    mostrarTrans('Carregando o seu painel');
     raiz.hidden = true; document.body.classList.remove('hub-locked');
     window.__hubPronto && window.__hubPronto({ email: emailDe(USER), papel: ACESSO.papel, nome: ACESSO.nome || '', book: podeBook() });
   } catch (e) {
