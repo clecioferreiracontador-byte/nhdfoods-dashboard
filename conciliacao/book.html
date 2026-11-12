@@ -196,6 +196,8 @@ select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500
 select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
 select.stsel.manual{outline:2px dashed var(--aud-secondary);outline-offset:1px}
 tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
+tr.grp4 td{background:#F6F8FB;font-weight:700;color:#1E3062;border-top:1px solid #DDE3EE}
+tr.grp4 td:first-child,tr.grp4 td:nth-child(2){padding-left:18px}
 tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
 a.lnk-conc{color:var(--aud-primary);font-weight:700;text-decoration:underline dotted;text-underline-offset:3px}
 a.lnk-conc:hover{color:var(--aud-secondary)}
@@ -659,14 +661,16 @@ function renderBook(){
   $('bkTit').textContent = 'Book — ' + mesLbl(mesAtual) + (raz && raz.agg[mesAtual] ? '' : ' (sem razão deste mês: coluna Razão em branco)');
   const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || l.st === fs) && (!so || l.st !== 'zero')
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
-  let h = '', grpAtual = '', grp1 = '', grp0 = '';
+  let h = '', grpAtual = '', grp1 = '', grp0 = '', grp4 = '';
   const TM = totaisMatriz(bal);
   const linhaMatriz = (g, extra) => { const s = TM[g]; return s ? `<tr class="grp0"><td>${g}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="6">${extra || ''}</td></tr>` : ''; };
   vis.forEach(l => {
-    const g0 = l.conta.charAt(0), g1 = l.conta.slice(0, 3), g = l.conta.slice(0, 6);
+    const g0 = l.conta.charAt(0), g1 = l.conta.slice(0, 3), g = l.conta.slice(0, 6), g4 = l.conta.slice(0, 8);
     if (g0 !== grp0){ grp0 = g0; const t = TM[g0], rm = t ? r2(t.c - t.d) : 0; h += linhaMatriz(g0, g0 === '3' && t ? `${rm >= 0 ? 'Lucro' : 'Prejuízo'} do mês: ${fmt(Math.abs(rm))}` : ''); }
     if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
-    if (g !== grpAtual){ grpAtual = g; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g !== grpAtual){ grpAtual = g; grp4 = ''; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    // subgrupo (ex.: 1.2.05.1 imobilizado em operação × 1.2.05.2 depreciação acumulada), como no Book original
+    if (g4 !== grp4 && bal.contas[g4] && g4 !== l.conta){ grp4 = g4; const s = bal.contas[g4]; h += `<tr class="grp4"><td>${g4}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="6"></td></tr>`; }
     const k = mesAtual + '|' + l.conta;
     if (l.res){
       h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
