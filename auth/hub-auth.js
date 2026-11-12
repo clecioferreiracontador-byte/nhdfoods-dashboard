@@ -208,7 +208,7 @@ const stT = document.createElement('style'); stT.textContent = cssT; document.he
 const trans = document.createElement('div');
 trans.id = 'hubTrans'; trans.setAttribute('role', 'status'); trans.setAttribute('aria-live', 'polite');
 // a própria marca da Audicon (a mesma imagem do topo do painel), sem redesenhar nada
-const logoAud = new URL('audicon-logo.png', import.meta.url).href;
+const logoAud = new URL('audicon-logo.svg', import.meta.url).href;
 trans.style.setProperty('--ht-logo', 'url("' + logoAud + '")');
 trans.innerHTML = '<div class="ht-logo"><img src="' + logoAud + '" alt="Audicon Contadores"><div class="ht-brilho"></div></div>' +
   '<div class="ht-hub"><i></i><b>Hub Contábil</b><i></i></div><div class="ht-msg">Carregando</div>';
