@@ -215,6 +215,15 @@ a.lnk-lanc:hover{color:var(--aud-primary);text-decoration:underline}
 tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
 tr.grp0 td .dsc{color:#CD9A56}
 .fech{margin-bottom:14px}
+/* quadro de fechamento recolhível: recolhido, fica uma linha com o essencial */
+.fech .fech-tit{cursor:pointer;user-select:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fech .fech-seta{display:inline-block;width:16px;color:var(--aud-secondary);transition:transform .15s}
+#fechBox:not(.min) .fech-seta{transform:rotate(90deg)}
+.fech .fech-resumo{font-size:.85rem;font-weight:600;color:var(--aud-gray-700);display:none;gap:8px;flex-wrap:wrap;align-items:center}
+#fechBox.min .fech-resumo{display:inline-flex}
+#fechBox.min .fech-corpo{display:none}
+#fechBox.min{padding-top:12px;padding-bottom:12px}
+#fechBox.min h2{margin:0;padding:0;border-bottom:0}
 .fech h2{margin-bottom:4px}
 .fech .grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));margin-top:10px}
 .fech .card{border:1px solid #e1e4e8;border-radius:var(--aud-radius);padding:12px 14px;background:#fff}
@@ -681,7 +690,13 @@ async function renderFechamento(){
       <tr class="tot"><td>Balancete fecha? (1 + 2 + 3${resG.length > 1 ? '…' : ''} = 0)</td><td>${pill(fecha, 'Sim', 'Não · ' + fmt(fecha))}</td></tr>
     </table></div>`;
   };
-  box.innerHTML = `<h2>Fechamento de ${mesLbl(mesAtual)}</h2>
+  const fechaSf = r2(A.sf + P.sf + R.sf);
+  const antOk = bAnt ? Object.keys(Object.assign({}, T, totaisMatriz(bAnt))).every(g => ok((T[g] ? T[g].sa : 0) - (totaisMatriz(bAnt)[g] ? totaisMatriz(bAnt)[g].sf : 0))) : null;
+  const pRes = `<span class="pill ${resMes >= 0 ? 'ok' : 'bad'}">${resMes >= 0 ? 'Lucro' : 'Prejuízo'} de ${fmt(Math.abs(resMes))}</span>`;
+  box.classList.toggle('min', lsGet('aud-book-fech-min', true));
+  box.innerHTML = `<h2 class="fech-tit" onclick="toggleFech()" title="Clique para mostrar ou recolher o fechamento"><span class="fech-seta">▸</span>Fechamento de ${mesLbl(mesAtual)}
+      <span class="fech-resumo">${pRes} Balancete fecha: ${pill(fechaSf, 'Sim', 'Não · ' + fmt(fechaSf))} Mês anterior: ${antOk === null ? '<span class="pill info">sem ' + mesLbl(mAnt) + '</span>' : antOk ? '<span class="pill ok">bate</span>' : '<span class="pill bad">não bate</span>'}</span></h2>
+    <div class="fech-corpo">
     <div class="muted small">Totais somados das contas analíticas do arquivo importado. A diferença entre ativo e passivo tem que ser igual ao resultado ainda não encerrado no PL.</div>
     <div class="grid">
       <div class="card"><h3>Resultado do mês</h3>
@@ -692,8 +707,9 @@ async function renderFechamento(){
       ${bloco('Saldos anteriores (início do mês)', 'sa')}
       ${bloco('Saldos finais (mês que está fechando)', 'sf')}
       <div class="card"><h3>Mês anterior × saldo anterior deste mês</h3>${antHtml}</div>
-    </div>`;
+    </div></div>`;
 }
+function toggleFech(){ const b = $('fechBox'), min = !b.classList.contains('min'); b.classList.toggle('min', min); lsSet('aud-book-fech-min', min); }
 
 // ===================== conta → painel de conciliação =====================
 // Clicar na conta abre o painel que concilia aquela conta (dentro do dash; fora dele, em nova aba).
