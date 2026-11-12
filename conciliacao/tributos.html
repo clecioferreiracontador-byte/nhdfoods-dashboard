@@ -285,6 +285,7 @@ table.pv tr.dif td{font-weight:600}
   <div class="toolbar" style="margin-top:12px">
     <label>Data-base:<select id="selMes" onchange="mesAtual=this.value;render()"></select></label>
     <span class="muted small" id="stTopo"></span>
+    <span class="muted small" id="stNuvem" style="flex-basis:100%"></span>
   </div>
   <div id="msgs"></div>
 </div>
@@ -411,7 +412,52 @@ let dados = lsGet(LS, null);
 if (!dados || !Array.isArray(dados.contas)) dados = { contas: PADRAO.map(([conta, nome]) => ({ conta, nome, itens: [] })) };
 let mesAtual = '', balMes = null, mesesBal = [];
 const contaDe = c => dados.contas.find(x => x.conta === c);
-function salvar(){ if (!lsSet(LS, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err'); }
+
+// ===================== base no Firebase + atualização automática =====================
+// A base deste painel fica neste navegador E no Firebase (coleção "dados", documento tributos-a-pagar): ao abrir,
+// vale a versão mais recente; cada alteração é enviada alguns segundos depois (só o admin grava).
+// O painel também confere de tempos em tempos se entrou razão ou balancete novo no Book e se atualiza sozinho.
+const HUB = (() => { try { return window.parent !== window && window.parent.HubAuth ? window.parent.HubAuth : null; } catch(e){ return null; } })();
+const DOC_NUVEM = 'tributos-a-pagar';
+let tNuvem = null;
+function stNuvem(t, tipo){ const el = $('stNuvem'); if (!el) return; el.textContent = t; el.style.color = tipo === 'err' ? 'var(--aud-danger-text)' : tipo === 'ok' ? 'var(--aud-success)' : ''; }
+function salvar(){
+  dados.savedAt = new Date().toISOString();
+  if (!lsSet(LS, dados)) msg('Não foi possível salvar neste navegador (espaço cheio).', 'err');
+  agendarNuvem();
+}
+function agendarNuvem(){
+  if (!HUB || HUB.papel !== 'admin') return;
+  clearTimeout(tNuvem); stNuvem('☁ Salvando no Firebase…');
+  tNuvem = setTimeout(async () => {
+    try { await HUB.gravarDoc(DOC_NUVEM, dados); stNuvem('☁ Base salva no Firebase às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.', 'ok'); }
+    catch(e){ stNuvem('⚠ Não foi possível salvar no Firebase: ' + (e && e.code === 'permission-denied' ? 'o seu acesso não permite salvar' : (e && e.message) || e) + ' (os dados continuam neste navegador).', 'err'); }
+  }, 2500);
+}
+async function carregarNuvem(){
+  if (!HUB){ stNuvem('Base guardada neste navegador (abra pelo Hub para salvar no Firebase).'); return; }
+  try {
+    const d = await HUB.lerDoc(DOC_NUVEM);
+    if (d && Array.isArray(d.contas) && (!dados.savedAt || (d.savedAt || '') > dados.savedAt)){
+      dados = d;  lsSet(LS, dados);
+      stNuvem('☁ Base carregada do Firebase (salva em ' + new Date(d.savedAt).toLocaleString('pt-BR') + ').', 'ok');
+    } else if (dados.savedAt && (!d || (d.savedAt || '') < dados.savedAt)) agendarNuvem();   // este navegador tem alterações mais novas
+    else if (d) stNuvem('☁ Base em dia com o Firebase.', 'ok');
+  } catch(e){ stNuvem('⚠ Não foi possível ler a base no Firebase: ' + ((e && e.message) || e) + ' — usando a deste navegador.', 'err'); }
+}
+let assinBase = '';
+async function assinaturaBase(){
+  if (!window.HubDB) return '';
+  try {
+    const i = await HubDB.getMeta('razao'), ks = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).sort(), partes = [];
+    for (const k of ks){ const b = await HubDB.getMeta(k); const c = (b && b.contas) || {}; partes.push(k + ':' + Object.keys(c).length + ':' + Math.round(Object.values(c).reduce((a, x) => a + Math.abs(x.sf || 0) + Math.abs(x.d || 0), 0))); }
+    return JSON.stringify([((i && i.arquivos) || []).map(a => a.nome + '@' + a.em), partes]);
+  } catch(e){ return ''; }
+}
+async function vigiarBase(){ const a = await assinaturaBase(); if (assinBase && a && a !== assinBase){ assinBase = a; await render(); msg('Razão/balancete novo no Book de conciliação: valores atualizados.', 'ok'); } else if (a) assinBase = a; }
+setInterval(vigiarBase, 15000);
+window.addEventListener('focus', vigiarBase);
+
 const saldoAte = (ct, ate) => r2(ct.itens.reduce((a, i) => a + (i.data <= ate ? i.valor : 0), 0));
 
 // ===================== importação do Book (aba "Trib Pagar") =====================
@@ -691,8 +737,7 @@ function tirarConta(i){ const c = dados.contas[i]; if (!c) return;
   dados.contas.splice(i, 1); salvar(); render(); }
 
 window.focoConta = function(c){ if (c && contaDe(c)) verConta(c); else window.abrirEtapa && abrirEtapa('conferencia'); };
-salvar();
-render();
+(async () => { await carregarNuvem(); await render(); assinBase = await assinaturaBase(); })();
 </script>
 
 <script>
