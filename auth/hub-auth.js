@@ -186,27 +186,34 @@ const cssT = `
 #hubTrans .ht-logo{position:relative;width:min(320px,72vw);animation:htPulse 1.9s 1.9s ease-in-out infinite}
 #hubTrans .ht-logo img{display:block;width:100%;height:auto;clip-path:inset(100% 0 0 0);animation:htMonta 1.3s .1s cubic-bezier(.55,0,.25,1) forwards}
 #hubTrans .ht-brilho{position:absolute;inset:0;pointer-events:none;opacity:0;
-  background:linear-gradient(105deg,transparent 30%,rgba(255,244,214,.95) 48%,rgba(255,255,255,.98) 50%,rgba(255,244,214,.95) 52%,transparent 70%) no-repeat;background-size:260% 100%;background-position:130% 0;
+  background:linear-gradient(105deg,transparent 40%,rgba(255,248,228,.45) 49%,rgba(255,255,255,.6) 50%,rgba(255,248,228,.45) 51%,transparent 60%) no-repeat;background-size:260% 100%;background-position:130% 0;
   -webkit-mask:var(--ht-logo) center/contain no-repeat;mask:var(--ht-logo) center/contain no-repeat;animation:htBrilho 2.6s 1.35s ease-in-out infinite}
-#hubTrans .ht-msg{font-size:14px;color:#A0B0BE;opacity:0;animation:htIn .5s 1.5s forwards}
+#hubTrans .ht-hub{display:flex;align-items:center;gap:14px;opacity:0;transform:translateY(6px);animation:htIn .6s 1.35s forwards}
+#hubTrans .ht-hub i{display:block;width:44px;height:1px;background:linear-gradient(90deg,transparent,#C9A84C)}
+#hubTrans .ht-hub i:last-child{background:linear-gradient(90deg,#C9A84C,transparent)}
+#hubTrans .ht-hub b{font-size:15px;font-weight:600;letter-spacing:.42em;padding-left:.42em;color:#EDEAE4;text-transform:uppercase;white-space:nowrap}
+#hubTrans .ht-msg{font-size:14px;color:#A0B0BE;opacity:0;animation:htIn .5s 1.6s forwards}
 #hubTrans .ht-msg:after{content:"";display:inline-block;width:1.2em;text-align:left;animation:htPts 1.4s steps(4) infinite}
 @keyframes htMonta{to{clip-path:inset(0 0 0 0)}}
 @keyframes htBrilho{0%{opacity:1;background-position:130% 0}45%,100%{opacity:1;background-position:-30% 0}}
-@keyframes htIn{to{opacity:1}}
-@keyframes htPulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 0 rgba(201,168,76,0))}50%{transform:scale(1.04);filter:drop-shadow(0 0 18px rgba(201,168,76,.45))}}
+@keyframes htIn{to{opacity:1;transform:none}}
+@keyframes htPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
 @keyframes htPts{0%{content:""}25%{content:"."}50%{content:".."}75%{content:"..."}}
 @media (prefers-reduced-motion:reduce){
   #hubTrans .ht-logo,#hubTrans .ht-brilho{animation:none}
   #hubTrans .ht-logo img{animation:none;clip-path:none}
-  #hubTrans .ht-msg{animation:none;opacity:1}
+  #hubTrans .ht-msg,#hubTrans .ht-hub{animation:none;opacity:1;transform:none}
 }`;
 const stT = document.createElement('style'); stT.textContent = cssT; document.head.appendChild(stT);
 const trans = document.createElement('div');
 trans.id = 'hubTrans'; trans.setAttribute('role', 'status'); trans.setAttribute('aria-live', 'polite');
 // a própria marca da Audicon (a mesma imagem do topo do painel), sem redesenhar nada
-const logoAud = (document.querySelector('.tb-aud-logo') || {}).src || '';
+const logoAud = new URL('audicon-logo.png', import.meta.url).href;
 trans.style.setProperty('--ht-logo', 'url("' + logoAud + '")');
-trans.innerHTML = '<div class="ht-logo"><img src="' + logoAud + '" alt="Audicon Contadores"><div class="ht-brilho"></div></div><div class="ht-msg">Carregando</div>';
+trans.innerHTML = '<div class="ht-logo"><img src="' + logoAud + '" alt="Audicon Contadores"><div class="ht-brilho"></div></div>' +
+  '<div class="ht-hub"><i></i><b>Hub Contábil</b><i></i></div><div class="ht-msg">Carregando</div>';
+// se a imagem nova não carregar, usa a marca do topo do painel
+trans.querySelector('.ht-logo img').addEventListener('error', ev => { const b = (document.querySelector('.tb-aud-logo') || {}).src; if (b && ev.target.src !== b){ ev.target.src = b; trans.style.setProperty('--ht-logo', 'url("' + b + '")'); } });
 let transDesde = 0, transFim = null, transTrava = null;
 function mostrarTrans(texto){
   trans.querySelector('.ht-msg').textContent = texto || 'Carregando';
@@ -214,7 +221,7 @@ function mostrarTrans(texto){
   if (!trans.isConnected || trans.classList.contains('sai')){
     trans.classList.remove('sai');
     // recomeça a animação do A a cada vez que a tela aparece
-    trans.querySelectorAll('.ht-logo,.ht-logo img,.ht-brilho,.ht-msg').forEach(e => { e.style.animation = 'none'; void e.getBoundingClientRect(); e.style.animation = ''; });
+    trans.querySelectorAll('.ht-logo,.ht-logo img,.ht-brilho,.ht-hub,.ht-msg').forEach(e => { e.style.animation = 'none'; void e.getBoundingClientRect(); e.style.animation = ''; });
     document.body.appendChild(trans); transDesde = Date.now();
   }
   transTrava = setTimeout(esconderTrans, 25000);   // nunca prende a tela se algo falhar
