@@ -2684,6 +2684,8 @@ function concTab(p){
     box.appendChild(f);
   }
   box.querySelectorAll('.conc-frame').forEach(function(x){x.style.display=x===f?'':'none';});
+  /* de volta ao Book: ele rola até a linha que estava sendo conciliada */
+  if(p==='book')setTimeout(function(){try{f.contentWindow.aoVoltar&&f.contentWindow.aoVoltar();}catch(e){}},80);
   document.getElementById('concOpen').href=CONC_PAINEIS[p]+'?v='+Date.now();
 }
 /* Book de conciliação carregado em segundo plano para o admin: o salvamento automático no portal (de hora em hora)

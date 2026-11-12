@@ -223,6 +223,9 @@ tr.grp0 td{background:#0C182B;color:#fff;font-weight:700}
 tr.grp0 td .dsc{color:#CD9A56}
 /* diferença zerada: bolinha verde com check, como no Book original */
 td.c-ok{text-align:center}
+/* volta para a linha que estava sendo conciliada */
+#bkBody tr.volta td{animation:volta 2.4s ease-out}
+@keyframes volta{0%,35%{background-color:#FFE8A8}100%{}}
 /* acima da tabela: só a linha dourada (o nome Book já aparece no topo) */
 #bkTit{padding:0;margin:0 0 10px;min-height:0}
 /* filtros do Book compactos */
@@ -816,8 +819,24 @@ const PAINEL_REGRA = [[/^1\.1\.01\.[23]/, 'bancos'], [/^1\.2\.02\.1002$|^2\.[12]
   [/^2\.1\.15\.(100[2389]|1011|2001|3001)$/, 'tributos'], [/^2\.1\.10\.2/, 'provisoes']];
 const NOME_PAINEL = { bancos: 'Conciliação bancária', consorcios: 'Consórcios', 'parcelamentos-federais': 'Parcelamentos federais', 'parcelamentos-estaduais': 'Parcelamentos estaduais', imobilizado: 'Patrimonial', tributos: 'Tributos a pagar', provisoes: 'Provisões Trab.' };
 function painelDaConta(c){ const s = suportes()[c]; if (s && PAINEL_FONTE[s.fonte]) return PAINEL_FONTE[s.fonte]; const r = PAINEL_REGRA.find(x => x[0].test(c)); return r ? r[1] : ''; }
+// ---- volta para a linha: ao sair para os lançamentos ou para um painel de conciliação, o Book guarda a conta
+// e, quando ele volta a aparecer, rola até a linha dela e a destaca por um instante
+let VOLTA = null;
+function marcarVolta(c){ VOLTA = { conta: c, y: window.scrollY }; }
+function voltarLinha(){
+  if (!VOLTA || !$('tab-conferencia').classList.contains('active') || !bal) return;
+  const v = VOLTA; VOLTA = null;
+  setTimeout(() => {
+    const tr = [...$('bkBody').querySelectorAll('tr')].find(t => t.cells[0] && t.cells[0].textContent.trim() === v.conta);
+    if (tr){ tr.scrollIntoView({ block: 'center' }); tr.classList.remove('volta'); void tr.offsetWidth; tr.classList.add('volta'); }
+    else window.scrollTo(0, v.y);
+  }, 60);
+}
+window.aoVoltar = voltarLinha;
+new MutationObserver(() => { if ($('tab-conferencia').classList.contains('active')) voltarLinha(); }).observe($('tab-conferencia'), { attributes: true, attributeFilter: ['class'] });
 function abrirPainelConta(c){
   const p = painelDaConta(c); if (!p) return;
+  marcarVolta(c);
   let ok = false; try { ok = window.parent !== window && typeof parent.abrirConciliacao === 'function' && parent.abrirConciliacao(p, c); } catch(e){}
   if (!ok) window.open(p + '.html', '_blank');
 }
@@ -895,6 +914,7 @@ function setRev(k, campo, v){ if (LEITURA || periodoFechado()) return; rev[k] = 
 
 // ===================== lançamentos =====================
 async function verLanc(conta){
+  marcarVolta(conta);
   if (LEITURA || !(raz && raz.agg[mesAtual])){ $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); $('lVazio').style.display = ''; $('lBox').style.display = 'none'; $('lVazio').textContent = 'Carregando o razão de ' + mesLbl(mesAtual) + '…'; await garantirRazaoCli(mesAtual); }
   $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc();
 }
