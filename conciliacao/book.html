@@ -221,6 +221,8 @@ tr.grp0 td .dsc{color:#CD9A56}
 #fechBox:not(.min) .fech-seta{transform:rotate(90deg)}
 .fech .fech-resumo{font-size:.85rem;font-weight:600;color:var(--aud-gray-700);display:none;gap:8px;flex-wrap:wrap;align-items:center}
 #fechBox.min .fech-resumo{display:none}
+.fech .fech-lucro{display:none;font-size:.8rem;font-weight:600;letter-spacing:.01em}
+#fechBox.min .fech-lucro{display:inline}
 #fechBox.min .fech-corpo{display:none}
 #fechBox.min{padding:7px 14px;margin-bottom:10px}
 #fechBox.min h2{margin:0;padding:0;border-bottom:0;font-size:.98rem}
@@ -723,6 +725,7 @@ async function renderFechamento(){
   const pRes = `<span class="pill ${resMes >= 0 ? 'ok' : 'bad'}">${resMes >= 0 ? 'Lucro' : 'Prejuízo'} de ${fmt(Math.abs(resMes))}</span>`;
   box.classList.toggle('min', lsGet('aud-book-fech-min', true));
   box.innerHTML = `<h2 class="fech-tit" onclick="toggleFech()" title="Clique para mostrar ou recolher o fechamento"><span class="fech-seta">▸</span>Fechamento de ${mesLbl(mesAtual)}
+      <span class="fech-lucro ${resMes >= 0 ? 'dok' : 'dbad'}">· ${resMes >= 0 ? 'Lucro' : 'Prejuízo'} de ${fmt(Math.abs(resMes))}</span>
       <span class="fech-resumo">${pRes} Balancete fecha: ${pill(fechaSf, 'Sim', 'Não · ' + fmt(fechaSf))} Mês anterior: ${antOk === null ? '<span class="pill info">sem ' + mesLbl(mAnt) + '</span>' : antOk ? '<span class="pill ok">bate</span>' : '<span class="pill bad">não bate</span>'}</span></h2>
     <div class="fech-corpo">
     <div class="muted small">Totais somados das contas analíticas do arquivo importado. A diferença entre ativo e passivo tem que ser igual ao resultado ainda não encerrado no PL.</div>
