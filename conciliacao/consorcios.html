@@ -147,6 +147,7 @@ footer{display:none}
 <script src="vendor/pdfjs/pdf.min.js"></script>
 <script src="vendor/jspdf/jspdf.umd.min.js"></script>
 <script src="vendor/jspdf/jspdf.plugin.autotable.min.js"></script>
+<script src="hub-db.js?v=2"></script>
 </head>
 <body>
 <header class="top"><div class="wrap">
@@ -601,17 +602,25 @@ function render(){
   save();
 }
 
+// Ativo de consórcios (1.2.02.1002) = total pago das cotas que ainda NÃO foram contempladas na data-base.
+// Cota contemplada sai do ativo (o total pago vai para o bem/imobilizado): no mês da contemplação, o total
+// pago dela é o crédito esperado na conta; depois disso, os pagamentos dela não entram mais no ativo.
+function contempladaAte(v, D){ const dC = parseBRDate(v.c.dataContemplacao); return !!dC && dC <= D; }
 function esperadoConc(vs, rs){
-  const e = { ativo: 0, cp: 0, lp: 0, pagoMes: 0, parcMes: 0, lanceMes: 0, rend: 0 };
+  const e = { ativo: 0, cp: 0, lp: 0, pagoMes: 0, parcMes: 0, lanceMes: 0, rend: 0, baixaMes: 0, pagoContempladas: 0, nContempladas: 0 };
+  const T = competencia ? isoToLocal(competencia) : null, fimAnt = T ? new Date(T.getFullYear(), T.getMonth(), 0) : null;
   vs.forEach((v, i) => {
-    e.ativo += v.pago || 0; e.pagoMes += rs[i].pagoMes || 0; e.parcMes += rs[i].parcMes || 0; e.lanceMes += rs[i].lanceMes || 0;
+    const contNaData = T ? contempladaAte(v, T) : v.contemplada, contAntes = fimAnt ? contempladaAte(v, fimAnt) : contNaData;
+    if (!contNaData) e.ativo += v.pago || 0; else { e.pagoContempladas += v.pago || 0; e.nContempladas++; }
+    if (!contAntes){ e.pagoMes += rs[i].pagoMes || 0; e.parcMes += rs[i].parcMes || 0; e.lanceMes += rs[i].lanceMes || 0; }
+    if (contNaData && !contAntes) e.baixaMes += v.pago || 0;   // contemplada dentro do mês: baixa do total pago
     const entra = concCfg.passivo === 'todas' || (concCfg.passivo === 'contempladas' && v.contemplada);
     if (entra){ e.cp += rs[i].cp || 0; e.lp += rs[i].lp || 0; }
   });
   return e;
 }
 function anteriorDe(iso){ const T = isoToLocal(iso); return localToISO(new Date(T.getFullYear(), T.getMonth(), 0)); }
-function ativoEsperadoEm(iso){ const old = competencia; competencia = iso; const x = cards.map(viewCard).reduce((a, v) => a + (v.pago || 0), 0); competencia = old; return x; }
+function ativoEsperadoEm(iso){ const old = competencia; competencia = iso; const D = isoToLocal(iso); const x = cards.map(viewCard).reduce((a, v) => a + (contempladaAte(v, D) ? 0 : (v.pago || 0)), 0); competencia = old; return x; }
 
 function difCell(d){ return isNaN(d) ? '—' : (Math.abs(d) < 0.5 ? '<span class="dif-ok">OK</span>' : `<span class="dif-bad">${fmtBRL(d)}</span>`); }
 
@@ -632,6 +641,16 @@ function enviarSuportesBook(vs, e){
   }
   try { localStorage.setItem('aud-hub-suportes', JSON.stringify(sup)); } catch(x){}
 }
+// saldos da contabilidade: do balancete importado no Book (mesmo mês); valor digitado no painel tem prioridade
+function saldosContabeis(d){
+  const cod = s => (String(s || '').match(/^\s*(\d(?:\.\d+)+)/) || [])[1];
+  const bc = k => balConsorcio && balConsorcio.contas ? balConsorcio.contas[cod(concCfg[k])] : null;
+  const ba = bc('contaAtivo'), bCP = bc('contaCP'), bLP = bc('contaLP');
+  const usa = (k, vb) => (d[k] !== undefined && d[k] !== '') ? toNum(d[k]) : vb;
+  return { ba, bCP, bLP,
+    sAnt: usa('saldoAnterior', ba ? ba.sa : NaN), deb: usa('debitos', ba ? ba.d : NaN), cred: usa('creditos', ba ? ba.c : NaN), sFin: usa('saldoFinal', ba ? ba.sf : NaN),
+    pCP: usa('passivoCP', bCP ? (-bCP.sf || 0) : NaN), pLP: usa('passivoLP', bLP ? (-bLP.sf || 0) : NaN) };
+}
 function renderConciliacao(vs, rs){
   const el = document.getElementById('concBody');
   if (!competencia){
@@ -645,11 +664,13 @@ function renderConciliacao(vs, rs){
   const e = esperadoConc(vs, rs);
   const antIso = anteriorDe(competencia), eAnt = ativoEsperadoEm(antIso);
   enviarSuportesBook(vs, e);
-  const inp = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(d[k] ?? '')}" placeholder="0,00" onchange="updateConc('${k}', this.value)"></div>`;
+  const sc = saldosContabeis(d), ba = sc.ba, bCP = sc.bCP, bLP = sc.bLP;
+  const daBal = { saldoAnterior: ba && ba.sa, debitos: ba && ba.d, creditos: ba && ba.c, saldoFinal: ba && ba.sf, passivoCP: bCP && (-bCP.sf || 0), passivoLP: bLP && (-bLP.sf || 0) };
+  const inp = (k, lbl) => { const vb = daBal[k]; const temB = typeof vb === 'number' && !isNaN(vb);
+    return `<div><label>${lbl}${temB && (d[k] === undefined || d[k] === '') ? ' <span class="badge ok">balancete</span>' : ''}</label><input type="text" value="${esc(d[k] ?? '')}" placeholder="${temB ? fmtBRL(vb) : '0,00'}" onchange="updateConc('${k}', this.value)"></div>`; };
   const cfg = (k, lbl) => `<div><label>${lbl}</label><input type="text" value="${esc(concCfg[k])}" onchange="updateCfg('${k}', this.value)"></div>`;
-  const sAnt = toNum(d.saldoAnterior), deb = toNum(d.debitos), cred = toNum(d.creditos), sFin = toNum(d.saldoFinal);
+  const { sAnt, deb, cred, sFin, pCP, pLP } = sc;
   const sFinCalc = !isNaN(sFin) ? sFin : (!isNaN(sAnt) && !isNaN(deb) ? sAnt + deb - (cred || 0) : NaN);
-  const pCP = toNum(d.passivoCP), pLP = toNum(d.passivoLP);
   const consist = (!isNaN(sAnt) && !isNaN(deb) && !isNaN(sFin)) ? sFin - (sAnt + deb - (cred || 0)) : NaN;
 
   el.innerHTML = `
@@ -678,7 +699,7 @@ function renderConciliacao(vs, rs){
       <tbody>
         <tr><td>${esc(concCfg.contaAtivo)} — saldo anterior (${localToBR(isoToLocal(antIso))})</td><td>${fmtBRL(sAnt)}</td><td>${fmtBRL(eAnt)}</td><td>${difCell(sAnt - eAnt)}</td></tr>
         <tr><td>(+) Débitos do mês × pagamentos do mês</td><td>${fmtBRL(deb)}</td><td>${fmtBRL(e.pagoMes)}${e.lanceMes ? ' <span class="badge">inclui lance ' + fmtBRL(e.lanceMes) + '</span>' : ''}</td><td>${difCell(deb - e.pagoMes)}</td></tr>
-        <tr><td>(−) Créditos do mês</td><td>${fmtBRL(cred)}</td><td>${fmtBRL(0)}</td><td>${difCell((cred || 0))}</td></tr>
+        <tr><td>(−) Créditos do mês × baixa das cotas contempladas no mês</td><td>${fmtBRL(cred)}</td><td>${fmtBRL(e.baixaMes)}</td><td>${difCell((cred || 0) - e.baixaMes)}</td></tr>
         <tr><td><b>${esc(concCfg.contaAtivo)} — saldo em ${localToBR(T)}</b></td><td><b>${fmtBRL(sFinCalc)}</b></td><td><b>${fmtBRL(e.ativo)}</b></td><td>${difCell(sFinCalc - e.ativo)}</td></tr>
         <tr><td>${esc(concCfg.contaCP)}</td><td>${fmtBRL(pCP)}</td><td>${fmtBRL(e.cp)}</td><td>${difCell((isNaN(pCP) ? 0 : pCP) - e.cp)}</td></tr>
         <tr><td>${esc(concCfg.contaLP)}</td><td>${fmtBRL(pLP)}</td><td>${fmtBRL(e.lp)}</td><td>${difCell((isNaN(pLP) ? 0 : pLP) - e.lp)}</td></tr>
@@ -686,7 +707,9 @@ function renderConciliacao(vs, rs){
     </table>
     </div>
     ${!isNaN(consist) && Math.abs(consist) >= 0.5 ? `<div class="note">Os saldos informados não fecham entre si: saldo anterior + débitos − créditos difere do saldo final em R$ ${fmtBRL(consist)}.</div>` : ''}
-    <div class="note exact" style="color:var(--muted);">Diferença positiva = contabilidade maior que os extratos. Esperado do ativo = total pago (parcelas + lances) de todas as cotas até ${localToBR(T)}. Diferença no saldo anterior que se repete no saldo final indica resíduo de meses anteriores (ex.: cota já encerrada/quitada que não está no painel, rendimento ou devolução não baixados).${vs.some(v => v.rendimentos) ? ' Rendimentos creditados pelas administradoras até a data: R$ ' + fmtBRL(e.rend = vs.reduce((a, v) => a + (v.rendimentos || 0), 0)) + '.' : ''}</div>
+    ${balConsorcio ? '' : `<div class="note">Importe no Book de conciliação o balancete de ${MESES[T.getMonth()]}/${T.getFullYear()} para os saldos contábeis virem sozinhos (ou digite-os acima).</div>`}
+    ${e.nContempladas ? `<div class="note">${e.nContempladas} cota(s) contemplada(s) até ${localToBR(T)} fora do ativo de consórcios: total pago R$ ${fmtBRL(e.pagoContempladas)} (deve estar no bem/imobilizado ou no crédito a utilizar).</div>` : ''}
+    <div class="note exact" style="color:var(--muted);">Diferença positiva = contabilidade maior que os extratos. Esperado do ativo = total pago (parcelas + lances) das cotas <b>ainda não contempladas</b> em ${localToBR(T)}. Diferença no saldo anterior que se repete no saldo final indica resíduo de meses anteriores (ex.: cota já encerrada/quitada que não está no painel, rendimento ou devolução não baixados).${vs.some(v => v.rendimentos) ? ' Rendimentos creditados pelas administradoras até a data: R$ ' + fmtBRL(e.rend = vs.reduce((a, v) => a + (v.rendimentos || 0), 0)) + '.' : ''}</div>
     ${vs.some(v => v.depoisDoExtrato) ? `<div class="note">Atenção: ${vs.filter(v => v.depoisDoExtrato).map(v => nomeCota(v.c)).join(', ')} tem extrato anterior a ${localToBR(T)} — pagamentos posteriores ao extrato não estão no esperado.</div>` : ''}
   `;
 }
@@ -848,7 +871,7 @@ function updateConc(k, value){
 function updateCfg(k, value){ concCfg[k] = value; render(); }
 function addCard(){ cards.push(blankCard()); render(); }
 function removeCard(id){ if (!confirm('Remover esta cota do painel?')) return; cards = cards.filter(c => c.id !== id); render(); }
-function setBase(v){ competencia = v || ''; try { localStorage.setItem(BASE_KEY, competencia); } catch(e){} render(); }
+function setBase(v){ competencia = v || ''; try { localStorage.setItem(BASE_KEY, competencia); } catch(e){} carregarBalConsorcio().then(render); }
 
 // ---------- aplicar extrato ----------
 const MONEY_KEYS = ['valorBem', 'pagoTotal', 'saldoDevedor', 'valorParcela', 'creditoDisponivel', 'fundoComum', 'fundoReserva', 'taxaAdm'];
@@ -1048,16 +1071,16 @@ function gerarRelatorioPDF(){
   if (competencia){
     const d = conc[competencia] || CONC_SEMENTE[competencia] || {};
     const e = esperadoConc(vs, rs), antIso = anteriorDe(competencia), eAnt = ativoEsperadoEm(antIso);
-    const sAnt = toNum(d.saldoAnterior), deb = toNum(d.debitos), cred = toNum(d.creditos), sFin = toNum(d.saldoFinal);
+    const { sAnt, deb, cred, sFin, pCP, pLP } = saldosContabeis(d);
     const dif = x => isNaN(x) ? '-' : (Math.abs(x) < 0.5 ? 'OK' : pdfN(x));
     secao('2. Conciliação contábil em ' + localToBR(dBase));
     tabela(['Item', 'Contabilidade', 'Extratos', 'Diferença'], [
       [concCfg.contaAtivo + ' - saldo anterior (' + localToBR(isoToLocal(antIso)) + ')', pdfN(sAnt), pdfN(eAnt), dif(sAnt - eAnt)],
       ['(+) Débitos do mês x pagamentos do mês', pdfN(deb), pdfN(e.pagoMes), dif(deb - e.pagoMes)],
-      ['(-) Créditos do mês', pdfN(cred), pdfN(0), dif(cred || 0)],
+      ['(-) Créditos do mês x baixa das cotas contempladas no mês', pdfN(cred), pdfN(e.baixaMes), dif((cred || 0) - e.baixaMes)],
       [concCfg.contaAtivo + ' - saldo em ' + localToBR(dBase), pdfN(sFin), pdfN(e.ativo), dif(sFin - e.ativo)],
-      [concCfg.contaCP, pdfN(toNum(d.passivoCP)), pdfN(e.cp), dif((toNum(d.passivoCP) || 0) - e.cp)],
-      [concCfg.contaLP, pdfN(toNum(d.passivoLP)), pdfN(e.lp), dif((toNum(d.passivoLP) || 0) - e.lp)]
+      [concCfg.contaCP, pdfN(pCP), pdfN(e.cp), dif((isNaN(pCP) ? 0 : pCP) - e.cp)],
+      [concCfg.contaLP, pdfN(pLP), pdfN(e.lp), dif((isNaN(pLP) ? 0 : pLP) - e.lp)]
     ], null, { columnStyles: { 0: { cellWidth: 330 } } });
   }
 
@@ -1091,10 +1114,29 @@ function gerarRelatorioPDF(){
   doc.save('relatorio-consorcios-' + (competencia ? competencia.slice(0, 7) : 'extratos') + '.pdf');
 }
 
+// ---------- balancete do Book (mesmo navegador) ----------
+let balConsorcio = null;
+async function carregarBalConsorcio(){
+  balConsorcio = null;
+  if (!window.HubDB || !competencia) return;
+  try { balConsorcio = await HubDB.getMeta('balancete:' + competencia.slice(0, 7)); } catch(e){}
+}
+
 // ---------- init ----------
 load();
 if (!cards.length) cards = [blankCard()];
-render();
+(async function(){
+  // sem data-base escolhida: usa o mês do último balancete importado no Book
+  let salvo = null; try { salvo = localStorage.getItem(BASE_KEY); } catch(e){}
+  if (salvo === null && window.HubDB){
+    try {
+      const meses = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0).map(k => k.slice(10)).sort();
+      if (meses.length){ const [y, m] = meses[meses.length - 1].split('-').map(Number); competencia = localToISO(new Date(y, m, 0)); try { localStorage.setItem(BASE_KEY, competencia); } catch(e){} }
+    } catch(e){}
+  }
+  await carregarBalConsorcio();
+  render();
+})();
 </script>
 <script>
 /* etapas (mesmo comportamento da Conferência de Faturamento) */
