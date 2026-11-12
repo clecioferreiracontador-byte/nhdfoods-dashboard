@@ -201,6 +201,8 @@ tr.grp4 td:first-child,tr.grp4 td:nth-child(2){padding-left:18px}
 tr.grp1 td{background:var(--aud-primary);color:#fff;font-weight:700}
 a.lnk-conc{color:var(--aud-primary);font-weight:700;text-decoration:underline dotted;text-underline-offset:3px}
 a.lnk-conc:hover{color:var(--aud-secondary)}
+a.lnk-lanc{color:inherit;text-decoration:none;cursor:pointer}
+a.lnk-lanc:hover{color:var(--aud-primary);text-decoration:underline}
 tr.grp0 td{background:#0C182B;color:#fff;font-weight:700;font-size:.95rem}
 tr.grp0 td .dsc{color:#CD9A56}
 .fech{margin-bottom:14px}
@@ -293,7 +295,7 @@ tr.grp0 td .dsc{color:#CD9A56}
     <li>Processar a <b>Conciliação bancária</b> e os <b>Consórcios</b> na data-base do mês: os saldos comprovados aparecem sozinhos no Book.</li>
     <li>Na etapa <b>2 · Book</b>, para cada conta com saldo: digitar o <b>saldo do suporte</b> (relatório de fornecedores, clientes, folha, apuração de tributos, controle patrimonial…), conferir a <b>diferença</b> e registrar a <b>observação</b>.</li>
     <li>Conferir a coluna <b>Razão</b>: ✔ indica que os débitos e créditos do razão batem com o balancete; ✗ indica razão incompleto ou de outro período.</li>
-    <li>Usar 🔍 para abrir os lançamentos de qualquer conta e achar a origem das diferenças.</li>
+    <li>Clicar no <b>nome da conta</b> para abrir os lançamentos do razão e achar a origem das diferenças (o número da conta sublinhado abre a conciliação dela).</li>
     <li><b>Exportar o Book</b> em Excel e arquivar com o fechamento.</li>
   </ol></div>
   <div class="box"><h2>Regras</h2><div class="tscroll" style="max-height:none"><table>
@@ -329,7 +331,7 @@ tr.grp0 td .dsc{color:#CD9A56}
         <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
       </div>
       <div class="tscroll"><table class="bk">
-        <thead><tr><th>Conta</th><th class="wrap">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th title="Razão do mês bate com o balancete">Raz.</th><th>Saldo suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th><th></th></tr></thead>
+        <thead><tr><th>Conta</th><th class="wrap">Descrição</th><th>Saldo anterior</th><th>Débitos</th><th>Créditos</th><th>Saldo final</th><th title="Razão do mês bate com o balancete">Raz.</th><th>Saldo suporte</th><th>Diferença</th><th>Status</th><th class="wrap">Observação</th></tr></thead>
         <tbody id="bkBody"></tbody>
       </table></div>
     </div>
@@ -638,6 +640,10 @@ function abrirPainelConta(c){
   let ok = false; try { ok = window.parent !== window && typeof parent.abrirConciliacao === 'function' && parent.abrirConciliacao(p, c); } catch(e){}
   if (!ok) window.open(p + '.html', '_blank');
 }
+// nome da conta: clicar abre os lançamentos do razão (no modo só visualização fica só o texto)
+function descConta(l){
+  return LEITURA ? esc(l.c.desc) : `<a href="#" class="lnk-lanc" title="Ver os lançamentos do razão desta conta" onclick="verLanc('${l.conta}');return false">${esc(l.c.desc)}</a>`;
+}
 function celConta(c){
   const p = LEITURA ? '' : painelDaConta(c);
   return p ? `<td><a href="#" class="lnk-conc" title="Abrir a conciliação: ${NOME_PAINEL[p]}" onclick="abrirPainelConta('${c}');return false">${esc(c)}</a></td>` : `<td>${esc(c)}</td>`;
@@ -663,21 +669,21 @@ function renderBook(){
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
   let h = '', grpAtual = '', grp1 = '', grp0 = '', grp4 = '';
   const TM = totaisMatriz(bal);
-  const linhaMatriz = (g, extra) => { const s = TM[g]; return s ? `<tr class="grp0"><td>${g}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="6">${extra || ''}</td></tr>` : ''; };
+  const linhaMatriz = (g, extra) => { const s = TM[g]; return s ? `<tr class="grp0"><td>${g}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="5">${extra || ''}</td></tr>` : ''; };
   vis.forEach(l => {
     const g0 = l.conta.charAt(0), g1 = l.conta.slice(0, 3), g = l.conta.slice(0, 6), g4 = l.conta.slice(0, 8);
     if (g0 !== grp0){ grp0 = g0; const t = TM[g0], rm = t ? r2(t.c - t.d) : 0; h += linhaMatriz(g0, g0 === '3' && t ? `${rm >= 0 ? 'Lucro' : 'Prejuízo'} do mês: ${fmt(Math.abs(rm))}` : ''); }
-    if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
-    if (g !== grpAtual){ grpAtual = g; grp4 = ''; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g1 !== grp1){ grp1 = g1; const s = bal.contas[g1]; h += `<tr class="grp1"><td>${g1}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="5"></td></tr>`; }
+    if (g !== grpAtual){ grpAtual = g; grp4 = ''; const s = bal.contas[g]; h += `<tr class="grp"><td>${g}</td><td><div class="dsc">${esc(s ? s.desc : '')}</div></td><td>${fmt(s && s.sa)}</td><td>${fmt(s && s.d)}</td><td>${fmt(s && s.c)}</td><td>${fmt(s && s.sf)}</td><td colspan="5"></td></tr>`; }
     // subgrupo (ex.: 1.2.05.1 imobilizado em operação × 1.2.05.2 depreciação acumulada), como no Book original
-    if (g4 !== grp4 && bal.contas[g4] && g4 !== l.conta){ grp4 = g4; const s = bal.contas[g4]; h += `<tr class="grp4"><td>${g4}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="6"></td></tr>`; }
+    if (g4 !== grp4 && bal.contas[g4] && g4 !== l.conta){ grp4 = g4; const s = bal.contas[g4]; h += `<tr class="grp4"><td>${g4}</td><td><div class="dsc">${esc(s.desc)}</div></td><td>${fmt(s.sa)}</td><td>${fmt(s.d)}</td><td>${fmt(s.c)}</td><td>${fmt(s.sf)}</td><td colspan="5"></td></tr>`; }
     const k = mesAtual + '|' + l.conta;
     if (l.res){
-      h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+      h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td class="muted small" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
-      <td><button class="lupa" type="button" title="Ver lançamentos do razão" onclick="verLanc('${l.conta}')">🔍</button></td></tr>`;
+      </tr>`;
       return;
     }
     const st = ST[l.st];
@@ -688,15 +694,15 @@ function renderBook(){
       .concat(Object.keys(ST).filter(s => s !== 'zero' && s !== l.st).map(s => [s, ST[s][1]]))
       .concat(manual ? [['', '↺ Automático (' + ST[l.stAuto][1] + ')']] : []);
     const stSel = `<select class="stsel ${st[0]}${manual ? ' manual' : ''}" title="${manual ? 'Definido manualmente — clique para mudar' : 'Automático — clique para mudar'}" onchange="setRev('${k}','st',this.value)">${opcoes.map((o, i) => `<option value="${o[0]}" ${i === 0 ? 'selected' : ''}>${o[1]}</option>`).join('')}</select>`;
-    h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${esc(l.c.desc)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
+    h += `<tr>${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
       <td><input type="text" value="${esc(supTxt)}" placeholder="${l.fonte && l.fonte !== 'manual' ? fmt(l.suporte) : '0,00'}" onchange="setRev('${k}','sup',this.value)">${l.fonte && l.fonte !== 'manual' ? `<div class="auto">automático: ${esc(l.fonte)}</div>` : ''}</td>
       <td class="${isNaN(l.dif) ? '' : (Math.abs(l.dif) < 0.01 ? 'dok' : 'dbad')}">${isNaN(l.dif) ? '—' : (Math.abs(l.dif) < 0.01 ? 'OK' : fmt(l.dif))}${l.difDoBook ? '<div class="auto">do Book</div>' : ''}</td>
       <td>${stSel}</td>
       <td class="obs"><textarea class="obs" rows="${Math.min(4, Math.max(1, Math.ceil(String(l.obs || '').length / 48)))}" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
-      <td><button class="lupa" type="button" title="Ver lançamentos do razão" onclick="verLanc('${l.conta}')">🔍</button></td></tr>`;
+      </tr>`;
   });
-  $('bkBody').innerHTML = h || '<tr><td colspan="12" class="muted">Nenhuma conta com esses filtros.</td></tr>';
+  $('bkBody').innerHTML = h || '<tr><td colspan="11" class="muted">Nenhuma conta com esses filtros.</td></tr>';
   if (LEITURA) $('bkBody').querySelectorAll('input,textarea,select').forEach(e => { e.disabled = true; e.tabIndex = -1; });
   renderFechamento();
   $('stTopo').textContent = bal ? 'Book de ' + mesLbl(mesAtual) + ' · origem: ' + (bal.origem || '') : '';
