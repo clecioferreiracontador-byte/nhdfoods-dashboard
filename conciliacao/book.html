@@ -361,7 +361,6 @@ table.bk td.mes-res{font-size:.62rem}
 <section class="panel active" id="tab-conferencia">
   <div id="bkVazio" class="box empty">Importe o Book ou o balancete do mês para montar o Book de conciliação.</div>
   <div id="bkBox" style="display:none">
-    <div class="kpis" id="kpis"></div>
     <div class="box fech" id="fechBox"></div>
     <div class="box bkMain">
       <div class="bkTopo" id="bkTopo">
@@ -750,6 +749,7 @@ async function renderFechamento(){
       <span class="fech-cad" id="fechCad" onclick="event.stopPropagation();alternarCadeado()"></span>
       <span class="fech-resumo">${pRes} Balancete fecha: ${pill(fechaSf, 'Sim', 'Não · ' + fmt(fechaSf))} Mês anterior: ${antOk === null ? '<span class="pill info">sem ' + mesLbl(mAnt) + '</span>' : antOk ? '<span class="pill ok">bate</span>' : '<span class="pill bad">não bate</span>'}</span></h2>
     <div class="fech-corpo">
+    <div class="kpis" id="kpis" style="margin-top:10px">${KPIS_HTML}</div>
     <div class="muted small">Totais somados das contas analíticas do arquivo importado. A diferença entre ativo e passivo tem que ser igual ao resultado ainda não encerrado no PL.</div>
     <div class="grid">
       <div class="card"><h3>Resultado do mês</h3>
@@ -765,7 +765,7 @@ async function renderFechamento(){
 }
 // ---- cadeado do período: fecha sozinho quando 100% das contas patrimoniais estão conciliadas/justificadas e o
 // balancete fecha; o admin pode fechar ou reabrir pelo clique (fica guardado no mês e vai para o portal).
-let K_ULT = null, FECHA_OK = null;
+let K_ULT = null, FECHA_OK = null, KPIS_HTML = '';
 const SVG_FECH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
 const SVG_ABER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 7.6-1.8"/></svg>';
 function estadoPeriodo(){
@@ -836,8 +836,10 @@ function renderBook(){
   const K = { tot: 0, ok: 0, div: 0, pend: 0, just: 0 };
   anal.forEach(l => { if (l.res || l.st === 'zero') return; K.tot++; K[l.st]++; });
   K_ULT = K;
-  $('kpis').innerHTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
+  // indicadores ficam dentro do quadro de fechamento (aparecem quando ele está aberto)
+  KPIS_HTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+  if ($('kpis')) $('kpis').innerHTML = KPIS_HTML;
   $('bkTit').textContent = 'Book';
   const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || (fs === 'atencao' ? !!l.alerta : l.st === fs)) && (!so || l.st !== 'zero' || l.alerta)
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
