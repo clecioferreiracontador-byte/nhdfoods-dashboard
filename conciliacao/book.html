@@ -144,9 +144,10 @@ footer{display:none}
   section.panel{display:block!important}
 }
 /* modo visualização (usuário com permissão "Book: visualizar"): nada de importar, salvar ou editar */
-body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="lanc"],body.leitura nav.tabs button[data-tab="fontes"],
+body.leitura .upl-grid,body.leitura .so-admin,body.leitura .lupa,body.leitura nav.tabs button[data-tab="fontes"],
 body.leitura ul.cl,body.leitura #btnLimparChecklist,body.leitura .so-admin-box{display:none!important}
-body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select{pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
+body.leitura #bkBody select.stsel{pointer-events:none;opacity:1;background-image:none;padding-right:8px;cursor:default}
+body.leitura #bkBody input,body.leitura #bkBody textarea,body.leitura #bkBody select:not(.stsel){pointer-events:none;background:transparent;border-color:transparent;resize:none;color:inherit;opacity:1;-webkit-appearance:none;appearance:none}
 .ro-aviso{display:none;margin:0 0 10px;padding:9px 12px;border-radius:8px;background:#EAF2FB;color:#1A3A6B;font-size:.9rem;border:1px solid #BBD3EE}
 body.leitura .ro-aviso{display:block}
 </style>
@@ -200,6 +201,8 @@ select.stsel.info{background-color:var(--aud-info);color:var(--aud-primary)}
 select.stsel.cinza{background-color:var(--aud-gray-100);color:var(--aud-gray-500)}
 select.stsel option{background:#fff;color:var(--aud-text);font-weight:400}
 select.stsel.manual{outline:1.5px dashed var(--aud-secondary);outline-offset:1px} /* status definido à mão: mesmo tamanho, só o tracejado em volta */
+td.mov-alerta{background:#FFF4D6!important}
+.mov-med{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:#F5AD00;color:#231F20;font-weight:700;font-size:.66rem;cursor:help;white-space:nowrap}
 tr.grp td{background:#EEF2F8;font-weight:700;color:var(--aud-primary)}
 tr.grp4 td{background:#F6F8FB;font-weight:700;color:#1E3062;border-top:1px solid #DDE3EE}
 tr.grp4 td:first-child,tr.grp4 td:nth-child(2){padding-left:18px}
@@ -332,7 +335,7 @@ tr.grp0 td .dsc{color:#CD9A56}
       <h2 id="bkTit">Book</h2>
       <div class="filters">
         <label>Grupo<select id="fGrupo" onchange="renderBook()"><option value="">Todas (1, 2, 3 e 4)</option><option value="12">Só ativo, passivo e PL</option><option value="1">Ativo</option><option value="2.1">Passivo circulante</option><option value="2.2">Passivo não circulante</option><option value="2.3">Patrimônio líquido</option><option value="3">Resultado (3)</option><option value="4">Apuração do resultado (4)</option></select></label>
-        <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option></select></label>
+        <label>Status<select id="fStatus" onchange="renderBook()"><option value="">Todos</option><option value="ok">Conciliada</option><option value="div">Divergente</option><option value="pend">Pendente</option><option value="just">Justificada</option><option value="zero">Sem saldo</option><option value="atencao">⚠ Atenção (resultado fora da média)</option></select></label>
         <label>Buscar<input type="text" id="fBusca" oninput="renderBook()" placeholder="conta, descrição, observação"></label>
         <label class="ck"><input type="checkbox" id="fSaldo" checked onchange="renderBook()"> só contas com saldo ou movimento</label>
       </div>
@@ -544,7 +547,7 @@ async function atualizarListas(){
   const meses = [...new Set(ks.concat(raz ? Object.keys(raz.agg) : []))].sort();
   if (!mesAtual || meses.indexOf(mesAtual) < 0) mesAtual = ks.length ? ks[ks.length - 1] : (meses[meses.length - 1] || '');
   $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}${ks.indexOf(m) < 0 ? ' (só razão)' : ''}</option>`).join('') || '<option value="">—</option>';
-  $('lMes').innerHTML = (raz ? Object.keys(raz.agg).sort() : []).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
+  $('lMes').innerHTML = (LEITURA ? meses : raz ? Object.keys(raz.agg).sort() : []).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
   $('fBal').innerHTML = await Promise.all(ks.map(async m => { const b = await HubDB.getMeta('balancete:' + m); return `<tr><td>${mesLbl(m)}</td><td class="wrap">${esc(b.origem || '')}</td><td>${Object.keys(b.contas).length}</td><td><button class="danger" type="button" onclick="apagarBal('${m}')">Remover</button></td></tr>`; })).then(a => a.join('')) || '<tr><td colspan="4" class="muted">Nenhum.</td></tr>';
   $('fRaz').innerHTML = raz ? raz.arquivos.map(a => `<tr><td class="wrap">${esc(a.nome)}</td><td>${a.meses.map(mesLbl).join(', ')}</td><td>${a.contas}</td><td>${a.linhas.toLocaleString('pt-BR')}</td><td>${new Date(a.em).toLocaleString('pt-BR')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">Nenhum razão importado.</td></tr>';
   const sup = suportes();
@@ -553,9 +556,43 @@ async function atualizarListas(){
 async function apagarBal(m){ if (!confirm('Remover o balancete de ' + mesLbl(m) + '?')) return; await HubDB.delMeta('balancete:' + m); if (mesAtual === m) mesAtual = ''; await atualizarListas(); await carregarMes(); }
 async function limparRazao(){ if (!confirm('Apagar todo o razão guardado neste navegador? (o Book e as observações continuam)')) return; await HubDB.limparRazao(); await atualizarListas(); await carregarMes(); renderLanc(); }
 
+// ---- movimento das contas de resultado mês a mês (balancetes guardados + razão), para comparar com a média
+let MOVS = {}, MESES_MOV = [];
+async function carregarMovs(){
+  MOVS = {}; const ms = new Set();
+  const ks = (await HubDB.metaKeys()).filter(k => String(k).indexOf('balancete:') === 0);
+  for (const k of ks){ const m = k.slice(10), b = await HubDB.getMeta(k); if (!b || !b.contas) continue; ms.add(m);
+    Object.entries(b.contas).forEach(([c, x]) => { if (/^3/.test(c)) (MOVS[c] = MOVS[c] || {})[m] = r2((x.d || 0) - (x.c || 0)); }); }
+  if (raz) Object.keys(raz.agg).forEach(m => { ms.add(m); Object.entries(raz.agg[m]).forEach(([c, a]) => { if (!/^3/.test(c)) return; const o = MOVS[c] = MOVS[c] || {}; if (o[m] === undefined) o[m] = r2(a.d - a.c); }); });
+  MESES_MOV = [...ms].sort();
+}
+// Atenção: o movimento do mês foge da média dos outros meses (pelo menos 3 meses para comparar).
+// Marca quando a diferença passa de R$ 10 mil e o mês é o dobro (ou +80%) / metade da média, quando a conta
+// não movimentou, quando o sinal inverteu ou quando a conta costuma ficar zerada. IRPJ/CSLL ficam de fora.
+const MOV_LIM = 10000;
+function alertaMov(c, desc){
+  if (LEITURA || !/^3/.test(c) || /IRPJ|CSLL|IMPOSTO DE RENDA|CONTRIBUICAO SOCIAL/.test(norm(desc))) return null;
+  const o = MOVS[c] || {}, outros = MESES_MOV.filter(m => m !== mesAtual).map(m => o[m] || 0);
+  if (outros.length < 3) return null;
+  const mov = o[mesAtual] !== undefined ? o[mesAtual] : 0, med = outros.reduce((a, x) => a + x, 0) / outros.length, dev = mov - med;
+  if (Math.abs(dev) < MOV_LIM) return null;
+  let tipo = '';
+  if (Math.abs(med) >= MOV_LIM && Math.abs(mov) < 0.005) tipo = 'zerou';
+  else if (Math.abs(med) >= MOV_LIM && mov * med < 0) tipo = 'sinal';
+  else if (Math.abs(med) < MOV_LIM / 2) tipo = 'novo';
+  else if (Math.abs(mov) >= 1.8 * Math.abs(med)) tipo = 'acima';
+  else if (Math.abs(mov) <= 0.5 * Math.abs(med)) tipo = 'abaixo';
+  if (!tipo) return null;
+  const pct = med ? (Math.abs(mov) - Math.abs(med)) / Math.abs(med) * 100 : 0;
+  const txt = 'Atenção: ' + (tipo === 'zerou' ? 'a conta não movimentou em ' + mesLbl(mesAtual) : 'movimentou ' + fmt(mov) + ' em ' + mesLbl(mesAtual)) +
+    '; a média dos outros ' + outros.length + ' meses é ' + fmt(r2(med)) + (tipo === 'acima' || tipo === 'abaixo' ? ' (' + (pct > 0 ? '+' : '') + pct.toFixed(0) + '%)' : '') +
+    (tipo === 'sinal' ? ' — o sinal inverteu' : tipo === 'novo' ? ' — a conta costuma ficar quase zerada' : '') + '. Pode haver lançamento em conta errada, em duplicidade, fora do mês ou faltando.';
+  return { tipo, mov, med: r2(med), pct, txt, curto: tipo === 'zerou' ? 'sem movimento · média ' + fmt(r2(med)) : 'média ' + fmt(r2(med)) + (tipo === 'acima' || tipo === 'abaixo' ? ' (' + (pct > 0 ? '+' : '') + pct.toFixed(0) + '%)' : tipo === 'sinal' ? ' · sinal invertido' : ' · costuma ser zero') };
+}
 async function carregarMes(){
   bal = mesAtual ? await HubDB.getMeta('balancete:' + mesAtual) : null;
   raz = await HubDB.getMeta('razao');
+  try { await carregarMovs(); } catch(e){ MOVS = {}; MESES_MOV = []; }
   $('bkVazio').style.display = bal ? 'none' : ''; $('bkBox').style.display = bal ? '' : 'none';
   if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual;
   // contas para a consulta de lançamentos: do balancete e do razão
@@ -650,7 +687,7 @@ function abrirPainelConta(c){
 }
 // nome da conta: clicar abre os lançamentos do razão (no modo só visualização fica só o texto)
 function descConta(l){
-  return LEITURA ? esc(l.c.desc) : `<a href="#" class="lnk-lanc" title="Ver os lançamentos do razão desta conta" onclick="verLanc('${l.conta}');return false">${esc(l.c.desc)}</a>`;
+  return `<a href="#" class="lnk-lanc" title="Ver os lançamentos do razão desta conta" onclick="verLanc('${l.conta}');return false">${esc(l.c.desc)}</a>`;
 }
 function celConta(c){
   const p = LEITURA ? '' : painelDaConta(c);
@@ -665,7 +702,7 @@ function renderBook(){
   const anal = codigos.filter(ehAnalitica).map(c => {
     const l = linhaConta(c);
     // contas de resultado: sem suporte/status de conciliação (o fechamento delas é o resultado do mês)
-    if (ehResultado(c)){ l.res = true; l.st = l.stAuto = (Math.abs(l.c.sf) < 0.005 && Math.abs(l.c.d) < 0.005 && Math.abs(l.c.c) < 0.005) ? 'zero' : 'res'; }
+    if (ehResultado(c)){ l.res = true; l.st = l.stAuto = (Math.abs(l.c.sf) < 0.005 && Math.abs(l.c.d) < 0.005 && Math.abs(l.c.c) < 0.005) ? 'zero' : 'res'; l.alerta = alertaMov(c, l.c.desc); }
     return l;
   });
   const K = { tot: 0, ok: 0, div: 0, pend: 0, just: 0 };
@@ -673,7 +710,7 @@ function renderBook(){
   $('kpis').innerHTML = [['Contas com saldo/movimento', K.tot], ['Conciliadas', K.ok], ['Divergentes', K.div], ['Pendentes', K.pend], ['Justificadas', K.just], ['% conciliado', K.tot ? ((K.ok + K.just) / K.tot * 100).toFixed(1).replace('.', ',') + '%' : '—']]
     .map(([t, v]) => `<div class="kpi"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
   $('bkTit').textContent = 'Book — ' + mesLbl(mesAtual) + (raz && raz.agg[mesAtual] ? '' : ' (sem razão deste mês: coluna Razão em branco)');
-  const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || l.st === fs) && (!so || l.st !== 'zero')
+  const vis = anal.filter(l => (!fg || (fg === '12' ? !l.res : l.conta.indexOf(fg) === 0)) && (!fs || (fs === 'atencao' ? !!l.alerta : l.st === fs)) && (!so || l.st !== 'zero' || l.alerta)
     && (!fb || norm(l.conta + ' ' + l.c.desc + ' ' + l.obs).indexOf(fb) >= 0));
   let h = '', grpAtual = '', grp1 = '', grp0 = '', grp4 = '';
   const TM = totaisMatriz(bal);
@@ -689,7 +726,7 @@ function renderBook(){
     if (l.res){
       h += `<tr class="res">${celConta(l.conta)}<td class="desc"><div class="dsc">${descConta(l)}</div></td><td>${fmt(l.c.sa)}</td><td>${fmt(l.c.d)}</td><td>${fmt(l.c.c)}</td><td><b>${fmt(l.c.sf)}</b></td>
       <td class="c-raz" title="${l.razOk === null ? 'Razão do mês não importado' : 'Razão: D ' + fmt(l.agg ? l.agg.d : 0) + ' / C ' + fmt(l.agg ? l.agg.c : 0)}">${l.razOk === null ? '' : (l.razOk ? '<span class="dok">✔</span>' : '<span class="dbad">✗</span>')}</td>
-      <td class="muted small" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}</td>
+      <td class="muted small${l.alerta ? ' mov-alerta' : ''}" colspan="3">Mês: ${fmt(r2(l.c.d - l.c.c))}${l.alerta ? `<span class="mov-med" title="${esc(l.alerta.txt)}">⚠ ${esc(l.alerta.curto)}</span>` : ''}</td>
       <td class="obs"><textarea class="obs" rows="1" onchange="setRev('${k}','obs',this.value)" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'">${esc(l.obs)}</textarea></td>
       </tr>`;
       return;
@@ -718,12 +755,34 @@ function renderBook(){
 function setRev(k, campo, v){ if (LEITURA) return; rev[k] = rev[k] || {}; if (v === '' && campo !== 'obs') delete rev[k][campo]; else rev[k][campo] = v; lsSet(LS_REV, rev); renderBook(); }
 
 // ===================== lançamentos =====================
-function verLanc(conta){ $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc(); }
+async function verLanc(conta){
+  if (LEITURA){ $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); $('lVazio').style.display = ''; $('lBox').style.display = 'none'; $('lVazio').textContent = 'Carregando o razão de ' + mesLbl(mesAtual) + '…'; await garantirRazaoCli(mesAtual); }
+  $('lConta').value = conta; if (raz && raz.agg[mesAtual]) $('lMes').value = mesAtual; window.abrirEtapa && abrirEtapa('lanc'); renderLanc();
+}
+// quem só visualiza: o razão do mês vem do Firebase (publicado pelo admin junto com o Book) e fica neste navegador
+const razCliOk = {};
+async function garantirRazaoCli(m){
+  if (!LEITURA || !HUB || !m || razCliOk[m]) return;
+  try {
+    const local = await HubDB.getMeta('razaoCli:' + m);
+    const r = await HUB.lerRazaoMes(m, local && local.assin);
+    if (!r){ razCliOk[m] = 'sem'; return; }
+    if (!r.mesmo){
+      const linhas = r.linhas.map(x => ({ conta: x[0], mes: m, data: x[1], hist: x[2], doc: x[3], cp: x[4], fil: x[5], deb: x[6] || 0, cred: x[7] || 0 }));
+      await HubDB.gravarRazao(linhas, { [m]: r.cab.saldoAnt || {} }, r.cab.desc || {}, 'Razão ' + mesLbl(m) + ' (publicado pela Audicon)');
+      await HubDB.setMeta('razaoCli:' + m, { assin: r.cab.assin, em: new Date().toISOString() });
+    }
+    razCliOk[m] = 'ok';
+    raz = await HubDB.getMeta('razao');
+    await atualizarListas(); await carregarMes();
+  } catch(e){ razCliOk[m] = ''; msg('Não foi possível carregar o razão de ' + mesLbl(m) + ': ' + esc((e && e.message) || e), 'err'); }
+}
 async function renderLanc(){
+  if (LEITURA && $('lMes').value && !razCliOk[$('lMes').value]) await garantirRazaoCli($('lMes').value);
   const conta = $('lConta').value, mes = $('lMes').value;
   const tem = raz && Object.keys(raz.agg).length;
   $('lVazio').style.display = tem && conta ? 'none' : ''; $('lBox').style.display = tem && conta ? '' : 'none';
-  $('lVazio').textContent = !tem ? 'Importe o razão completo para consultar os lançamentos.' : 'Escolha a conta.';
+  $('lVazio').textContent = !tem ? (LEITURA ? (razCliOk[mes] === 'sem' ? 'A Audicon ainda não publicou o razão de ' + mesLbl(mes) + '.' : 'Escolha o mês e a conta.') : 'Importe o razão completo para consultar os lançamentos.') : 'Escolha a conta.';
   if (!tem || !conta) { $('lInfo').textContent = ''; return; }
   lancCache = await HubDB.lancamentosConta(conta, [mes]);
   renderLancFiltro();
@@ -788,6 +847,8 @@ async function salvarMesPortal(auto){
   if (HUB && HUB.papel === 'admin'){
     try { const kb = await HUB.gravarBook(m, pac); ok.push('Firebase (' + kb + ' KB)'); }
     catch(e){ falhas.push('Firebase: ' + (e && e.code === 'permission-denied' ? 'o seu acesso não permite salvar' : e.message)); }
+    try { const r = await enviarRazaoPortal(m); if (r) ok.push('razão (' + r.linhas.toLocaleString('pt-BR') + ' lançamentos)'); }
+    catch(e){ falhas.push('Razão: ' + (e && e.code === 'permission-denied' ? 'o seu acesso não permite salvar' : e.message)); }
   } else falhas.push('Firebase: abra o Book pelo painel (Admin › Conciliação) para salvar no Firebase');
   // 2) repositório privado no GitHub (cópia de segurança), quando houver token cadastrado
   if (tokenGh()){
@@ -811,10 +872,27 @@ async function salvarMesPortal(auto){
 // ---- salvamento automático: de hora em hora, enquanto o Hub estiver aberto com o admin logado.
 // Só salva quando o mês mudou desde o último salvamento (status, observações, suportes ou balancete),
 // assim o cliente vê o Book atualizado sem precisar clicar em "Salvar mês no portal".
-const LS_AUTO = 'aud-book-auto-portal', AUTO_MS = 60 * 60 * 1000;
+const LS_AUTO = 'aud-book-auto-portal', AUTO_MS = 60 * 60 * 1000, LS_RAZ_ENV = 'aud-book-razao-enviado';
+// assinatura do razão do mês (arquivos importados + totais): muda quando um razão novo do mês é importado
+function assinRazao(m){
+  if (!raz || !raz.agg[m]) return '';
+  const a = raz.agg[m], t = Object.keys(a).reduce((x, c) => [x[0] + a[c].d, x[1] + a[c].c, x[2] + a[c].n], [0, 0, 0]);
+  return Math.round(t[0] * 100) + '|' + Math.round(t[1] * 100) + '|' + t[2] + '|' + Object.keys(a).length + '|' + (raz.arquivos || []).filter(f => (f.meses || []).includes(m)).map(f => f.nome + '@' + f.em).join(',');
+}
+async function enviarRazaoPortal(m){
+  const assin = assinRazao(m); if (!assin || !HUB || !HUB.gravarRazaoMes) return null;
+  const env = lsGet(LS_RAZ_ENV, {}); if (env[m] === assin) return null;
+  setPortal('☁ Enviando o razão de ' + mesLbl(m) + '…');
+  const L = await HubDB.lancamentos([m]);
+  const linhas = L.map(l => [l.conta, l.data, l.hist || '', l.doc || '', l.cp || '', l.fil || '', r2(l.deb || 0), r2(l.cred || 0)]);
+  const desc = {}; L.forEach(l => { if (raz.desc && raz.desc[l.conta]) desc[l.conta] = raz.desc[l.conta]; });
+  await HUB.gravarRazaoMes(m, { assin, linhas, saldoAnt: (raz.saldoAnt && raz.saldoAnt[m]) || {}, desc });
+  env[m] = assin; lsSet(LS_RAZ_ENV, env);
+  return { linhas: linhas.length };
+}
 let autoProx = 0;
 function hashTxt(t){ let h = 5381; for (let i = 0; i < t.length; i++) h = ((h << 5) + h + t.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + '.' + t.length; }
-function assinaturaMes(m){ const p = pacoteMes(m); delete p.salvoEm; return hashTxt(JSON.stringify(p)); }
+function assinaturaMes(m){ const p = pacoteMes(m); delete p.salvoEm; return hashTxt(JSON.stringify(p) + '#' + assinRazao(m)); }
 function proximoAuto(){ return autoProx ? ' · Próximo salvamento automático às ' + new Date(autoProx).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) + '.' : ''; }
 async function autoSalvar(){
   autoProx = Date.now() + AUTO_MS;

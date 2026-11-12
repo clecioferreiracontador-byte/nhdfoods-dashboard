@@ -75,11 +75,48 @@ async function gravarBook(mes, pac){
   await setDoc(doc(db, 'book', mes), { gz: z, salvoEm: pac.salvoEm || new Date().toISOString(), por: emailDe(USER), em: serverTimestamp() });
   return Math.round(z.length / 1024);
 }
-/* todos os meses salvos: {aaaa-mm: pacote} */
+/* todos os meses salvos: {aaaa-mm: pacote} (os documentos do razão, aaaa-mm_razN, ficam de fora) */
 async function lerBooks(){
   const q = await getDocs(collection(db, 'book')), out = {};
-  for (const d of q.docs){ try { out[d.id] = JSON.parse(await gunzip(d.data().gz)); } catch (e) { console.warn('Book ' + d.id + ' ilegível', e); } }
+  for (const d of q.docs){ if (!/^\d{4}-\d{2}$/.test(d.id)) continue; try { out[d.id] = JSON.parse(await gunzip(d.data().gz)); } catch (e) { console.warn('Book ' + d.id + ' ilegível', e); } }
   return out;
+}
+/* Razão do mês para quem vê o Book: vai na mesma coleção, em partes compactadas (o mês inteiro passa do
+   limite de 1 MB de um documento). aaaa-mm_raz0 = cabeçalho {assin, partes, linhas, saldoAnt, desc};
+   aaaa-mm_raz1..N = blocos de lançamentos [conta, data, hist, doc, cp, fil, deb, cred]. */
+async function gravarRazaoMes(mes, pac){
+  if (!ACESSO || ACESSO.papel !== 'admin') throw new Error('só o administrador salva o razão');
+  if (!/^\d{4}-\d{2}$/.test(mes)) throw new Error('mês inválido');
+  const L = pac.linhas || [];
+  let tam = Math.max(1000, Math.ceil(L.length / 3)), blocos;
+  for (;;){
+    blocos = [];
+    for (let i = 0; i < L.length; i += tam) blocos.push(await gz(JSON.stringify(L.slice(i, i + tam))));
+    if (!blocos.some(b => b.length > 950000) || tam <= 500) break;
+    tam = Math.floor(tam / 2);
+  }
+  if (blocos.some(b => b.length > 950000)) throw new Error('o razão de ' + mes + ' ficou grande demais para o Firebase');
+  let antes = 0;
+  try { const h = await getDoc(doc(db, 'book', mes + '_raz0')); if (h.exists()) antes = JSON.parse(await gunzip(h.data().gz)).partes || 0; } catch (e) {}
+  for (let i = 0; i < blocos.length; i++) await setDoc(doc(db, 'book', mes + '_raz' + (i + 1)), { gz: blocos[i], em: serverTimestamp() });
+  const cab = { assin: pac.assin, partes: blocos.length, linhas: L.length, saldoAnt: pac.saldoAnt || {}, desc: pac.desc || {}, salvoEm: new Date().toISOString() };
+  await setDoc(doc(db, 'book', mes + '_raz0'), { gz: await gz(JSON.stringify(cab)), por: emailDe(USER), em: serverTimestamp() });
+  for (let i = blocos.length + 1; i <= antes; i++) await deleteDoc(doc(db, 'book', mes + '_raz' + i));
+  return { partes: blocos.length, kb: Math.round(blocos.reduce((a, b) => a + b.length, 0) / 1024) };
+}
+/* lê o razão do mês; se a assinatura for a mesma que o navegador já tem, não baixa de novo */
+async function lerRazaoMes(mes, assinLocal){
+  const h = await getDoc(doc(db, 'book', mes + '_raz0'));
+  if (!h.exists()) return null;
+  const cab = JSON.parse(await gunzip(h.data().gz));
+  if (assinLocal && cab.assin === assinLocal) return { cab, mesmo: true };
+  let linhas = [];
+  for (let i = 1; i <= cab.partes; i++){
+    const d = await getDoc(doc(db, 'book', mes + '_raz' + i));
+    if (!d.exists()) throw new Error('parte ' + i + ' do razão de ' + mes + ' não encontrada');
+    linhas = linhas.concat(JSON.parse(await gunzip(d.data().gz)));
+  }
+  return { cab, linhas };
 }
 async function removerAcesso(email){
   email = String(email || '').toLowerCase();
@@ -92,7 +129,7 @@ async function sair(){
   await signOut(auth);
   location.reload();
 }
-window.HubAuth = { lerDoc, gravarDoc, listarAcessos, salvarAcesso, removerAcesso, sair, gravarBook, lerBooks,
+window.HubAuth = { lerDoc, gravarDoc, listarAcessos, salvarAcesso, removerAcesso, sair, gravarBook, lerBooks, gravarRazaoMes, lerRazaoMes,
   get podeBook(){ return podeBook(); },
   get email(){ return emailDe(USER); }, get papel(){ return ACESSO && ACESSO.papel; }, get nome(){ return (ACESSO && ACESSO.nome) || ''; } };
 
