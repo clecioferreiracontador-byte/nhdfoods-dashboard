@@ -109,7 +109,7 @@ html,body{height:100%;background:var(--navy);color:var(--white);font-family:Cali
 /* Recursos de admin (importar, publicar, editar LALUR): o cliente não vê */
 body:not(.is-admin) .adm-only{display:none!important}
 .dre-lnk{cursor:pointer;border-bottom:1px dotted rgba(201,168,76,.6)}
-/* oscilação fora do padrão (só admin): um "?" discreto ao lado do valor */
+/* oscilação fora do padrão (só admin): um "!" discreto ao lado do valor */
 .osc{display:inline-block;width:13px;height:13px;line-height:12px;margin-left:4px;border-radius:50%;border:1px solid rgba(232,201,106,.75);color:var(--g2);font-size:9px;font-weight:700;text-align:center;vertical-align:1px;cursor:help;opacity:.8}
 .osc:hover{opacity:1;background:rgba(201,168,76,.18)}
 .osc.lk{cursor:pointer}
@@ -883,7 +883,7 @@ function dreBkNo(r){
   var tem=function(ns){return ns.some(function(n){return n.r===r||(n.c&&tem(n.c));});};
   return tem(DTREE.filter(function(n){return n.r===6||n.r===7;}))?'rb':'rl';
 }
-/* Oscilação fora do padrão (só o admin vê): cada mês da linha é comparado com a MEDIANA dos outros meses.
+/* Oscilação fora do padrão (só o admin vê, com um "!"): cada mês da linha é comparado com a MEDIANA dos outros meses.
    Marca só linhas de conta (subtotal com subcontas fica de fora: as subcontas mostram de onde veio) quando a
    diferença é material (acima de R$ 15 mil ou 0,5% da receita líquida média) e foge do normal da linha (mais de 4
    desvios robustos e pelo menos o dobro/metade da mediana), quando a conta zera ou quando o sinal inverte.
@@ -917,7 +917,7 @@ function oscHtml(node,i){
   txt+=' Pode ser lançamento em conta errada, em duplicidade, fora do mês ou faltando.';
   var lk=dreTemLanc(node.r);
   if(lk)txt+=' Clique para ver os lançamentos.';
-  return '<span class="osc'+(lk?' lk':'')+'" data-tip="'+txt.replace(/"/g,'&quot;')+'"'+(lk?' onclick="event.stopPropagation();abrirLancDRE('+node.r+')"':'')+'>?</span>';
+  return '<span class="osc'+(lk?' lk':'')+'" data-tip="'+txt.replace(/"/g,'&quot;')+'"'+(lk?' onclick="event.stopPropagation();abrirLancDRE('+node.r+')"':'')+'>!</span>';
 }
 function renderTreeRows(nodes,ci,view,base,bk,depth){
   var h='';
