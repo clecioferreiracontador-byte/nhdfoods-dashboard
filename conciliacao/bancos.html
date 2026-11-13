@@ -377,7 +377,8 @@ async function carregar(files, tipo){
         else e = lerExtratoXlsx(XLSX.read(await f.arrayBuffer(), { type: 'array', cellDates: true }), f.name);
         if (!e.linhas.length && isNaN(e.saldoFin)) throw new Error('não encontrei movimentos nem saldo no arquivo');
         // mesmo banco/conta/período carregado de novo: substitui
-        extratos = extratos.filter(x => !(x.banco === e.banco && x.conta === e.conta && x.periodo === e.periodo) && x.arquivo !== e.arquivo);
+        // (arquivos de bancos diferentes podem ter o mesmo nome, ex.: “03.08.pdf”: só substitui se for o mesmo banco e conta)
+        extratos = extratos.filter(x => !(x.banco === e.banco && x.conta === e.conta && (x.periodo === e.periodo || x.arquivo === e.arquivo)));
         extratos.push(e);
         msg(`Extrato “${esc(f.name)}”: ${e.banco} ${e.conta || ''}, ${e.linhas.length} movimento(s).`, 'ok');
       }
@@ -807,9 +808,41 @@ function ligar(e){
 }
 // modo de conferência: 'itens' (lançamento a lançamento) ou 'saldo' (só saldo final). Itaú e PDFs só com saldo: padrão 'saldo'.
 function modoConta(k, ex){
-  if (ex.some(e => e.soSaldo)) return 'saldo';
+  // só posição de saldo (sem movimentos em nenhum arquivo da conta): confere pelo saldo
+  if (ex.some(e => e.soSaldo) && !ex.some(e => e.linhas.length)) return 'saldo';
   if (cfg.modo && cfg.modo[k]) return cfg.modo[k];
-  return ex.some(e => /ita[uú]/i.test(e.banco)) ? 'saldo' : 'itens';
+  return 'itens';   // todos os bancos (inclusive Itaú) são conferidos movimento a movimento
+}
+// Vários arquivos do MESMO banco/conta (PDFs diários + o do mês, cópias do mesmo Excel): cada movimento (data e
+// valor) entra uma vez só — fica a maior quantidade em que ele aparece num mesmo arquivo. O saldo inicial vem do
+// arquivo que começa primeiro e o final do que termina por último. Contas bancárias diferentes ligadas à mesma
+// conta contábil continuam somadas.
+function unificarExtratos(ex){
+  const chaveCC = e => norm(e.banco) + '|' + (String(e.conta || '').replace(/\D/g, '').replace(/^0+/, '') || e.arquivo);
+  const per = e => { const p = (e.periodo || '').split('|').filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)); const ds = (p.length ? p : e.linhas.map(l => l.data)).slice().sort(); return { ini: ds[0] || '', fim: ds[ds.length - 1] || '' }; };
+  const grupos = {};
+  ex.forEach(e => { (grupos[chaveCC(e)] = grupos[chaveCC(e)] || []).push(e); });
+  let eAnt = 0, eFin = 0, repetidos = 0, juntos = 0;
+  const linhas = [];
+  Object.values(grupos).forEach(G => {
+    if (G.length > 1) juntos += G.length;
+    const melhor = {};
+    G.forEach(e => {
+      const cnt = {};
+      e.linhas.forEach(l => { const k = l.data + '|' + Math.round(l.valor * 100); (cnt[k] = cnt[k] || []).push(l); });
+      Object.keys(cnt).forEach(k => { if (!melhor[k] || cnt[k].length > melhor[k].length) melhor[k] = cnt[k]; });
+    });
+    const total = G.reduce((a, e) => a + e.linhas.length, 0), unicos = Object.values(melhor).reduce((a, L) => a + L.length, 0);
+    repetidos += total - unicos;
+    Object.values(melhor).forEach(L => L.forEach(l => linhas.push(l)));
+    const ord = G.map(e => ({ e, p: per(e) }));
+    const ini = ord.filter(o => !isNaN(o.e.saldoAnt)).sort((a, b) => (a.p.ini || '9').localeCompare(b.p.ini || '9') || b.e.linhas.length - a.e.linhas.length)[0];
+    const fim = ord.filter(o => !isNaN(o.e.saldoFin)).sort((a, b) => (b.p.fim || '').localeCompare(a.p.fim || '') || b.e.linhas.length - a.e.linhas.length)[0];
+    if (ini) eAnt += ini.e.saldoAnt;
+    if (fim) eFin += fim.e.saldoFin;
+  });
+  linhas.sort((a, b) => a.data.localeCompare(b.data));
+  return { linhas, eAnt: r2(eAnt), eFin: r2(eFin), repetidos, juntos, contasBanco: Object.keys(grupos).length };
 }
 function setModo(conta, v){ cfg.modo = cfg.modo || {}; cfg.modo[conta] = v; salvarCfg(); processar(); }
 function setMapa(eid, conta){ const e = extratos.find(x => x.id === eid); if (!e) return; mapa[chaveExt(e)] = conta; lsSet(LS_MAP, mapa); processar(); }
@@ -912,7 +945,12 @@ function periodoExtratos(ex){
 function processar(){
   const tol = cfg.tol;
   const contas = {};
-  extratos.forEach(e => { const lg = ligar(e); e.__lig = lg; if (lg.conta){ (contas[lg.conta] = contas[lg.conta] || { ext: [] }).ext.push(e); } });
+  extratos.forEach(e => { e.__lig = ligar(e); });
+  // arquivos da mesma conta bancária (ex.: PDFs diários só com o saldo do dia) seguem a conta contábil já ligada a outro arquivo dela
+  const ccDe = e => norm(e.banco) + '|' + String(e.conta || '').replace(/\D/g, '').replace(/^0+/, '');
+  const porCC = {}; extratos.forEach(e => { if (e.__lig.conta && String(e.conta || '').replace(/\D/g, '').length >= 4) porCC[ccDe(e)] = porCC[ccDe(e)] || e.__lig.conta; });
+  extratos.forEach(e => { if (!e.__lig.conta && porCC[ccDe(e)]) e.__lig = { conta: porCC[ccDe(e)], como: 'mesma conta bancária de outro arquivo' }; });
+  extratos.forEach(e => { const lg = e.__lig; if (lg.conta){ (contas[lg.conta] = contas[lg.conta] || { ext: [] }).ext.push(e); } });
   Object.keys(razao).forEach(k => { contas[k] = contas[k] || { ext: [] }; });
   const linhas = [];
   Object.keys(contas).sort().forEach(k => {
@@ -924,21 +962,22 @@ function processar(){
     const R = per ? todos.filter(l => l.data >= per.ini && l.data <= per.fim) : todos;
     const antes = per ? todos.filter(l => l.data < per.ini).reduce((a, l) => a + l.valor, 0) : 0;
     const fora = per ? todos.filter(l => l.data < per.ini || l.data > per.fim).length : 0;
-    const E = ex.flatMap(e => e.linhas);
+    const U = unificarExtratos(ex), E = U.linhas;
     const modo = ex.length ? modoConta(k, ex) : 'itens';
-    const c = modo === 'saldo' ? { casados: [], soR: [], soE: [] } : conciliarConta(R, E, tol);
     const rAnt = C ? r2(C.saldoAnt + antes) : NaN, rFin = C ? r2(rAnt + R.reduce((a, l) => a + l.valor, 0)) : NaN;
-    const eAnt = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoAnt) ? 0 : e.saldoAnt), 0)) : NaN;
-    const eFin = ex.length ? r2(ex.reduce((a, e) => a + (isNaN(e.saldoFin) ? 0 : e.saldoFin), 0)) : NaN;
+    const eAnt = ex.length ? U.eAnt : NaN, eFin = ex.length ? U.eFin : NaN;
+    const dif = r2(rFin - eFin), difAnt = r2(rAnt - eAnt);
+    // conta conferida por saldo: se o saldo não bate, os movimentos são cruzados para mostrar de onde vem a diferença
+    const porSaldo = modo === 'saldo' && (Math.abs(dif) < 0.01 || !E.length);
+    const c = porSaldo ? { casados: [], soR: [], soE: [] } : conciliarConta(R, E, tol);
     // tR / tE = soma dos itens só no razão / só no extrato (soR / soE são as listas de itens)
     const tR = r2(c.soR.reduce((a, l) => a + l.valor, 0)), tE = r2(c.soE.reduce((a, l) => a + l.valor, 0));
-    const dif = r2(rFin - eFin), difAnt = r2(rAnt - eAnt);
-    const naoExp = modo === 'saldo' ? NaN : r2(dif - (difAnt + tR - tE));
+    const naoExp = porSaldo ? NaN : r2(dif - (difAnt + tR - tE));
     let status = 'ok';
     if (!C) status = 'semrazao'; else if (!ex.length) status = 'semext';
-    else if (modo === 'saldo') status = Math.abs(dif) < 0.01 ? 'ok' : 'saldodif';
+    else if (porSaldo) status = Math.abs(dif) < 0.01 ? 'ok' : 'saldodif';
     else if (Math.abs(naoExp) >= 0.01) status = 'naoexp'; else if (Math.abs(dif) >= 0.01 || c.soR.length || c.soE.length || c.casados.some(g => /^lançado em outra data/.test(g.regra))) status = 'div';
-    linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status, modo, per, fora }, c));
+    linhas.push(Object.assign({ conta: k, desc: C ? C.desc : '', ex, rAnt, rFin, eAnt, eFin, dif, difAnt, tR, tE, naoExp, status, modo, per, fora, U }, c));
   });
   // extratos ainda sem conta contábil: aparecem no resumo para não passarem despercebidos
   extratos.filter(e => !e.__lig.conta).forEach(e => linhas.push({ conta: 'sem conta', desc: 'Ligue na etapa 4 ou carregue o razão desta conta', ex: [e],
@@ -977,7 +1016,8 @@ function render(){
     T.rFin += l.rFin || 0; T.eFin += l.eFin || 0; T.dif += l.dif || 0; T.soE += l.tE; T.soR += l.tR; T.ne += isNaN(l.naoExp) ? 0 : l.naoExp;
     T.nE += l.soE.length; T.nR += l.soR.length; T.cas += l.casados.length;
     const st = STATUS[l.status];
-    const perTxt = l.per ? `<div class="muted small">Razão de ${br(l.per.ini)} a ${br(l.per.fim)}${l.fora ? ` · ${l.fora} lanç. de outros meses ignorados` : ''}</div>` : '';
+    const perTxt = (l.per ? `<div class="muted small">Razão de ${br(l.per.ini)} a ${br(l.per.fim)}${l.fora ? ` · ${l.fora} lanç. de outros meses ignorados` : ''}</div>` : '')
+      + (l.U && l.U.juntos ? `<div class="muted small">${l.U.juntos} arquivos do mesmo banco unificados${l.U.repetidos ? ` · ${l.U.repetidos} movimento(s) repetido(s) ignorado(s)` : ''}</div>` : '');
     return `<tr class="clickable" onclick="verConta('${l.conta}')"><td>${esc(l.conta)}<div class="muted small">${esc(l.desc)}</div>${perTxt}</td>
       <td class="wrap" style="min-width:160px">${l.ex.map(e => esc(e.banco + ' ' + e.conta)).join('<br>') || '—'}</td>
       <td>${fmt(l.rAnt)}</td><td>${fmt(l.eAnt)}</td><td>${fmt(l.rFin)}</td><td>${fmt(l.eFin)}</td>
