@@ -57,6 +57,16 @@
     const d = await db(); const arr = await req(d.transaction('lanc').objectStore('lanc').index('conta').getAll(IDBKeyRange.only(conta)));
     return arr.filter(l => !meses || meses.includes(l.mes)).sort((a, b) => a.data.localeCompare(b.data) || (a.id - b.id));
   }
+  // remove do razão os lançamentos dos meses informados (e os arquivos que ficarem sem mês)
+  async function removerRazaoMeses(meses){
+    const d = await db(); const t = d.transaction('lanc', 'readwrite'); const ix = t.objectStore('lanc').index('mes');
+    meses.forEach(m => { ix.openCursor(IDBKeyRange.only(m)).onsuccess = e => { const c = e.target.result; if (!c) return; c.delete(); c.continue(); }; });
+    await fim(t);
+    const info = await getMeta('razao'); if (!info) return;
+    meses.forEach(m => { delete info.agg[m]; delete info.saldoAnt[m]; });
+    info.arquivos = (info.arquivos || []).map(a => Object.assign({}, a, { meses: (a.meses || []).filter(m => !meses.includes(m)) })).filter(a => a.meses.length);
+    if (!Object.keys(info.agg).length) await delMeta('razao'); else await setMeta('razao', info);
+  }
   async function limparRazao(){ const d = await db(); const t = d.transaction('lanc', 'readwrite'); t.objectStore('lanc').clear(); await fim(t); await delMeta('razao'); }
-  window.HubDB = { getMeta, setMeta, delMeta, metaKeys, gravarRazao, lancamentos, lancamentosConta, limparRazao };
+  window.HubDB = { getMeta, setMeta, delMeta, metaKeys, gravarRazao, lancamentos, lancamentosConta, limparRazao, removerRazaoMeses };
 })();

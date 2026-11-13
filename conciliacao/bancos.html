@@ -155,7 +155,9 @@ footer{display:none}
 .msg.warn{border-left-color:var(--aud-warning);background:#FFF8E6}
 .msg.ok{border-left-color:var(--aud-success);background:#EAF6EC;color:#0b4f1a}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.chip{background:var(--aud-gray-100);border:1px solid var(--aud-gold-soft);border-radius:999px;padding:3px 10px;font-size:.78rem;color:var(--aud-primary)}
+.chip{background:var(--aud-gray-100);border:1px solid var(--aud-gold-soft);border-radius:999px;padding:3px 10px;font-size:.78rem;color:var(--aud-primary);display:inline-flex;align-items:center;gap:6px}
+.chip button.rm{border:0;background:transparent;cursor:pointer;color:var(--aud-gray-500);font-size:1rem;line-height:1;padding:0 2px;min-height:0}
+.chip button.rm:hover{color:var(--aud-danger-text);background:transparent}
 .filters{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:12px}
 .filters label{display:flex;flex-direction:column;font-size:.78rem;font-weight:600;color:var(--aud-gray-700);gap:3px;margin:0}
 .filters select,.filters input{width:auto}
@@ -220,7 +222,8 @@ tr.clickable{cursor:pointer}
         <option value="0">mesmo dia</option><option value="1">até 1 dia</option><option value="3">até 3 dias</option><option value="5">até 5 dias</option><option value="10">até 10 dias</option>
       </select></label>
     <button type="button" onclick="exportarExcel()">📊 Exportar Excel (divergências e sugestões)</button>
-    <button type="button" class="ghost" onclick="limparTudo()">Limpar arquivos</button>
+    <button type="button" class="ghost" onclick="limparRazaoB()">Limpar razão</button>
+    <button type="button" class="ghost" onclick="limparExtratos()">Limpar extratos</button>
     <span class="muted small" id="stTopo"></span>
   </div>
   <div id="msgs"></div>
@@ -959,8 +962,10 @@ function enviarSuportes(linhas){
 // ===================== telas =====================
 const STATUS = { saldodif: ['bad', 'Saldo diferente'], ok: ['ok', 'Conciliada'], div: ['warn', 'Com divergências'], naoexp: ['bad', 'Não explicado'], semext: ['info', 'Sem extrato'], semrazao: ['info', 'Sem razão'] };
 function render(){
-  $('chRazao').innerHTML = Object.values(razao).map(C => `<span class="chip">${esc(C.conta)} · ${C.linhas.length} lanç.</span>`).join('');
-  $('chExt').innerHTML = extratos.map(e => `<span class="chip">${esc(e.banco)} ${esc(e.conta)} · ${e.linhas.length} mov.</span>`).join('');
+  // um chip por arquivo de razão (com as contas dele) e um por extrato, cada um com “×” para remover só aquele
+  const porArq = {}; Object.values(razao).forEach(C => { const a = C.arquivo || 'razão'; const x = porArq[a] = porArq[a] || { contas: 0, linhas: 0 }; x.contas++; x.linhas += C.linhas.length; });
+  $('chRazao').innerHTML = Object.keys(porArq).map(a => `<span class="chip" title="${esc(a)}">${esc(a.length > 38 ? a.slice(0, 36) + '…' : a)} · ${porArq[a].contas} conta(s) · ${porArq[a].linhas} lanç.<button type="button" class="rm" title="Remover este razão" onclick="removerRazaoArq(decodeURIComponent('${encodeURIComponent(a)}'))">×</button></span>`).join('');
+  $('chExt').innerHTML = extratos.map(e => `<span class="chip" title="${esc(e.arquivo || '')}">${esc(e.banco)} ${esc(e.conta)} · ${e.linhas.length} mov.<button type="button" class="rm" title="Remover este extrato" onclick="removerExtrato('${e.id}')">×</button></span>`).join('');
   $('tolDias').value = String(cfg.tol);
   const tem = res && res.linhas.length;
   $('confVazio').style.display = tem ? 'none' : ''; $('confBox').style.display = tem ? '' : 'none';
@@ -1087,6 +1092,26 @@ function exportarExcel(){
 function salvarDados(){
   const ok = lsSet(LS_DADOS, { razao, extratos: extratos.map(e => { const c = Object.assign({}, e); delete c.__lig; return c; }) });
   if (!ok) msg('Os arquivos são grandes demais para ficarem salvos neste navegador: a conferência funciona agora, mas será preciso carregá-los de novo na próxima vez.', 'warn');
+}
+function removerRazaoArq(arq){
+  if (!confirm('Remover o razão “' + arq + '”? (os extratos continuam)')) return;
+  Object.keys(razao).forEach(k => { if ((razao[k].arquivo || 'razão') === arq) delete razao[k]; });
+  salvarDados(); processar();
+}
+function removerExtrato(id){
+  const e = extratos.find(x => x.id === id); if (!e) return;
+  if (!confirm('Remover o extrato ' + e.banco + ' ' + (e.conta || '') + (e.arquivo ? ' (“' + e.arquivo + '”)' : '') + '? (o razão continua)')) return;
+  extratos = extratos.filter(x => x.id !== id); salvarDados(); processar();
+}
+function limparRazaoB(){
+  if (!Object.keys(razao).length) return;
+  if (!confirm('Remover todo o razão carregado? (os extratos continuam)')) return;
+  razao = {}; salvarDados(); processar();
+}
+function limparExtratos(){
+  if (!extratos.length) return;
+  if (!confirm('Remover todos os extratos carregados? (o razão continua)')) return;
+  extratos = []; salvarDados(); processar();
 }
 function limparTudo(){
   if (!confirm('Remover o razão e os extratos carregados? (as marcações de conferido e observações são mantidas)')) return;

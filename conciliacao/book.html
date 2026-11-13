@@ -284,7 +284,7 @@ table.bk td.mes-res{font-size:.62rem}
 .auto{font-size:.72rem;color:var(--aud-gray-500)}
 </style>
 <script src="vendor/sheetjs/xlsx.full.min.js"></script>
-<script src="hub-db.js?v=2"></script>
+<script src="hub-db.js?v=3"></script>
 <script src="recolher.js?v=1"></script>
 </head>
 <body>
@@ -413,7 +413,7 @@ table.bk td.mes-res{font-size:.62rem}
   <div class="box"><h2>Balancetes / Books importados</h2><div class="tscroll" style="max-height:none"><table>
     <thead><tr><th>Mês</th><th>Origem</th><th>Contas</th><th></th></tr></thead><tbody id="fBal"></tbody></table></div></div>
   <div class="box"><h2>Razão importado</h2><div class="tscroll" style="max-height:none"><table>
-    <thead><tr><th>Arquivo</th><th>Meses</th><th>Contas</th><th>Lançamentos</th><th>Importado em</th></tr></thead><tbody id="fRaz"></tbody></table></div>
+    <thead><tr><th>Arquivo</th><th>Meses</th><th>Contas</th><th>Lançamentos</th><th>Importado em</th><th></th></tr></thead><tbody id="fRaz"></tbody></table></div>
     <div class="paste-actions" style="margin-top:10px"><button type="button" class="danger" onclick="limparRazao()">Apagar o razão deste navegador</button></div></div>
   <div class="box"><h2>Suportes automáticos recebidos</h2><div class="tscroll" style="max-height:none"><table>
     <thead><tr><th>Conta</th><th>Fonte</th><th>Data-base</th><th>Saldo comprovado</th><th class="wrap">Detalhe</th></tr></thead><tbody id="fSup"></tbody></table></div></div>
@@ -592,11 +592,19 @@ async function atualizarListas(){
   $('selMes').innerHTML = meses.map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}${ks.indexOf(m) >= 0 ? '' : PACS_FB && PACS_FB[m] ? ' (no portal)' : ' (só razão)'}</option>`).join('') || '<option value="">—</option>';
   $('lMes').innerHTML = (LEITURA ? meses : [...new Set((raz ? Object.keys(raz.agg) : []).concat(Object.keys(PACS_FB || {})))].sort()).map(m => `<option value="${m}" ${m === mesAtual ? 'selected' : ''}>${mesLbl(m)}</option>`).join('');
   $('fBal').innerHTML = await Promise.all(ks.map(async m => { const b = await HubDB.getMeta('balancete:' + m); return `<tr><td>${mesLbl(m)}</td><td class="wrap">${esc(b.origem || '')}</td><td>${Object.keys(b.contas).length}</td><td><button class="danger" type="button" onclick="apagarBal('${m}')">Remover</button></td></tr>`; })).then(a => a.join('')) || '<tr><td colspan="4" class="muted">Nenhum.</td></tr>';
-  $('fRaz').innerHTML = raz ? raz.arquivos.map(a => `<tr><td class="wrap">${esc(a.nome)}</td><td>${a.meses.map(mesLbl).join(', ')}</td><td>${a.contas}</td><td>${a.linhas.toLocaleString('pt-BR')}</td><td>${new Date(a.em).toLocaleString('pt-BR')}</td></tr>`).join('') : '<tr><td colspan="5" class="muted">Nenhum razão importado.</td></tr>';
+  $('fRaz').innerHTML = raz ? raz.arquivos.map((a, i) => `<tr><td class="wrap">${esc(a.nome)}</td><td>${a.meses.map(mesLbl).join(', ')}</td><td>${a.contas}</td><td>${a.linhas.toLocaleString('pt-BR')}</td><td>${new Date(a.em).toLocaleString('pt-BR')}</td><td><button class="danger" type="button" onclick="apagarRazaoArq(${i})">Remover</button></td></tr>`).join('') : '<tr><td colspan="6" class="muted">Nenhum razão importado.</td></tr>';
   const sup = suportes();
   $('fSup').innerHTML = Object.keys(sup).sort().map(k => `<tr><td>${esc(k)}</td><td>${esc(sup[k].fonte)}</td><td>${br(sup[k].data)}</td><td>${fmt(sup[k].saldo)}</td><td class="wrap">${esc(sup[k].detalhe || '')}</td></tr>`).join('') || '<tr><td colspan="5" class="muted">Nenhum suporte recebido ainda. Processe a Conciliação bancária e os Consórcios.</td></tr>';
 }
 async function apagarBal(m){ if (!confirm('Remover o balancete de ' + mesLbl(m) + '?')) return; await HubDB.delMeta('balancete:' + m); if (mesAtual === m) mesAtual = ''; await atualizarListas(); await carregarMes(); }
+// remove um razão importado: apaga os lançamentos dos meses dele (os outros meses e os balancetes continuam)
+async function apagarRazaoArq(i){
+  const a = raz && raz.arquivos[i]; if (!a) return;
+  const outros = raz.arquivos.filter((x, j) => j !== i && (x.meses || []).some(m => a.meses.includes(m))).map(x => x.nome);
+  if (!confirm('Remover o razão “' + a.nome + '” (' + a.meses.map(mesLbl).join(', ') + ')?' + (outros.length ? '\n\nAtenção: ' + outros.join(', ') + ' também tem lançamentos desses meses, que serão removidos junto.' : '') + '\n\nO Book, os balancetes e as observações continuam.')) return;
+  await HubDB.removerRazaoMeses(a.meses); await atualizarListas(); await carregarMes(); renderLanc();
+  msg('Razão “' + esc(a.nome) + '” removido.', 'ok');
+}
 async function limparRazao(){ if (!confirm('Apagar todo o razão guardado neste navegador? (o Book e as observações continuam)')) return; await HubDB.limparRazao(); await atualizarListas(); await carregarMes(); renderLanc(); }
 
 // ---- movimento das contas de resultado mês a mês (balancetes guardados + razão), para comparar com a média

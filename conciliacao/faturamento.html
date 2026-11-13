@@ -114,6 +114,8 @@ select:focus,input:focus{border-color:var(--aud-secondary)}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{background:var(--aud-gray-100);border:1px solid var(--aud-gold-soft);border-radius:999px;padding:3px 6px 3px 10px;font-size:.78rem;display:inline-flex;gap:6px;align-items:center;color:var(--aud-primary)}
 .chip button{border:0;background:transparent;cursor:pointer;color:var(--aud-gray-500);font-size:1rem;line-height:1}
+.rm-arq{border:0;background:transparent;cursor:pointer;color:var(--aud-gray-500);font-size:1rem;line-height:1;padding:0 3px;vertical-align:-1px}
+.rm-arq:hover{color:var(--aud-danger-text);background:transparent}
 .kpi{border-radius:var(--aud-radius);padding:14px;background:var(--aud-white);border:1px solid #e1e4e8;border-top:4px solid var(--aud-secondary)}
 .kpi .t{font-size:.85rem;font-weight:600;color:var(--aud-primary)}
 .kpi .row{display:flex;justify-content:space-between;font-size:.9rem;margin-top:4px}
@@ -626,12 +628,21 @@ function razaoHandler(inputId,stId,kind,key){
     try{
       var r=await lerRazao(f,kind); state[key]=r;
       var cts=Array.from(r.contas.keys()).sort().join(', ');
-      setStatus(stId,'ok',esc(r.name)+' — '+fmtInt(r.n)+' lançamentos · '+mesLabel(r.minYm)+(r.minYm!==r.maxYm?' a '+mesLabel(r.maxYm):'')+' · contas '+esc(cts)+' · filiais '+esc(r.filiais.join(', '))
+      setStatus(stId,'ok','<button type="button" class="rm-arq" title="Remover este razão" data-rmraz="'+key+'|'+stId+'">×</button> '+esc(r.name)+' — '+fmtInt(r.n)+' lançamentos · '+mesLabel(r.minYm)+(r.minYm!==r.maxYm?' a '+mesLabel(r.maxYm):'')+' · contas '+esc(cts)+' · filiais '+esc(r.filiais.join(', '))
         +(r.bad?'<br><span class="dbad">'+r.bad+' lançamento(s) sem data válida ignorado(s).</span>':''));
     }catch(err){state[key]=null; setStatus(stId,'bad','Não foi possível ler: '+esc(err.message||err));}
     updateProcBtn();
   });
 }
+function removerRaz(key,stId){
+  if(!state[key])return;
+  if(!confirm('Remover “'+state[key].name+'”? (os outros arquivos continuam)'))return;
+  state[key]=null; state.res=null; $(stId).innerHTML=''; updateProcBtn();
+}
+document.addEventListener('click',function(e){
+  var t=e.target&&e.target.closest?e.target.closest('[data-rmraz]'):null; if(!t)return;
+  var p=t.getAttribute('data-rmraz').split('|'); removerRaz(p[0],p[1]);
+});
 razaoHandler('fRec','stRec','fat','razRec');
 razaoHandler('fDev','stDev','dev','razDev');
 
