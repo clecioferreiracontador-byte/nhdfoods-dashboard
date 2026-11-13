@@ -789,7 +789,10 @@ function ligar(e){
     const semDv = dig.slice(0, -1);
     let c = contas.filter(C => { const d = C.desc.replace(/\D/g, ''); return d && (d.indexOf(dig) >= 0 || (semDv.length >= 4 && d.indexOf(semDv) >= 0)); });
     // mesmo número na conta corrente e na aplicação (ex.: XP): extrato de aplicação fica com a conta de aplicação
-    if (c.length > 1 && e.aplic){ const ap = c.filter(C => /APLI|INVEST|CDB|FUNDO/.test(norm(C.desc))); if (ap.length) c = ap; }
+    // mesmo número na conta corrente e na aplicação (ex.: XP, Credicopa 30181 e “RDC 30181”): extrato de aplicação
+    // fica com a conta de aplicação e extrato de conta corrente com a que não é aplicação
+    const ehApl = C => /APLI|INVEST|CDB|FUNDO|RDC|POUPANCA|RENDA FIXA/.test(norm(C.desc));
+    if (c.length > 1){ const f = c.filter(C => e.aplic ? ehApl(C) : !ehApl(C)); if (f.length) c = f; }
     if (c.length === 1) return { conta: c[0].conta, como: 'número da conta na descrição' };
   }
   if (!isNaN(e.saldoAnt)){
