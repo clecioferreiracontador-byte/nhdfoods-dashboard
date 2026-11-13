@@ -802,7 +802,16 @@ function ligar(e){
   // nome do banco + palavras do nome do arquivo (ex.: “CTA GARANTIDA”): fica com a conta de maior pontuação, se for única
   const IGN = ['BANCO', 'SICOOB', 'CTA', 'CONTA', 'CORRENTE', 'EXTRATO', 'XLSX', 'PDF', 'OFX', 'DESKTOP'];
   const pal = [...new Set(norm(e.banco + ' ' + e.arquivo.replace(/\.[a-z]+$/i, '')).split(/[^A-Z]+/).filter(w => w.length > 3 && !IGN.includes(w) && !/^(JANEIRO|FEVEREIRO|MARCO|ABRIL|MAIO|JUNHO|JULHO|AGOSTO|SETEMBRO|OUTUBRO|NOVEMBRO|DEZEMBRO)$/.test(w)))];
-  const pont = contas.map(C => ({ C, p: pal.filter(w => norm(C.desc).split(/[^A-Z]+/).includes(w)).length })).filter(x => x.p > 0).sort((a, b) => b.p - a.p);
+  // não liga pelo nome se o número da conta do extrato contradiz o número que está na descrição da conta contábil
+  // (ex.: extrato da Credicitrus 67.239-4 não pode cair na conta “BANCO CREDICITRUS 54831-6”)
+  const numExt = String(e.conta || '').replace(/\D/g, '').replace(/^0+/, '');
+  const conflita = C => {
+    if (numExt.length < 4) return false;
+    const nums = (String(C.desc).match(/\d[\d.\-\/ ]{3,}\d/g) || []).map(x => x.replace(/\D/g, '').replace(/^0+/, '')).filter(x => x.length >= 4);
+    if (!nums.length) return false;
+    return !nums.some(n => n === numExt || n.indexOf(numExt.slice(0, -1)) === 0 || numExt.indexOf(n.slice(0, -1)) === 0);
+  };
+  const pont = contas.filter(C => !conflita(C)).map(C => ({ C, p: pal.filter(w => norm(C.desc).split(/[^A-Z]+/).includes(w)).length })).filter(x => x.p > 0).sort((a, b) => b.p - a.p);
   if (pont.length && (pont.length === 1 || pont[0].p > pont[1].p)) return { conta: pont[0].C.conta, como: 'nome do banco/arquivo' };
   return { conta: '', como: 'não ligado' };
 }
@@ -818,26 +827,30 @@ function modoConta(k, ex){
 // arquivo que começa primeiro e o final do que termina por último. Contas bancárias diferentes ligadas à mesma
 // conta contábil continuam somadas.
 function unificarExtratos(ex){
-  const chaveCC = e => norm(e.banco) + '|' + (String(e.conta || '').replace(/\D/g, '').replace(/^0+/, '') || e.arquivo);
+  // mesma conta bancária = mesmo número de conta (o nome do banco às vezes não vem no arquivo)
+  const chaveCC = e => { const d = String(e.conta || '').replace(/\D/g, '').replace(/^0+/, ''); return d.length >= 6 ? d : norm(e.banco) + '|' + (d || e.arquivo); };
   const per = e => { const p = (e.periodo || '').split('|').filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)); const ds = (p.length ? p : e.linhas.map(l => l.data)).slice().sort(); return { ini: ds[0] || '', fim: ds[ds.length - 1] || '' }; };
+  const dur = p => p.ini && p.fim ? (new Date(p.fim) - new Date(p.ini)) : -1;
   const grupos = {};
   ex.forEach(e => { (grupos[chaveCC(e)] = grupos[chaveCC(e)] || []).push(e); });
   let eAnt = 0, eFin = 0, repetidos = 0, juntos = 0;
   const linhas = [];
   Object.values(grupos).forEach(G => {
     if (G.length > 1) juntos += G.length;
-    const melhor = {};
-    G.forEach(e => {
-      const cnt = {};
-      e.linhas.forEach(l => { const k = l.data + '|' + Math.round(l.valor * 100); (cnt[k] = cnt[k] || []).push(l); });
-      Object.keys(cnt).forEach(k => { if (!melhor[k] || cnt[k].length > melhor[k].length) melhor[k] = cnt[k]; });
+    // o arquivo que cobre o período maior vale primeiro (ex.: o do mês); os outros só completam os dias que ele
+    // não cobre — um extrato parcial tirado antes do fim do mês pode trazer lançamentos que depois mudaram
+    const ord = G.map(e => ({ e, p: per(e) })).sort((a, b) => dur(b.p) - dur(a.p) || b.e.linhas.length - a.e.linhas.length);
+    const cobertos = [];
+    const coberto = d => cobertos.some(c => d >= c.ini && d <= c.fim);
+    ord.forEach(({ e, p }) => {
+      const dentro = e.linhas.filter(l => !p.ini || (l.data >= p.ini && l.data <= p.fim));
+      const usa = dentro.filter(l => !coberto(l.data));
+      repetidos += e.linhas.length - usa.length;
+      usa.forEach(l => linhas.push(l));
+      if (p.ini && e.linhas.length) cobertos.push(p);
     });
-    const total = G.reduce((a, e) => a + e.linhas.length, 0), unicos = Object.values(melhor).reduce((a, L) => a + L.length, 0);
-    repetidos += total - unicos;
-    Object.values(melhor).forEach(L => L.forEach(l => linhas.push(l)));
-    const ord = G.map(e => ({ e, p: per(e) }));
-    const ini = ord.filter(o => !isNaN(o.e.saldoAnt)).sort((a, b) => (a.p.ini || '9').localeCompare(b.p.ini || '9') || b.e.linhas.length - a.e.linhas.length)[0];
-    const fim = ord.filter(o => !isNaN(o.e.saldoFin)).sort((a, b) => (b.p.fim || '').localeCompare(a.p.fim || '') || b.e.linhas.length - a.e.linhas.length)[0];
+    const ini = ord.filter(o => !isNaN(o.e.saldoAnt)).sort((a, b) => (a.p.ini || '9').localeCompare(b.p.ini || '9') || dur(b.p) - dur(a.p))[0];
+    const fim = ord.filter(o => !isNaN(o.e.saldoFin)).sort((a, b) => (b.p.fim || '').localeCompare(a.p.fim || '') || dur(b.p) - dur(a.p))[0];
     if (ini) eAnt += ini.e.saldoAnt;
     if (fim) eFin += fim.e.saldoFin;
   });
@@ -947,9 +960,13 @@ function processar(){
   const contas = {};
   extratos.forEach(e => { e.__lig = ligar(e); });
   // arquivos da mesma conta bancária (ex.: PDFs diários só com o saldo do dia) seguem a conta contábil já ligada a outro arquivo dela
-  const ccDe = e => norm(e.banco) + '|' + String(e.conta || '').replace(/\D/g, '').replace(/^0+/, '');
-  const porCC = {}; extratos.forEach(e => { if (e.__lig.conta && String(e.conta || '').replace(/\D/g, '').length >= 4) porCC[ccDe(e)] = porCC[ccDe(e)] || e.__lig.conta; });
-  extratos.forEach(e => { if (!e.__lig.conta && porCC[ccDe(e)]) e.__lig = { conta: porCC[ccDe(e)], como: 'mesma conta bancária de outro arquivo' }; });
+  const ccDe = e => { const d = String(e.conta || '').replace(/\D/g, '').replace(/^0+/, ''); return d.length >= 6 ? d : norm(e.banco) + '|' + d; };
+  // a conta contábil vem do arquivo principal (o que tem mais movimentos e está ligado); os demais arquivos da mesma
+  // conta bancária seguem ele — menos os que você ligou à mão na etapa 4
+  const porCC = {};
+  extratos.filter(e => e.__lig.conta && String(e.conta || '').replace(/\D/g, '').length >= 4).sort((a, b) => b.linhas.length - a.linhas.length)
+    .forEach(e => { if (!porCC[ccDe(e)]) porCC[ccDe(e)] = e.__lig.conta; });
+  extratos.forEach(e => { const c = porCC[ccDe(e)]; if (c && e.__lig.como !== 'manual' && e.__lig.conta !== c) e.__lig = { conta: c, como: 'mesma conta bancária do arquivo principal' }; });
   extratos.forEach(e => { const lg = e.__lig; if (lg.conta){ (contas[lg.conta] = contas[lg.conta] || { ext: [] }).ext.push(e); } });
   Object.keys(razao).forEach(k => { contas[k] = contas[k] || { ext: [] }; });
   const linhas = [];
